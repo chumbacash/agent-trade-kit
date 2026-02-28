@@ -6,7 +6,7 @@ import { createServer } from "./server.js";
 
 function printHelp(): void {
   const help = `
-Usage: okx-mcp-server [options]
+Usage: okx-trade-mcp [options]
 
 Options:
   --modules <list>     Comma-separated list of modules to load

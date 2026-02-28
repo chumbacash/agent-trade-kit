@@ -1,5 +1,5 @@
 {
-  "name": "okx-cli",
+  "name": "okx-trade-cli",
   "version": "1.0.0",
   "description": "OKX CLI - Command line tool for OKX exchange",
   "type": "module",

@@ -239,7 +239,7 @@ interface ToolSpec {
 ### CLI 参数
 
 ```
-okx-mcp-server [options]
+okx-trade-mcp [options]
 
   --modules <list>   逗号分隔模块名，或 "all"（默认：spot,swap,account）
   --read-only        禁用所有写操作

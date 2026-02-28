@@ -5,8 +5,8 @@ OKX toolkit with two standalone packages:
 
 | Package | Description |
 |---|---|
-| `okx-mcp-server` | MCP server for Claude/Cursor |
-| `okx-cli` | CLI for operating OKX from terminal |
+| `okx-trade-mcp` | MCP server for Claude/Cursor |
+| `okx-trade-cli` | CLI for operating OKX from terminal |
 
 ---
 
@@ -48,12 +48,12 @@ demo = true
 
 After build, choose your usage:
 
-- **AI integrations (Claude / Cursor)** → See [okx-mcp-server](#okx-mcp-server)
-- **CLI usage** → See [okx-cli](#okx-cli)
+- **AI integrations (Claude / Cursor)** → See [okx-trade-mcp](#okx-trade-mcp)
+- **CLI usage** → See [okx-trade-cli](#okx-trade-cli)
 
 ---
 
-## okx-mcp-server
+## okx-trade-mcp
 
 ### Config
 
@@ -83,15 +83,15 @@ Restart Claude Desktop after updating the config.
 ### Startup Options
 
 ```bash
-okx-mcp-server --profile live         # specify profile
-okx-mcp-server --modules market       # market only (no key)
-okx-mcp-server --read-only            # read-only, no trades
-okx-mcp-server --modules all          # all modules
+okx-trade-mcp --profile live         # specify profile
+okx-trade-mcp --modules market       # market only (no key)
+okx-trade-mcp --read-only            # read-only, no trades
+okx-trade-mcp --modules all          # all modules
 ```
 
 ---
 
-## okx-cli
+## okx-trade-cli
 
 ### Install
 
@@ -181,8 +181,8 @@ pnpm install && pnpm run build
 
 # Build individually
 pnpm --filter @okx-hub/core build
-pnpm --filter okx-mcp-server build
-pnpm --filter okx-cli build
+pnpm --filter okx-trade-mcp build
+pnpm --filter okx-trade-cli build
 ```
 
 ### Project Structure
@@ -205,8 +205,8 @@ OKX 工具集，包含两个独立包：
 
 | 包 | 说明 |
 |---|---|
-| `okx-mcp-server` | MCP Server，供 Claude / Cursor 等 AI 工具调用 |
-| `okx-cli` | 命令行工具，直接在终端操作 OKX |
+| `okx-trade-mcp` | MCP Server，供 Claude / Cursor 等 AI 工具调用 |
+| `okx-trade-cli` | 命令行工具，直接在终端操作 OKX |
 
 ---
 
@@ -248,12 +248,12 @@ demo = true
 
 构建完成后按使用场景选择：
 
-- **AI 工具集成（Claude / Cursor）** → 看 [okx-mcp-server](#okx-mcp-server)
-- **终端命令行** → 看 [okx-cli](#okx-cli)
+- **AI 工具集成（Claude / Cursor）** → 看 [okx-trade-mcp](#okx-trade-mcp)
+- **终端命令行** → 看 [okx-trade-cli](#okx-trade-cli)
 
 ---
 
-## okx-mcp-server
+## okx-trade-mcp
 
 ### 配置
 
@@ -283,15 +283,15 @@ demo = true
 ### 启动选项
 
 ```bash
-okx-mcp-server --profile live         # 指定 profile
-okx-mcp-server --modules market       # 只加载行情（无需 Key）
-okx-mcp-server --read-only            # 只读模式，禁止下单
-okx-mcp-server --modules all          # 加载所有模块
+okx-trade-mcp --profile live         # 指定 profile
+okx-trade-mcp --modules market       # 只加载行情（无需 Key）
+okx-trade-mcp --read-only            # 只读模式，禁止下单
+okx-trade-mcp --modules all          # 加载所有模块
 ```
 
 ---
 
-## okx-cli
+## okx-trade-cli
 
 ### 安装
 
@@ -381,8 +381,8 @@ pnpm install && pnpm run build
 
 # 单独构建
 pnpm --filter @okx-hub/core build
-pnpm --filter okx-mcp-server build
-pnpm --filter okx-cli build
+pnpm --filter okx-trade-mcp build
+pnpm --filter okx-trade-cli build
 ```
 
 ### 项目结构
