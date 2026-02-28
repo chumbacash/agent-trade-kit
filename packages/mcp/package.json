@@ -1,0 +1,30 @@
+{
+  "name": "okx-mcp-server",
+  "version": "1.0.0",
+  "description": "OKX MCP Server - Model Context Protocol server for OKX exchange",
+  "type": "module",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "okx-mcp-server": "dist/index.js"
+  },
+  "files": ["dist", "README.md"],
+  "publishConfig": { "access": "public" },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "engines": { "node": ">=18" },
+  "keywords": ["okx", "mcp", "model-context-protocol", "trading"],
+  "dependencies": {
+    "@okx-hub/core": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.26.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.2",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "okx-cli",
+  "version": "1.0.0",
+  "description": "OKX CLI - Command line tool for OKX exchange",
+  "type": "module",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "bin": {
+    "okx": "dist/index.js"
+  },
+  "files": ["dist", "README.md"],
+  "publishConfig": { "access": "public" },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "engines": { "node": ">=18" },
+  "keywords": ["okx", "cli", "trading"],
+  "dependencies": {
+    "@okx-hub/core": "workspace:*",
+    "smol-toml": "^1.3.4"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.2",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3"
+  }
+}

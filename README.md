@@ -1,93 +1,198 @@
-# okx-trade-mcp
+# okx-hub
 
+OKX 工具集，包含两个独立包：
 
+| 包 | 说明 |
+|---|---|
+| `okx-mcp-server` | MCP Server，供 Claude / Cursor 等 AI 工具调用 |
+| `okx-cli` | 命令行工具，直接在终端操作 OKX |
 
-## Getting started
+---
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## 快速开始
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+**前置要求：** Node.js >= 18，pnpm（没有的话第一步会装）
 
-## Add your files
+```bash
+# 1. 安装 pnpm（已装可跳过）
+npm install -g pnpm && pnpm setup && source ~/.zshrc
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+# 2. 安装依赖 & 构建
+pnpm install && pnpm run build
+
+# 3. 配置 API 凭证
+mkdir -p ~/.okx && cp config.toml.example ~/.okx/config.toml
+vim ~/.okx/config.toml
+```
+
+`~/.okx/config.toml` 填入真实盘和模拟盘的 Key：
+
+```toml
+default_profile = "demo"
+
+[profiles.live]
+api_key = "your-live-api-key"
+secret_key = "your-live-secret-key"
+passphrase = "your-live-passphrase"
+
+[profiles.demo]
+api_key = "your-demo-api-key"
+secret_key = "your-demo-secret-key"
+passphrase = "your-demo-passphrase"
+demo = true
+```
+
+> 真实盘 Key：OKX 官网 → 个人中心 → API → 创建 API Key
+> 模拟盘 Key：OKX 官网 → 交易 → 模拟交易 → API 管理
+
+构建完成后按使用场景选择：
+
+- **AI 工具集成（Claude / Cursor）** → 看 [okx-mcp-server](#okx-mcp-server)
+- **终端命令行** → 看 [okx-cli](#okx-cli)
+
+---
+
+## okx-mcp-server
+
+### 配置
+
+**Claude Desktop 配置文件路径：**
+- macOS：`~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows：`%APPDATA%\Claude\claude_desktop_config.json`
+
+凭证从 `~/.okx/config.toml` 读取，JSON 里只需指定 profile：
+
+```json
+{
+  "mcpServers": {
+    "okx-live": {
+      "command": "node",
+      "args": ["/path/to/okx_hub/packages/mcp/dist/index.js", "--profile", "live"]
+    },
+    "okx-demo": {
+      "command": "node",
+      "args": ["/path/to/okx_hub/packages/mcp/dist/index.js", "--profile", "demo"]
+    }
+  }
+}
+```
+
+修改配置后重启 Claude Desktop 生效。
+
+### 启动选项
+
+```bash
+okx-mcp-server --profile live         # 指定 profile
+okx-mcp-server --modules market       # 只加载行情（无需 Key）
+okx-mcp-server --read-only            # 只读模式，禁止下单
+okx-mcp-server --modules all          # 加载所有模块
+```
+
+---
+
+## okx-cli
+
+### 安装
+
+```bash
+# 注册 okx 全局命令（构建完成后执行一次）
+cd packages/cli && pnpm link --global && cd ../..
+
+# 验证
+okx market ticker BTC-USDT   # 无需 Key，直接可用
+okx --profile demo account balance
+okx --profile live swap positions
+```
+
+### 命令
+
+#### 市场行情（无需 API Key）
+
+```bash
+okx market ticker BTC-USDT
+okx market tickers SPOT
+okx market orderbook BTC-USDT --sz 5
+okx market candles BTC-USDT --bar 1H --limit 10
+```
+
+支持的 K 线周期：`1m` `3m` `5m` `15m` `30m` `1H` `2H` `4H` `6H` `12H` `1D` `1W` `1M`
+
+#### 账户
+
+```bash
+okx account balance
+okx account balance BTC,ETH
+```
+
+#### 现货交易
+
+```bash
+okx spot orders
+okx spot orders --instId BTC-USDT --history
+okx spot fills --instId BTC-USDT
+okx spot place --instId BTC-USDT --side buy --ordType market --sz 100
+okx spot place --instId BTC-USDT --side sell --ordType limit --sz 0.001 --px 70000
+okx spot cancel BTC-USDT --ordId 123456
+```
+
+#### 合约交易
+
+```bash
+okx swap positions
+okx swap orders --history
+okx swap place --instId BTC-USDT-SWAP --side buy --ordType market --sz 1 --posSide long --tdMode cross
+okx swap place --instId BTC-USDT-SWAP --side sell --ordType market --sz 1 --posSide long --tdMode cross
+okx swap cancel BTC-USDT-SWAP --ordId 123456
+okx swap leverage --instId BTC-USDT-SWAP --lever 10 --mgnMode cross
+```
+
+#### 配置管理
+
+```bash
+okx config show
+okx config set default_profile live
+```
+
+### 全局选项
+
+| 选项 | 说明 |
+|---|---|
+| `--profile <name>` | 指定 profile |
+| `--json` | 输出原始 JSON（适合脚本/管道处理） |
+| `--help` | 显示帮助 |
+
+```bash
+# 结合 jq 使用
+okx account balance --json | jq '.[] | {ccy: .ccy, eq: .eq}'
+
+# 结合技术分析脚本 + Claude
+okx market candles BTC-USDT --bar 1H --limit 200 --json \
+  | python3 demo/cli/analyze.py --inst BTC-USDT \
+  | claude -p "基于以上技术分析，现在值得做多吗？给出简短建议"
+```
+
+---
+
+## 开发
+
+```bash
+pnpm install && pnpm run build
+
+# 单独构建
+pnpm --filter @okx-hub/core build
+pnpm --filter okx-mcp-server build
+pnpm --filter okx-cli build
+```
+
+### 项目结构
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.okg.com/retail-ai/okx-trade-mcp.git
-git branch -M master
-git push -uf origin master
+packages/
+├── core/    # 共享 OKX client、tools、工具函数
+├── mcp/     # MCP Server
+└── cli/     # CLI 工具
+demo/
+└── cli/     # 技术分析示例（analyze.py + run.sh）
+docs/
+└── tech-design-phase1.md   # 技术设计文档
 ```
-
-## Integrate with your tools
-
-- [ ] [Set up project integrations](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/settings/integrations)
-
-## Collaborate with your team
-
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
