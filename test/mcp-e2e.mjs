@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // test/mcp-e2e.mjs — Full E2E tests via MCP stdio JSON-RPC (demo mode)
 //
-// Covers all 29 tools (account_transfer skipped — moves real funds).
+// Covers all 43 tools (account_transfer skipped — moves real funds).
 //
 // Usage:
 //   OKX_API_KEY=xxx OKX_SECRET_KEY=xxx OKX_PASSPHRASE=xxx node test/mcp-e2e.mjs
@@ -195,6 +195,48 @@ try {
       throw new Error("Expected non-empty candles array");
   });
 
+  await test("market_get_candles history BTC-USDT 1H", async () => {
+    const parsed = assertOk(await client.callTool("market_get_candles", { instId: "BTC-USDT", bar: "1H", limit: 3, history: true }));
+    if (!Array.isArray(parsed.data?.data) || parsed.data.data.length === 0)
+      throw new Error("Expected non-empty historical candles array");
+  });
+
+  await test("market_get_instruments SWAP", async () => {
+    const parsed = assertOk(await client.callTool("market_get_instruments", { instType: "SWAP" }));
+    if (!Array.isArray(parsed.data?.data) || parsed.data.data.length === 0)
+      throw new Error("Expected non-empty instruments array");
+  });
+
+  await test("market_get_funding_rate BTC-USDT-SWAP", async () => {
+    const parsed = assertOk(await client.callTool("market_get_funding_rate", { instId: "BTC-USDT-SWAP" }));
+    const rate = parsed.data?.data?.[0]?.fundingRate;
+    if (rate === undefined) throw new Error("Expected fundingRate field");
+  });
+
+  await test("market_get_funding_rate history BTC-USDT-SWAP", async () => {
+    const parsed = assertOk(await client.callTool("market_get_funding_rate", { instId: "BTC-USDT-SWAP", history: true, limit: 3 }));
+    if (!Array.isArray(parsed.data?.data) || parsed.data.data.length === 0)
+      throw new Error("Expected non-empty funding rate history");
+  });
+
+  await test("market_get_mark_price BTC-USDT-SWAP", async () => {
+    const parsed = assertOk(await client.callTool("market_get_mark_price", { instType: "SWAP", instId: "BTC-USDT-SWAP" }));
+    const mp = parsed.data?.data?.[0]?.markPx;
+    if (!mp || isNaN(Number(mp))) throw new Error(`Expected numeric markPx, got: ${mp}`);
+  });
+
+  await test("market_get_trades BTC-USDT", async () => {
+    const parsed = assertOk(await client.callTool("market_get_trades", { instId: "BTC-USDT", limit: 5 }));
+    if (!Array.isArray(parsed.data?.data) || parsed.data.data.length === 0)
+      throw new Error("Expected non-empty trades array");
+  });
+
+  await test("market_get_open_interest SWAP", async () => {
+    const parsed = assertOk(await client.callTool("market_get_open_interest", { instType: "SWAP", instId: "BTC-USDT-SWAP" }));
+    const oi = parsed.data?.data?.[0]?.oi;
+    if (oi === undefined) throw new Error("Expected oi field");
+  });
+
   // ── Private phases ────────────────────────────────────────────────────────
   if (!creds) {
     console.log("\n⚠️  No credentials — skipping private tests.");
@@ -260,6 +302,32 @@ try {
       assertOk(await client.callTool("swap_get_algo_orders", { status: "pending" }));
     });
 
+    await test("account_get_bills", async () => {
+      assertOk(await client.callTool("account_get_bills", { limit: 5 }));
+    });
+
+    await test("account_get_positions_history", async () => {
+      assertOk(await client.callTool("account_get_positions_history", { limit: 5 }));
+    });
+
+    await test("account_get_trade_fee SWAP", async () => {
+      const parsed = assertOk(await client.callTool("account_get_trade_fee", { instType: "SWAP" }));
+      if (!parsed.data?.data?.[0]?.taker) throw new Error("Expected taker fee field");
+    });
+
+    await test("account_get_config", async () => {
+      const parsed = assertOk(await client.callTool("account_get_config", {}));
+      if (!parsed.data?.data?.[0]?.posMode) throw new Error("Expected posMode field");
+    });
+
+    await test("spot_get_fills archive", async () => {
+      assertOk(await client.callTool("spot_get_fills", { archive: true, limit: 5 }));
+    });
+
+    await test("swap_get_fills archive", async () => {
+      assertOk(await client.callTool("swap_get_fills", { archive: true, limit: 5 }));
+    });
+
     // ── Phase 3: Spot write (demo) (6 tools) ─────────────────────────────
     section("spot write (demo)");
 
@@ -285,6 +353,15 @@ try {
     });
 
     if (spotOrdId) {
+      await test("spot_get_order by ordId", async () => {
+        const parsed = assertOk(await client.callTool("spot_get_order", {
+          instId: "BTC-USDT",
+          ordId: spotOrdId,
+        }));
+        if (parsed.data?.data?.[0]?.ordId !== spotOrdId)
+          throw new Error(`Expected ordId ${spotOrdId}, got: ${parsed.data?.data?.[0]?.ordId}`);
+      });
+
       await test("spot_amend_order change price", async () => {
         const parsed = assertOk(await client.callTool("spot_amend_order", {
           instId: "BTC-USDT",
@@ -370,6 +447,15 @@ try {
     });
 
     if (swapLimitOrdId) {
+      await test("swap_get_order by ordId", async () => {
+        const parsed = assertOk(await client.callTool("swap_get_order", {
+          instId: "BTC-USDT-SWAP",
+          ordId: swapLimitOrdId,
+        }));
+        if (parsed.data?.data?.[0]?.ordId !== swapLimitOrdId)
+          throw new Error(`Expected ordId ${swapLimitOrdId}, got: ${parsed.data?.data?.[0]?.ordId}`);
+      });
+
       await test("swap_cancel_order", async () => {
         assertOk(await client.callTool("swap_cancel_order", {
           instId: "BTC-USDT-SWAP",
@@ -541,6 +627,10 @@ try {
         instId: "BTC-USDT-SWAP",
         mgnMode: "cross",
       }));
+    });
+
+    await test("account_set_position_mode net_mode (idempotent)", async () => {
+      assertOk(await client.callTool("account_set_position_mode", { posMode: "net_mode" }));
     });
   }
 } finally {
