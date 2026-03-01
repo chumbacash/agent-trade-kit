@@ -93,18 +93,6 @@ okx-trade-mcp --modules all          # all modules
 
 ## okx-trade-cli
 
-### Install
-
-```bash
-# Register global okx command (run once after build)
-cd packages/cli && pnpm link --global && cd ../..
-
-# Verify
-okx market ticker BTC-USDT   # no key required
-okx --profile demo account balance
-okx --profile live swap positions
-```
-
 ### Commands
 
 #### Market data (no API key required)
@@ -281,16 +269,6 @@ okx-trade-mcp --modules all          # 加载所有模块
 ## okx-trade-cli
 
 ### 安装
-
-```bash
-# 注册 okx 全局命令（构建完成后执行一次）
-cd packages/cli && pnpm link --global && cd ../..
-
-# 验证
-okx market ticker BTC-USDT   # 无需 Key，直接可用
-okx --profile demo account balance
-okx --profile live swap positions
-```
 
 ### 命令
 
