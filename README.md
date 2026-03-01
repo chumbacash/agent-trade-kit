@@ -16,17 +16,15 @@ OKX toolkit with two standalone packages:
 
 ## Quick Start
 
-**Prerequisites:** Node.js >= 18, pnpm (installed in step 1 if missing)
+**Prerequisites:** Node.js >= 18
 
 ```bash
-# 1. Install pnpm (skip if already)
-npm install -g pnpm && pnpm setup && source ~/.zshrc
+# 1. Install packages
+npm install -g okx-trade-mcp okx-trade-cli
 
-# 2. Install deps & build
-pnpm install && pnpm run build
-
-# 3. Configure API credentials
-mkdir -p ~/.okx && cp config.toml.example ~/.okx/config.toml
+# 2. Configure API credentials
+mkdir -p ~/.okx && curl -fsSL https://raw.githubusercontent.com/USER/REPO/master/config.toml.example -o ~/.okx/config.toml
+# or: copy config.toml.example manually
 vim ~/.okx/config.toml
 ```
 
@@ -47,10 +45,10 @@ passphrase = "your-demo-passphrase"
 demo = true
 ```
 
-> Live key: OKX website → Profile → API → Create API Key  
+> Live key: OKX website → Profile → API → Create API Key
 > Demo key: OKX website → Trading → Demo Trading → API Management
 
-After build, choose your usage:
+Choose your usage:
 
 - **AI integrations (Claude / Cursor)** → See [okx-trade-mcp](#okx-trade-mcp)
 - **CLI usage** → See [okx-trade-cli](#okx-trade-cli)
@@ -173,16 +171,14 @@ okx account balance --json | jq '.[] | {ccy: .ccy, eq: .eq}'
 
 ---
 
-## Development
+## Build from Source
 
 ```bash
-pnpm install && pnpm run build
-
-# Build individually
-pnpm --filter @okx-hub/core build
-pnpm --filter okx-trade-mcp build
-pnpm --filter okx-trade-cli build
+git clone https://github.com/USER/REPO.git && cd okx-hub
+pnpm install && pnpm build
 ```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full development guide.
 
 ### Project Structure
 
@@ -207,17 +203,15 @@ OKX 工具集，包含两个独立包：
 
 ## 快速开始
 
-**前置要求：** Node.js >= 18，pnpm（没有的话第一步会装）
+**前置要求：** Node.js >= 18
 
 ```bash
-# 1. 安装 pnpm（已装可跳过）
-npm install -g pnpm && pnpm setup && source ~/.zshrc
+# 1. 安装
+npm install -g okx-trade-mcp okx-trade-cli
 
-# 2. 安装依赖 & 构建
-pnpm install && pnpm run build
-
-# 3. 配置 API 凭证
-mkdir -p ~/.okx && cp config.toml.example ~/.okx/config.toml
+# 2. 配置 API 凭证
+mkdir -p ~/.okx
+# 将 config.toml.example 复制到 ~/.okx/config.toml 后编辑
 vim ~/.okx/config.toml
 ```
 
@@ -238,10 +232,10 @@ passphrase = "your-demo-passphrase"
 demo = true
 ```
 
-> 真实盘 Key：OKX 官网 → 个人中心 → API → 创建 API Key  
+> 真实盘 Key：OKX 官网 → 个人中心 → API → 创建 API Key
 > 模拟盘 Key：OKX 官网 → 交易 → 模拟交易 → API 管理
 
-构建完成后按使用场景选择：
+按使用场景选择：
 
 - **AI 工具集成（Claude / Cursor）** → 看 [okx-trade-mcp](#okx-trade-mcp)
 - **终端命令行** → 看 [okx-trade-cli](#okx-trade-cli)
@@ -364,16 +358,14 @@ okx account balance --json | jq '.[] | {ccy: .ccy, eq: .eq}'
 
 ---
 
-## 开发
+## 从源码构建
 
 ```bash
-pnpm install && pnpm run build
-
-# 单独构建
-pnpm --filter @okx-hub/core build
-pnpm --filter okx-trade-mcp build
-pnpm --filter okx-trade-cli build
+git clone https://github.com/USER/REPO.git && cd okx-hub
+pnpm install && pnpm build
 ```
+
+详细开发指引见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ### 项目结构
 
