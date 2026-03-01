@@ -1,4 +1,4 @@
-# okx-hub
+# OKX Trade MCP Tools
 
 [![npm](https://img.shields.io/npm/v/okx-trade-mcp)](https://www.npmjs.com/package/okx-trade-mcp)
 [![npm](https://img.shields.io/npm/v/okx-trade-cli)](https://www.npmjs.com/package/okx-trade-cli)
