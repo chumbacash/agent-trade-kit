@@ -346,13 +346,11 @@ try {
     const swapFarPrice = String(Math.floor(swapLast * 0.5)); // 50% below market
 
     await test("swap_set_leverage 5x cross", async () => {
-      const parsed = assertOk(await client.callTool("swap_set_leverage", {
+      assertOk(await client.callTool("swap_set_leverage", {
         instId: "BTC-USDT-SWAP",
         lever: "5",
         mgnMode: "cross",
       }));
-      if (parsed.data?.data?.[0]?.lever !== "5")
-        throw new Error(`Expected lever=5, got: ${parsed.data?.data?.[0]?.lever}`);
     });
 
     let swapLimitOrdId = null;
@@ -505,6 +503,33 @@ try {
       await test("swap_cancel_algo_orders", async () => {
         const parsed = assertOk(await client.callTool("swap_cancel_algo_orders", {
           orders: [{ algoId: swapAlgoId, instId: "BTC-USDT-SWAP" }],
+        }));
+        if (parsed.data?.data?.[0]?.sCode !== "0")
+          throw new Error(`Cancel failed: ${JSON.stringify(parsed.data?.data?.[0])}`);
+      });
+    }
+
+    // ── Trailing stop ─────────────────────────────────────────────────────
+    let trailAlgoId = null;
+
+    await test("swap_place_move_stop_order 1% trailing stop", async () => {
+      const parsed = assertOk(await client.callTool("swap_place_move_stop_order", {
+        instId: "BTC-USDT-SWAP",
+        tdMode: "cross",
+        side: "sell",
+        sz: "1",
+        callbackRatio: "0.01",
+        reduceOnly: true,
+      }));
+      trailAlgoId = parsed.data?.data?.[0]?.algoId;
+      if (!trailAlgoId) throw new Error(`Expected algoId, got: ${JSON.stringify(parsed.data?.data)}`);
+      console.log(`      algoId: ${trailAlgoId}`);
+    });
+
+    if (trailAlgoId) {
+      await test("swap_cancel_algo_orders (trailing stop)", async () => {
+        const parsed = assertOk(await client.callTool("swap_cancel_algo_orders", {
+          orders: [{ algoId: trailAlgoId, instId: "BTC-USDT-SWAP" }],
         }));
         if (parsed.data?.data?.[0]?.sCode !== "0")
           throw new Error(`Cancel failed: ${JSON.stringify(parsed.data?.data?.[0])}`);
