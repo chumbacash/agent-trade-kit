@@ -1,5 +1,9 @@
-# okx-hub
+# OKX Trade MCP Tools
 
+[![npm](https://img.shields.io/npm/v/okx-trade-mcp)](https://www.npmjs.com/package/okx-trade-mcp)
+[![npm](https://img.shields.io/npm/v/okx-trade-cli)](https://www.npmjs.com/package/okx-trade-cli)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![CI](https://github.com/USER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/USER/REPO/actions/workflows/ci.yml)
 
 OKX toolkit with two standalone packages:
 
@@ -12,18 +16,14 @@ OKX toolkit with two standalone packages:
 
 ## Quick Start
 
-**Prerequisites:** Node.js >= 18, pnpm (installed in step 1 if missing)
+**Prerequisites:** Node.js >= 18
 
 ```bash
-# 1. Install pnpm (skip if already)
-npm install -g pnpm && pnpm setup && source ~/.zshrc
+# 1. Install packages
+npm install -g okx-trade-mcp okx-trade-cli
 
-# 2. Install deps & build
-pnpm install && pnpm run build
-
-# 3. Configure API credentials
-mkdir -p ~/.okx && cp config.toml.example ~/.okx/config.toml
-vim ~/.okx/config.toml
+# 2. Configure API credentials
+mkdir -p ~/.okx && vim ~/.okx/config.toml
 ```
 
 Fill live and demo keys in `~/.okx/config.toml`:
@@ -43,10 +43,10 @@ passphrase = "your-demo-passphrase"
 demo = true
 ```
 
-> Live key: OKX website → Profile → API → Create API Key  
+> Live key: OKX website → Profile → API → Create API Key
 > Demo key: OKX website → Trading → Demo Trading → API Management
 
-After build, choose your usage:
+Choose your usage:
 
 - **AI integrations (Claude / Cursor)** → See [okx-trade-mcp](#okx-trade-mcp)
 - **CLI usage** → See [okx-trade-cli](#okx-trade-cli)
@@ -66,13 +66,13 @@ Credentials are read from `~/.okx/config.toml`; only profile is needed in JSON:
 ```json
 {
   "mcpServers": {
-    "okx-live": {
-      "command": "node",
-      "args": ["/path/to/okx_hub/packages/mcp/dist/index.js", "--profile", "live", "--modules", "all"]
+    "okx-LIVE-real-money": {
+      "command": "okx-trade-mcp",
+      "args": ["--profile", "live", "--modules", "all"]
     },
-    "okx-demo": {
-      "command": "node",
-      "args": ["/path/to/okx_hub/packages/mcp/dist/index.js", "--profile", "demo"]
+    "okx-DEMO-simulated-trading": {
+      "command": "okx-trade-mcp",
+      "args": ["--profile", "demo", "--modules", "all"]
     }
   }
 }
@@ -92,18 +92,6 @@ okx-trade-mcp --modules all          # all modules
 ---
 
 ## okx-trade-cli
-
-### Install
-
-```bash
-# Register global okx command (run once after build)
-cd packages/cli && pnpm link --global && cd ../..
-
-# Verify
-okx market ticker BTC-USDT   # no key required
-okx --profile demo account balance
-okx --profile live swap positions
-```
 
 ### Commands
 
@@ -165,25 +153,18 @@ okx config set default_profile live
 ```bash
 # Use with jq
 okx account balance --json | jq '.[] | {ccy: .ccy, eq: .eq}'
-
-# With analysis script + Claude
-okx market candles BTC-USDT --bar 1H --limit 200 --json \
-  | python3 demo/cli/analyze.py --inst BTC-USDT \
-  | claude -p "基于以上技术分析，现在值得做多吗？给出简短建议"
 ```
 
 ---
 
-## Development
+## Build from Source
 
 ```bash
-pnpm install && pnpm run build
-
-# Build individually
-pnpm --filter @okx-hub/core build
-pnpm --filter okx-trade-mcp build
-pnpm --filter okx-trade-cli build
+git clone https://github.com/USER/REPO.git && cd okx-hub
+pnpm install && pnpm build
 ```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full development guide.
 
 ### Project Structure
 
@@ -192,10 +173,6 @@ packages/
 ├── core/    # shared client & tools
 ├── mcp/     # MCP Server
 └── cli/     # CLI tool
-demo/
-└── cli/     # analysis example (analyze.py + run.sh)
-docs/
-└── tech-design-phase1.md   # design doc
 ```
 
 ---
@@ -212,17 +189,15 @@ OKX 工具集，包含两个独立包：
 
 ## 快速开始
 
-**前置要求：** Node.js >= 18，pnpm（没有的话第一步会装）
+**前置要求：** Node.js >= 18
 
 ```bash
-# 1. 安装 pnpm（已装可跳过）
-npm install -g pnpm && pnpm setup && source ~/.zshrc
+# 1. 安装
+npm install -g okx-trade-mcp okx-trade-cli
 
-# 2. 安装依赖 & 构建
-pnpm install && pnpm run build
-
-# 3. 配置 API 凭证
-mkdir -p ~/.okx && cp config.toml.example ~/.okx/config.toml
+# 2. 配置 API 凭证
+mkdir -p ~/.okx
+# 将 config.toml.example 复制到 ~/.okx/config.toml 后编辑
 vim ~/.okx/config.toml
 ```
 
@@ -243,10 +218,10 @@ passphrase = "your-demo-passphrase"
 demo = true
 ```
 
-> 真实盘 Key：OKX 官网 → 个人中心 → API → 创建 API Key  
+> 真实盘 Key：OKX 官网 → 个人中心 → API → 创建 API Key
 > 模拟盘 Key：OKX 官网 → 交易 → 模拟交易 → API 管理
 
-构建完成后按使用场景选择：
+按使用场景选择：
 
 - **AI 工具集成（Claude / Cursor）** → 看 [okx-trade-mcp](#okx-trade-mcp)
 - **终端命令行** → 看 [okx-trade-cli](#okx-trade-cli)
@@ -266,13 +241,13 @@ demo = true
 ```json
 {
   "mcpServers": {
-    "okx-live": {
-      "command": "node",
-      "args": ["/path/to/okx_hub/packages/mcp/dist/index.js", "--profile", "live", "--modules", "all"]
+    "okx-LIVE-real-money": {
+      "command": "okx-trade-mcp",
+      "args": ["--profile", "live", "--modules", "all"]
     },
-    "okx-demo": {
-      "command": "node",
-      "args": ["/path/to/okx_hub/packages/mcp/dist/index.js", "--profile", "demo"]
+    "okx-DEMO-simulated-trading": {
+      "command": "okx-trade-mcp",
+      "args": ["--profile", "demo", "--modules", "all"]
     }
   }
 }
@@ -294,16 +269,6 @@ okx-trade-mcp --modules all          # 加载所有模块
 ## okx-trade-cli
 
 ### 安装
-
-```bash
-# 注册 okx 全局命令（构建完成后执行一次）
-cd packages/cli && pnpm link --global && cd ../..
-
-# 验证
-okx market ticker BTC-USDT   # 无需 Key，直接可用
-okx --profile demo account balance
-okx --profile live swap positions
-```
 
 ### 命令
 
@@ -365,25 +330,18 @@ okx config set default_profile live
 ```bash
 # 结合 jq 使用
 okx account balance --json | jq '.[] | {ccy: .ccy, eq: .eq}'
-
-# 结合技术分析脚本 + Claude
-okx market candles BTC-USDT --bar 1H --limit 200 --json \
-  | python3 demo/cli/analyze.py --inst BTC-USDT \
-  | claude -p "基于以上技术分析，现在值得做多吗？给出简短建议"
 ```
 
 ---
 
-## 开发
+## 从源码构建
 
 ```bash
-pnpm install && pnpm run build
-
-# 单独构建
-pnpm --filter @okx-hub/core build
-pnpm --filter okx-trade-mcp build
-pnpm --filter okx-trade-cli build
+git clone https://github.com/USER/REPO.git && cd okx-hub
+pnpm install && pnpm build
 ```
+
+详细开发指引见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ### 项目结构
 
@@ -392,8 +350,4 @@ packages/
 ├── core/    # 共享 OKX client、tools、工具函数
 ├── mcp/     # MCP Server
 └── cli/     # CLI 工具
-demo/
-└── cli/     # 技术分析示例（analyze.py + run.sh）
-docs/
-└── tech-design-phase1.md   # 技术设计文档
 ```
