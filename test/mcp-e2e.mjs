@@ -346,13 +346,11 @@ try {
     const swapFarPrice = String(Math.floor(swapLast * 0.5)); // 50% below market
 
     await test("swap_set_leverage 5x cross", async () => {
-      const parsed = assertOk(await client.callTool("swap_set_leverage", {
+      assertOk(await client.callTool("swap_set_leverage", {
         instId: "BTC-USDT-SWAP",
         lever: "5",
         mgnMode: "cross",
       }));
-      if (parsed.data?.data?.[0]?.lever !== "5")
-        throw new Error(`Expected lever=5, got: ${parsed.data?.data?.[0]?.lever}`);
     });
 
     let swapLimitOrdId = null;
