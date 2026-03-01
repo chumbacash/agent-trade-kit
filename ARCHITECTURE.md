@@ -314,35 +314,19 @@ Failed tool call response format:
 
 Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
 
-**Standard (npx — always latest version):**
-```json
-{
-  "mcpServers": {
-    "okx": {
-      "command": "npx",
-      "args": ["-y", "okx-trade-mcp"],
-      "env": {
-        "OKX_API_KEY": "your-api-key",
-        "OKX_SECRET_KEY": "your-secret-key",
-        "OKX_PASSPHRASE": "your-passphrase"
-      }
-    }
-  }
-}
-```
+Credentials are read from `~/.okx/config.toml` — only the profile name is needed here.
 
-**Demo trading:**
+**Standard (live + demo profiles):**
 ```json
 {
   "mcpServers": {
-    "okx-demo": {
-      "command": "npx",
-      "args": ["-y", "okx-trade-mcp", "--demo"],
-      "env": {
-        "OKX_API_KEY": "your-demo-api-key",
-        "OKX_SECRET_KEY": "your-demo-secret-key",
-        "OKX_PASSPHRASE": "your-demo-passphrase"
-      }
+    "okx-LIVE-real-money": {
+      "command": "okx-trade-mcp",
+      "args": ["--profile", "live", "--modules", "all"]
+    },
+    "okx-DEMO-simulated-trading": {
+      "command": "okx-trade-mcp",
+      "args": ["--profile", "demo", "--modules", "all"]
     }
   }
 }
@@ -353,8 +337,8 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
 {
   "mcpServers": {
     "okx-readonly": {
-      "command": "npx",
-      "args": ["-y", "okx-trade-mcp", "--modules", "market", "--read-only"]
+      "command": "okx-trade-mcp",
+      "args": ["--modules", "market", "--read-only"]
     }
   }
 }
