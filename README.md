@@ -132,6 +132,70 @@ Config file: `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (project-level)
 </details>
 
 <details>
+<summary>Claude Code CLI</summary>
+
+Run in terminal:
+
+```bash
+claude mcp add --transport stdio okx-trade-mcp -- okx-trade-mcp --profile live --modules all
+```
+
+Or create `.mcp.json` in your project root:
+
+```json
+{
+  "mcpServers": {
+    "okx-trade-mcp": {
+      "type": "stdio",
+      "command": "okx-trade-mcp",
+      "args": ["--profile", "live", "--modules", "all"]
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>VS Code</summary>
+
+Create `.mcp.json` in your project root (or `~/.claude.json` for global scope):
+
+```json
+{
+  "mcpServers": {
+    "okx-trade-mcp": {
+      "type": "stdio",
+      "command": "okx-trade-mcp",
+      "args": ["--profile", "live", "--modules", "all"]
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>Windsurf</summary>
+
+Config file:
+- macOS/Linux: `~/.codeium/windsurf/mcp_config.json`
+- Windows: `%USERPROFILE%\.codeium\windsurf\mcp_config.json`
+
+```json
+{
+  "mcpServers": {
+    "okx-trade-mcp": {
+      "command": "okx-trade-mcp",
+      "args": ["--profile", "live", "--modules", "all"]
+    }
+  }
+}
+```
+
+</details>
+
+<details>
 <summary>openCxxW</summary>
 
 Config file: `openCxxW.json`
@@ -376,6 +440,70 @@ demo = true
 {
   "mcpServers": {
     "okx-trade": {
+      "command": "okx-trade-mcp",
+      "args": ["--profile", "live", "--modules", "all"]
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>Claude Code CLI</summary>
+
+在终端执行：
+
+```bash
+claude mcp add --transport stdio okx-trade-mcp -- okx-trade-mcp --profile live --modules all
+```
+
+或在项目根目录创建 `.mcp.json`：
+
+```json
+{
+  "mcpServers": {
+    "okx-trade-mcp": {
+      "type": "stdio",
+      "command": "okx-trade-mcp",
+      "args": ["--profile", "live", "--modules", "all"]
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>VS Code</summary>
+
+在项目根目录创建 `.mcp.json`（或 `~/.claude.json` 全局生效）：
+
+```json
+{
+  "mcpServers": {
+    "okx-trade-mcp": {
+      "type": "stdio",
+      "command": "okx-trade-mcp",
+      "args": ["--profile", "live", "--modules", "all"]
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>Windsurf</summary>
+
+配置文件：
+- macOS/Linux：`~/.codeium/windsurf/mcp_config.json`
+- Windows：`%USERPROFILE%\.codeium\windsurf\mcp_config.json`
+
+```json
+{
+  "mcpServers": {
+    "okx-trade-mcp": {
       "command": "okx-trade-mcp",
       "args": ["--profile", "live", "--modules", "all"]
     }
