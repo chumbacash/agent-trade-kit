@@ -80,6 +80,23 @@ Credentials are read from `~/.okx/config.toml`; only profile is needed in JSON:
 
 Restart Claude Desktop after updating the config.
 
+**openCxxW config (`openCxxW.json`):**
+
+```json
+{
+  "mcpServers": {
+    "okx-LIVE-real-money": {
+      "command": "okx-trade-mcp",
+      "args": ["--profile", "live", "--modules", "all"]
+    },
+    "okx-DEMO-simulated-trading": {
+      "command": "okx-trade-mcp",
+      "args": ["--profile", "demo", "--modules", "all"]
+    }
+  }
+}
+```
+
 ### Startup Options
 
 ```bash
@@ -254,6 +271,23 @@ demo = true
 ```
 
 修改配置后重启 Claude Desktop 生效。
+
+**openCxxW 配置（`openCxxW.json`）：**
+
+```json
+{
+  "mcpServers": {
+    "okx-LIVE-real-money": {
+      "command": "okx-trade-mcp",
+      "args": ["--profile", "live", "--modules", "all"]
+    },
+    "okx-DEMO-simulated-trading": {
+      "command": "okx-trade-mcp",
+      "args": ["--profile", "demo", "--modules", "all"]
+    }
+  }
+}
+```
 
 ### 启动选项
 
