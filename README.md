@@ -3,14 +3,42 @@
 [![npm](https://img.shields.io/npm/v/okx-trade-mcp)](https://www.npmjs.com/package/okx-trade-mcp)
 [![npm](https://img.shields.io/npm/v/okx-trade-cli)](https://www.npmjs.com/package/okx-trade-cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![CI](https://github.com/USER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/USER/REPO/actions/workflows/ci.yml)
 
 OKX toolkit with two standalone packages:
 
 | Package | Description |
 |---|---|
-| `okx-trade-mcp` | MCP server for Claude/Cursor |
+| `okx-trade-mcp` | MCP server for Claude / Cursor and any MCP-compatible AI client |
 | `okx-trade-cli` | CLI for operating OKX from terminal |
+
+---
+
+## What is this?
+
+OKX Trade MCP connects AI assistants directly to your OKX account via the [Model Context Protocol](https://modelcontextprotocol.io). Instead of switching between your AI and the exchange UI, you describe what you want — the AI calls the right tools and executes it.
+
+It runs as a **local process** with your API keys stored only on your machine. No cloud services, no data leaving your device.
+
+## Features
+
+| | |
+|---|---|
+| **43 tools across 5 modules** | Full trading lifecycle: market data → orders → algo orders → account management |
+| **Algo orders built-in** | Conditional, OCO take-profit/stop-loss, trailing stop |
+| **Safety controls** | `--read-only` flag, per-module filtering, built-in rate limiter |
+| **Zero infrastructure** | Local stdio process, no server or database required |
+| **MCP standard** | Works with Claude Desktop, Cursor, openCxxW, and any MCP-compatible client |
+| **Open source** | MIT license, API keys never leave your machine |
+
+## Modules
+
+| Module | Tools | Description |
+|--------|-------|-------------|
+| `market` | 9 | Ticker, orderbook, candles (+history), funding rate, mark price, open interest |
+| `spot` | 10 | Place/cancel/amend orders, fills (+archive), conditional orders, OCO |
+| `swap` | 11 | Perpetual trading, batch orders, trailing stop, positions, leverage |
+| `algo` | 4 | Conditional, OCO, trailing stop (SWAP) |
+| `account` | 9 | Balance, bills, positions history, fee rates, config, position mode |
 
 ---
 
@@ -57,11 +85,14 @@ Choose your usage:
 
 ### Config
 
-**Claude Desktop config path:**
+Credentials are read from `~/.okx/config.toml`; only the profile name is needed in the client config.
+
+<details>
+<summary>Claude Desktop</summary>
+
+Config file:
 - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
-
-Credentials are read from `~/.okx/config.toml`; only profile is needed in JSON:
 
 ```json
 {
@@ -80,7 +111,30 @@ Credentials are read from `~/.okx/config.toml`; only profile is needed in JSON:
 
 Restart Claude Desktop after updating the config.
 
-**openCxxW config (`openCxxW.json`):**
+</details>
+
+<details>
+<summary>Cursor</summary>
+
+Config file: `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (project-level)
+
+```json
+{
+  "mcpServers": {
+    "okx-trade": {
+      "command": "okx-trade-mcp",
+      "args": ["--profile", "live", "--modules", "all"]
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>openCxxW</summary>
+
+Config file: `openCxxW.json`
 
 ```json
 {
@@ -96,6 +150,8 @@ Restart Claude Desktop after updating the config.
   }
 }
 ```
+
+</details>
 
 ### Startup Options
 
@@ -194,6 +250,13 @@ packages/
 
 ---
 
+---
+
+# OKX Trade MCP 工具集
+
+[![npm](https://img.shields.io/npm/v/okx-trade-mcp)](https://www.npmjs.com/package/okx-trade-mcp)
+[![npm](https://img.shields.io/npm/v/okx-trade-cli)](https://www.npmjs.com/package/okx-trade-cli)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 OKX 工具集，包含两个独立包：
 
@@ -201,6 +264,35 @@ OKX 工具集，包含两个独立包：
 |---|---|
 | `okx-trade-mcp` | MCP Server，供 Claude / Cursor 等 AI 工具调用 |
 | `okx-trade-cli` | 命令行工具，直接在终端操作 OKX |
+
+---
+
+## 这是什么？
+
+OKX Trade MCP 通过 [Model Context Protocol](https://modelcontextprotocol.io) 将 AI 助手直接接入你的 OKX 账户。不用再在 AI 和交易所界面之间来回切换，直接描述你想做什么，AI 调用对应工具完成执行。
+
+以**本地进程**方式运行，API Key 仅存储在你的机器上，无云服务，数据不离开本地。
+
+## 功能亮点
+
+| | |
+|---|---|
+| **43 个工具，5 大模块** | 完整交易生命周期：行情 → 下单 → 算法单 → 账户管理 |
+| **内置算法单** | 条件单、OCO 止盈止损、追踪止损 |
+| **安全控制** | `--read-only` 只读模式、按模块过滤、内置限速器 |
+| **零基础设施** | 本地 stdio 进程，无需服务器或数据库 |
+| **MCP 标准** | 兼容 Claude Desktop、Cursor、openCxxW 及所有 MCP 客户端 |
+| **开源** | MIT 协议，API Key 不离开本机 |
+
+## 模块概览
+
+| 模块 | 工具数 | 说明 |
+|------|--------|------|
+| `market` | 9 | Ticker、盘口、K线（含历史）、资金费率、标记价格、持仓量 |
+| `spot` | 10 | 下单/改单/撤单、成交记录（含归档）、条件单、OCO |
+| `swap` | 11 | 合约交易、批量操作、追踪止损、持仓、杠杆 |
+| `algo` | 4 | 条件单、OCO、追踪止损（SWAP） |
+| `account` | 9 | 余额、账单、持仓历史、手续费率、配置、仓位模式 |
 
 ---
 
@@ -213,9 +305,7 @@ OKX 工具集，包含两个独立包：
 npm install -g okx-trade-mcp okx-trade-cli
 
 # 2. 配置 API 凭证
-mkdir -p ~/.okx
-# 将 config.toml.example 复制到 ~/.okx/config.toml 后编辑
-vim ~/.okx/config.toml
+mkdir -p ~/.okx && vim ~/.okx/config.toml
 ```
 
 `~/.okx/config.toml` 填入真实盘和模拟盘的 Key：
@@ -240,8 +330,8 @@ demo = true
 
 按使用场景选择：
 
-- **AI 工具集成（Claude / Cursor）** → 看 [okx-trade-mcp](#okx-trade-mcp)
-- **终端命令行** → 看 [okx-trade-cli](#okx-trade-cli)
+- **AI 工具集成（Claude / Cursor）** → 看 [okx-trade-mcp](#okx-trade-mcp-1)
+- **终端命令行** → 看 [okx-trade-cli](#okx-trade-cli-1)
 
 ---
 
@@ -249,11 +339,14 @@ demo = true
 
 ### 配置
 
-**Claude Desktop 配置文件路径：**
+凭证从 `~/.okx/config.toml` 读取，客户端配置中只需指定 profile 名称。
+
+<details>
+<summary>Claude Desktop</summary>
+
+配置文件路径：
 - macOS：`~/Library/Application Support/Claude/claude_desktop_config.json`
 - Windows：`%APPDATA%\Claude\claude_desktop_config.json`
-
-凭证从 `~/.okx/config.toml` 读取，JSON 里只需指定 profile：
 
 ```json
 {
@@ -272,7 +365,30 @@ demo = true
 
 修改配置后重启 Claude Desktop 生效。
 
-**openCxxW 配置（`openCxxW.json`）：**
+</details>
+
+<details>
+<summary>Cursor</summary>
+
+配置文件：`~/.cursor/mcp.json`（全局）或 `.cursor/mcp.json`（项目级）
+
+```json
+{
+  "mcpServers": {
+    "okx-trade": {
+      "command": "okx-trade-mcp",
+      "args": ["--profile", "live", "--modules", "all"]
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>openCxxW</summary>
+
+配置文件：`openCxxW.json`
 
 ```json
 {
@@ -289,6 +405,8 @@ demo = true
 }
 ```
 
+</details>
+
 ### 启动选项
 
 ```bash
@@ -301,8 +419,6 @@ okx-trade-mcp --modules all          # 加载所有模块
 ---
 
 ## okx-trade-cli
-
-### 安装
 
 ### 命令
 
