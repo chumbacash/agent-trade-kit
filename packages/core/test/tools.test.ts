@@ -170,6 +170,69 @@ describe("market_get_open_interest", () => {
   });
 });
 
+describe("market_get_index_ticker", () => {
+  const tools = registerMarketTools();
+  const tool = tools.find((t) => t.name === "market_get_index_ticker")!;
+
+  it("calls /market/index-tickers", async () => {
+    const { client, getLastCall } = makeMockClient();
+    await tool.handler({}, makeContext(client));
+    assert.equal(getLastCall()?.endpoint, "/api/v5/market/index-tickers");
+  });
+
+  it("passes instId filter when provided", async () => {
+    const { client, getLastCall } = makeMockClient();
+    await tool.handler({ instId: "BTC-USD" }, makeContext(client));
+    assert.equal(getLastCall()?.params.instId, "BTC-USD");
+  });
+
+  it("omits instId when not provided (returns all indices)", async () => {
+    const { client, getLastCall } = makeMockClient();
+    await tool.handler({}, makeContext(client));
+    assert.equal(getLastCall()?.params.instId, undefined);
+  });
+});
+
+describe("market_get_index_candles", () => {
+  const tools = registerMarketTools();
+  const tool = tools.find((t) => t.name === "market_get_index_candles")!;
+
+  it("calls /market/index-candles by default", async () => {
+    const { client, getLastCall } = makeMockClient();
+    await tool.handler({ instId: "BTC-USD" }, makeContext(client));
+    assert.equal(getLastCall()?.endpoint, "/api/v5/market/index-candles");
+  });
+
+  it("calls /market/history-index-candles when history=true", async () => {
+    const { client, getLastCall } = makeMockClient();
+    await tool.handler({ instId: "BTC-USD", history: true }, makeContext(client));
+    assert.equal(getLastCall()?.endpoint, "/api/v5/market/history-index-candles");
+  });
+
+  it("passes bar parameter", async () => {
+    const { client, getLastCall } = makeMockClient();
+    await tool.handler({ instId: "BTC-USD", bar: "1H" }, makeContext(client));
+    assert.equal(getLastCall()?.params.bar, "1H");
+  });
+});
+
+describe("market_get_price_limit", () => {
+  const tools = registerMarketTools();
+  const tool = tools.find((t) => t.name === "market_get_price_limit")!;
+
+  it("calls /public/price-limit", async () => {
+    const { client, getLastCall } = makeMockClient();
+    await tool.handler({ instId: "BTC-USDT-SWAP" }, makeContext(client));
+    assert.equal(getLastCall()?.endpoint, "/api/v5/public/price-limit");
+  });
+
+  it("passes instId", async () => {
+    const { client, getLastCall } = makeMockClient();
+    await tool.handler({ instId: "ETH-USDT-SWAP" }, makeContext(client));
+    assert.equal(getLastCall()?.params.instId, "ETH-USDT-SWAP");
+  });
+});
+
 // ---------------------------------------------------------------------------
 // Spot trade tools
 // ---------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // test/mcp-e2e.mjs — Full E2E tests via MCP stdio JSON-RPC (demo mode)
 //
-// Covers all 48 tools (account_transfer skipped — moves real funds).
+// Covers all 51 tools (account_transfer skipped — moves real funds).
 //
 // Usage:
 //   OKX_API_KEY=xxx OKX_SECRET_KEY=xxx OKX_PASSPHRASE=xxx node test/mcp-e2e.mjs
@@ -235,6 +235,22 @@ try {
     const parsed = assertOk(await client.callTool("market_get_open_interest", { instType: "SWAP", instId: "BTC-USDT-SWAP" }));
     const oi = parsed.data?.data?.[0]?.oi;
     if (oi === undefined) throw new Error("Expected oi field");
+  });
+
+  await test("market_get_index_ticker BTC-USD", async () => {
+    assertOk(await client.callTool("market_get_index_ticker", { instId: "BTC-USD" }));
+  });
+
+  await test("market_get_index_ticker all (no filter)", async () => {
+    assertOk(await client.callTool("market_get_index_ticker", {}));
+  });
+
+  await test("market_get_index_candles BTC-USD", async () => {
+    assertOk(await client.callTool("market_get_index_candles", { instId: "BTC-USD", bar: "1H", limit: 5 }));
+  });
+
+  await test("market_get_price_limit BTC-USDT-SWAP", async () => {
+    assertOk(await client.callTool("market_get_price_limit", { instId: "BTC-USDT-SWAP" }));
   });
 
   // ── Private phases ────────────────────────────────────────────────────────
