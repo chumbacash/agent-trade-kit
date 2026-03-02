@@ -358,6 +358,128 @@ export function registerMarketTools(): ToolSpec[] {
       },
     },
     {
+      name: "market_get_index_ticker",
+      module: "market",
+      description:
+        "Get index ticker data (e.g. BTC-USD, ETH-USD index prices). " +
+        "Index prices are used for mark price calculation and are independent of any single exchange. " +
+        "Public endpoint. Rate limit: 20 req/s.",
+      isWrite: false,
+      inputSchema: {
+        type: "object",
+        properties: {
+          instId: {
+            type: "string",
+            description: "Index instrument ID, e.g. BTC-USD, ETH-USDT. Omit to return all indices.",
+          },
+          quoteCcy: {
+            type: "string",
+            description: "Quote currency filter, e.g. USD or USDT.",
+          },
+        },
+      },
+      handler: async (rawArgs, context) => {
+        const args = asRecord(rawArgs);
+        const response = await context.client.publicGet(
+          "/api/v5/market/index-tickers",
+          compactObject({
+            instId: readString(args, "instId"),
+            quoteCcy: readString(args, "quoteCcy"),
+          }),
+          publicRateLimit("market_get_index_ticker", 20),
+        );
+        return normalize(response);
+      },
+    },
+    {
+      name: "market_get_index_candles",
+      module: "market",
+      description:
+        "Get candlestick data for an index (e.g. BTC-USD index). " +
+        "history=false (default): recent candles up to 1440 bars. " +
+        "history=true: older historical data beyond the recent window. " +
+        "Public endpoint. Rate limit: 20 req/s.",
+      isWrite: false,
+      inputSchema: {
+        type: "object",
+        properties: {
+          instId: {
+            type: "string",
+            description: "Index instrument ID, e.g. BTC-USD.",
+          },
+          bar: {
+            type: "string",
+            enum: [...OKX_CANDLE_BARS],
+            description: "Bar size. Default 1m.",
+          },
+          after: {
+            type: "string",
+            description: "Pagination: records earlier than this timestamp (ms).",
+          },
+          before: {
+            type: "string",
+            description: "Pagination: records newer than this timestamp (ms).",
+          },
+          limit: {
+            type: "number",
+            description: "Number of results. Default 100, max 100.",
+          },
+          history: {
+            type: "boolean",
+            description: "Set true to query historical index candles older than the recent window.",
+          },
+        },
+        required: ["instId"],
+      },
+      handler: async (rawArgs, context) => {
+        const args = asRecord(rawArgs);
+        const isHistory = readBoolean(args, "history") ?? false;
+        const path = isHistory
+          ? "/api/v5/market/history-index-candles"
+          : "/api/v5/market/index-candles";
+        const response = await context.client.publicGet(
+          path,
+          compactObject({
+            instId: requireString(args, "instId"),
+            bar: readString(args, "bar"),
+            after: readString(args, "after"),
+            before: readString(args, "before"),
+            limit: readNumber(args, "limit"),
+          }),
+          publicRateLimit("market_get_index_candles", 20),
+        );
+        return normalize(response);
+      },
+    },
+    {
+      name: "market_get_price_limit",
+      module: "market",
+      description:
+        "Get the current price limit (upper and lower bands) for a SWAP or FUTURES instrument. " +
+        "Orders placed outside these limits will be rejected by OKX. " +
+        "Public endpoint. Rate limit: 20 req/s.",
+      isWrite: false,
+      inputSchema: {
+        type: "object",
+        properties: {
+          instId: {
+            type: "string",
+            description: "SWAP or FUTURES instrument ID, e.g. BTC-USDT-SWAP.",
+          },
+        },
+        required: ["instId"],
+      },
+      handler: async (rawArgs, context) => {
+        const args = asRecord(rawArgs);
+        const response = await context.client.publicGet(
+          "/api/v5/public/price-limit",
+          { instId: requireString(args, "instId") },
+          publicRateLimit("market_get_price_limit", 20),
+        );
+        return normalize(response);
+      },
+    },
+    {
       name: "market_get_open_interest",
       module: "market",
       description:
