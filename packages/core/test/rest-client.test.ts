@@ -433,3 +433,38 @@ describe("OkxRestClient — trace ID extraction", () => {
     );
   });
 });
+
+// ---------------------------------------------------------------------------
+// User-Agent header
+// ---------------------------------------------------------------------------
+
+/** Capture the Request object passed to fetch and return a success response. */
+function capturingFetch(capture: { req?: Request }): typeof globalThis.fetch {
+  return async (input, init) => {
+    capture.req = new Request(input, init);
+    return new Response(JSON.stringify({ code: "0", msg: "", data: [] }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  };
+}
+
+describe("OkxRestClient — User-Agent header", () => {
+  it("sets User-Agent when userAgent is configured", async () => {
+    const captured: { req?: Request } = {};
+    const client = new OkxRestClient({ ...BASE_CONFIG, userAgent: "okx-trade-mcp/1.0.2" });
+    await withFetch(capturingFetch(captured), () =>
+      client.publicGet("/api/v5/market/ticker"),
+    );
+    assert.equal(captured.req?.headers.get("User-Agent"), "okx-trade-mcp/1.0.2");
+  });
+
+  it("does not set User-Agent when userAgent is not configured", async () => {
+    const captured: { req?: Request } = {};
+    const client = new OkxRestClient(BASE_CONFIG);
+    await withFetch(capturingFetch(captured), () =>
+      client.publicGet("/api/v5/market/ticker"),
+    );
+    assert.equal(captured.req?.headers.get("User-Agent"), null);
+  });
+});
