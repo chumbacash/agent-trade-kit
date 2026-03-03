@@ -26,6 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **README**: "Reporting Issues / 报错反馈" section with example error payloads
 - **Grid Bot (module: `bot`)**: 5 new tools for OKX Trading Bot grid strategies — `grid_get_orders`, `grid_get_order_details`, `grid_get_sub_orders` (read), `grid_create_order`, `grid_stop_order` (write). Covers Spot Grid, Contract Grid, and Moon Grid.
 
+### Fixed
+
+- **`spot_get_algo_orders`**: fixed `400 Parameter ordType error` when called without an `ordType` filter — now fetches `conditional` and `oco` types in parallel and merges results, matching the behaviour of `swap_get_algo_orders`
+
 ### Changed
 
 - Total tools: 48 → 57
