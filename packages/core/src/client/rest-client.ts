@@ -120,6 +120,10 @@ export class OkxRestClient {
       Accept: "application/json",
     });
 
+    if (this.config.userAgent) {
+      headers.set("User-Agent", this.config.userAgent);
+    }
+
     if (config.auth === "private") {
       if (!this.config.hasAuth) {
         throw new ConfigError(
