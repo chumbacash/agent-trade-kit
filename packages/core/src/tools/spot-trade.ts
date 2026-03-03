@@ -471,19 +471,34 @@ export function registerSpotTradeTools(): ToolSpec[] {
           status === "history"
             ? "/api/v5/trade/orders-algo-history"
             : "/api/v5/trade/orders-algo-pending";
-        const response = await context.client.privateGet(
-          path,
-          compactObject({
-            instType: "SPOT",
-            instId: readString(args, "instId"),
-            ordType: readString(args, "ordType"),
-            after: readString(args, "after"),
-            before: readString(args, "before"),
-            limit: readNumber(args, "limit"),
-          }),
-          privateRateLimit("spot_get_algo_orders", 20),
-        );
-        return normalize(response);
+        const ordType = readString(args, "ordType");
+        const baseParams = compactObject({
+          instType: "SPOT",
+          instId: readString(args, "instId"),
+          after: readString(args, "after"),
+          before: readString(args, "before"),
+          limit: readNumber(args, "limit"),
+        });
+
+        if (ordType) {
+          const response = await context.client.privateGet(
+            path,
+            { ...baseParams, ordType },
+            privateRateLimit("spot_get_algo_orders", 20),
+          );
+          return normalize(response);
+        }
+
+        // ordType is required by OKX; fetch both spot types in parallel and merge
+        const [r1, r2] = await Promise.all([
+          context.client.privateGet(path, { ...baseParams, ordType: "conditional" }, privateRateLimit("spot_get_algo_orders", 20)),
+          context.client.privateGet(path, { ...baseParams, ordType: "oco" }, privateRateLimit("spot_get_algo_orders", 20)),
+        ]);
+        const merged = [
+          ...((r1.data as unknown[]) ?? []),
+          ...((r2.data as unknown[]) ?? []),
+        ];
+        return { endpoint: r1.endpoint, requestTime: r1.requestTime, data: merged };
       },
     },
     {
