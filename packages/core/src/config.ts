@@ -7,6 +7,7 @@ export interface CliOptions {
   readOnly: boolean;
   demo: boolean;
   profile?: string;
+  userAgent?: string;
 }
 
 export interface OkxConfig {
@@ -19,6 +20,7 @@ export interface OkxConfig {
   modules: ModuleId[];
   readOnly: boolean;
   demo: boolean;
+  userAgent?: string;
 }
 
 function parseModuleList(rawModules?: string): ModuleId[] {
@@ -116,5 +118,6 @@ export function loadConfig(cli: CliOptions): OkxConfig {
     modules: parseModuleList(cli.modules),
     readOnly: cli.readOnly,
     demo,
+    userAgent: cli.userAgent,
   };
 }

@@ -152,7 +152,7 @@ async function main(): Promise<void> {
     return;
   }
 
-  const config = loadProfileConfig({ profile: values.profile });
+  const config = loadProfileConfig({ profile: values.profile, userAgent: `okx-trade-cli/${CLI_VERSION}` });
   const client = new OkxRestClient(config);
 
   if (module === "market") {

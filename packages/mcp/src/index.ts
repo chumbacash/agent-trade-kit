@@ -1,7 +1,7 @@
 import { parseArgs } from "node:util";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { loadConfig, toToolErrorPayload, checkForUpdates } from "@okx-hub/core";
-import { SERVER_VERSION } from "./constants.js";
+import { SERVER_NAME, SERVER_VERSION } from "./constants.js";
 import { createServer } from "./server.js";
 
 function printHelp(): void {
@@ -83,6 +83,7 @@ export async function main(): Promise<void> {
     profile: cli.profile,
     readOnly: cli.readOnly,
     demo: cli.demo,
+    userAgent: `${SERVER_NAME}/${SERVER_VERSION}`,
   });
   const server = createServer(config);
   const transport = new StdioServerTransport();
