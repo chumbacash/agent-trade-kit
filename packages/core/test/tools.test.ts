@@ -659,3 +659,41 @@ describe("swap_batch_amend", () => {
     assert.equal(getLastCall()?.endpoint, "/api/v5/trade/amend-batch-orders");
   });
 });
+
+describe("spot_batch_cancel", () => {
+  const tools = registerSpotTradeTools();
+  const tool = tools.find((t) => t.name === "spot_batch_cancel")!;
+
+  it("calls /trade/cancel-batch-orders via POST", async () => {
+    const { client, getLastCall } = makeMockClient();
+    await tool.handler(
+      { orders: [{ instId: "BTC-USDT", ordId: "123" }] },
+      makeContext(client),
+    );
+    assert.equal(getLastCall()?.method, "POST");
+    assert.equal(getLastCall()?.endpoint, "/api/v5/trade/cancel-batch-orders");
+  });
+
+  it("throws when orders is empty", async () => {
+    const { client } = makeMockClient();
+    await assert.rejects(
+      () => tool.handler({ orders: [] }, makeContext(client)),
+      (err: unknown) => err instanceof Error,
+    );
+  });
+});
+
+describe("swap_batch_cancel", () => {
+  const tools = registerSwapTradeTools();
+  const tool = tools.find((t) => t.name === "swap_batch_cancel")!;
+
+  it("calls /trade/cancel-batch-orders via POST", async () => {
+    const { client, getLastCall } = makeMockClient();
+    await tool.handler(
+      { orders: [{ instId: "BTC-USDT-SWAP", ordId: "456" }] },
+      makeContext(client),
+    );
+    assert.equal(getLastCall()?.method, "POST");
+    assert.equal(getLastCall()?.endpoint, "/api/v5/trade/cancel-batch-orders");
+  });
+});
