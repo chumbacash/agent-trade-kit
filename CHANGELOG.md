@@ -33,6 +33,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Grid bot endpoint paths**: corrected all 5 grid tool endpoints to match OKX API v5 spec — `orders-algo-pending`, `orders-algo-history`, `order-algo`, `stop-order-algo` (previously used wrong paths causing HTTP 404)
 - **`grid_stop_order`**: request body now serialized as an array `[{...}]` as required by OKX `stop-order-algo` endpoint
+- **`grid_create_order`**: removed spurious `tdMode` parameter (field does not exist in `ApiPlaceGridParam`; was silently ignored by server but polluted the tool schema)
+- **`grid_create_order`**: restricted `algoOrdType` enum to `["grid", "contract_grid"]` — server `@StringMatch` validation only accepts these two values for creation; `moon_grid` is valid for queries and stop operations only
+- **`grid_stop_order`**: expanded `stopType` enum from `["1","2"]` to `["1","2","3","5","6"]` to match server `StopStrategyParam` validation
+- **CLI `bot grid create`**: removed `--tdMode` flag and `algoOrdType` now restricted to `<grid|contract_grid>`, in sync with MCP tool changes
+- **CLI `bot grid stop`**: updated `--stopType` hint to `<1|2|3|5|6>`
 - **`spot_get_algo_orders`**: fixed `400 Parameter ordType error` when called without an `ordType` filter — now fetches `conditional` and `oco` types in parallel and merges results, matching the behaviour of `swap_get_algo_orders`
 
 ### Changed

@@ -317,7 +317,7 @@ okx bot grid orders --algoOrdType grid --history
 
 # Create a spot grid bot (invest 100 USDT, 10 grids, price range 80000–100000)
 okx --demo bot grid create --instId BTC-USDT --algoOrdType grid \
-  --maxPx 100000 --minPx 80000 --gridNum 10 --tdMode cash --quoteSz 100
+  --maxPx 100000 --minPx 80000 --gridNum 10 --quoteSz 100
 
 # View bot details and filled sub-orders
 okx bot grid details --algoOrdType grid --algoId <algoId>
@@ -724,7 +724,7 @@ okx bot grid orders --algoOrdType grid --history
 
 # 创建现货网格 bot（投入 100 USDT，10 格，价格区间 80000–100000，模拟盘）
 okx --demo bot grid create --instId BTC-USDT --algoOrdType grid \
-  --maxPx 100000 --minPx 80000 --gridNum 10 --tdMode cash --quoteSz 100
+  --maxPx 100000 --minPx 80000 --gridNum 10 --quoteSz 100
 
 # 查看 bot 详情和成交子订单
 okx bot grid details --algoOrdType grid --algoId <algoId>
