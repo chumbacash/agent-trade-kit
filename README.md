@@ -57,11 +57,14 @@ It runs as a **local process** with your API keys stored only on your machine. N
 # 1. Install packages
 npm install -g okx-trade-mcp okx-trade-cli
 
-# 2. Configure API credentials
-mkdir -p ~/.okx && vim ~/.okx/config.toml
+# 2. Register the MCP server with your AI client
+okx-trade-mcp setup --client claude-desktop   # or: cursor / vscode / claude-code
+```
 
-# 3. Configure your AI client (Claude Desktop, Cursor, VS Code, ...)
-okx-trade-mcp setup --client claude-desktop
+Then add your OKX API credentials (separate from the above — only needed for authenticated tools):
+
+```bash
+mkdir -p ~/.okx && vim ~/.okx/config.toml
 ```
 
 Fill in `~/.okx/config.toml`:
