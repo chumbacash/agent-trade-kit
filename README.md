@@ -59,6 +59,9 @@ npm install -g okx-trade-mcp okx-trade-cli
 
 # 2. Configure API credentials
 mkdir -p ~/.okx && vim ~/.okx/config.toml
+
+# 3. Configure your AI client (Claude Desktop, Cursor, VS Code, ...)
+okx-trade-mcp setup --client claude-desktop
 ```
 
 Fill in `~/.okx/config.toml`:

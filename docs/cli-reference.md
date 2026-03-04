@@ -139,6 +139,26 @@ okx config set default_profile live
 
 ---
 
+## setup — Configure MCP Clients
+
+```bash
+# Write MCP server entry into client config file
+okx setup --client claude-desktop
+okx setup --client cursor
+okx setup --client windsurf
+okx setup --client vscode          # writes .mcp.json in current directory
+okx setup --client claude-code     # runs claude mcp add
+
+# With specific profile and modules
+okx setup --client claude-desktop --profile live --modules market,spot,account
+```
+
+Supported clients: `claude-desktop` `cursor` `windsurf` `vscode` `claude-code`
+
+Also available directly as `okx-trade-mcp setup --client <client>` without installing the CLI.
+
+---
+
 # CLI 命令参考（中文）
 
 ## 安装
@@ -277,3 +297,23 @@ okx bot grid stop --algoId <algoId> --algoOrdType grid --instId BTC-USDT
 okx config show
 okx config set default_profile live
 ```
+
+---
+
+## setup — 配置 MCP 客户端
+
+```bash
+# 将 MCP Server 配置写入客户端配置文件
+okx setup --client claude-desktop
+okx setup --client cursor
+okx setup --client windsurf
+okx setup --client vscode          # 在当前目录写 .mcp.json
+okx setup --client claude-code     # 调用 claude mcp add
+
+# 指定 profile 和模块
+okx setup --client claude-desktop --profile live --modules market,spot,account
+```
+
+支持的客户端：`claude-desktop` `cursor` `windsurf` `vscode` `claude-code`
+
+不安装 CLI 也可以直接用 `okx-trade-mcp setup --client <client>`。
