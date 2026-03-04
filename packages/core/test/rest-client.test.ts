@@ -15,6 +15,7 @@ import {
   NetworkError,
   OkxApiError,
   AuthenticationError,
+  RateLimitError,
 } from "../src/utils/errors.js";
 import type { OkxConfig } from "../src/config.js";
 import type { ModuleId } from "../src/constants.js";
@@ -229,6 +230,121 @@ describe("OkxRestClient — OKX API error codes", () => {
       const result = await client.publicGet("/api/v5/market/ticker");
       assert.deepEqual(result.data, payload);
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// OKX API error code behaviors — suggestion + RateLimitError
+// ---------------------------------------------------------------------------
+
+describe("OkxRestClient — OKX error code behaviors", () => {
+  it("throws RateLimitError for sCode 50011", async () => {
+    await withFetch(
+      jsonFetch({ code: "50011", msg: "Requests too frequent", data: [] }),
+      async () => {
+        const client = new OkxRestClient(BASE_CONFIG);
+        await assert.rejects(
+          () => client.publicGet("/api/v5/market/ticker"),
+          (err: unknown) => err instanceof RateLimitError,
+        );
+      },
+    );
+  });
+
+  it("RateLimitError for 50011 carries suggestion", async () => {
+    await withFetch(
+      jsonFetch({ code: "50011", msg: "Requests too frequent", data: [] }),
+      async () => {
+        const client = new OkxRestClient(BASE_CONFIG);
+        await assert.rejects(
+          () => client.publicGet("/api/v5/market/ticker"),
+          (err: unknown) =>
+            err instanceof RateLimitError &&
+            typeof err.suggestion === "string" &&
+            err.suggestion.length > 0,
+        );
+      },
+    );
+  });
+
+  it("throws RateLimitError for sCode 50061", async () => {
+    await withFetch(
+      jsonFetch({ code: "50061", msg: "Too many connections", data: [] }),
+      async () => {
+        const client = new OkxRestClient(BASE_CONFIG);
+        await assert.rejects(
+          () => client.publicGet("/api/v5/market/ticker"),
+          (err: unknown) => err instanceof RateLimitError,
+        );
+      },
+    );
+  });
+
+  it("OkxApiError for region restriction (51155) carries 'Do not retry' suggestion", async () => {
+    await withFetch(
+      jsonFetch({ code: "51155", msg: "Requests from restricted location", data: [] }),
+      async () => {
+        const client = new OkxRestClient(BASE_CONFIG);
+        await assert.rejects(
+          () => client.publicGet("/api/v5/market/ticker"),
+          (err: unknown) =>
+            err instanceof OkxApiError &&
+            err.code === "51155" &&
+            typeof err.suggestion === "string" &&
+            err.suggestion.includes("Do not retry"),
+        );
+      },
+    );
+  });
+
+  it("OkxApiError for system busy (50013) carries retry suggestion", async () => {
+    await withFetch(
+      jsonFetch({ code: "50013", msg: "System busy", data: [] }),
+      async () => {
+        const client = new OkxRestClient(BASE_CONFIG);
+        await assert.rejects(
+          () => client.publicGet("/api/v5/market/ticker"),
+          (err: unknown) =>
+            err instanceof OkxApiError &&
+            err.code === "50013" &&
+            typeof err.suggestion === "string" &&
+            err.suggestion.includes("Retry"),
+        );
+      },
+    );
+  });
+
+  it("OkxApiError for insufficient balance (51008) carries suggestion", async () => {
+    await withFetch(
+      jsonFetch({ code: "51008", msg: "Insufficient margin balance", data: [] }),
+      async () => {
+        const client = new OkxRestClient(BASE_CONFIG);
+        await assert.rejects(
+          () => client.publicGet("/api/v5/market/ticker"),
+          (err: unknown) =>
+            err instanceof OkxApiError &&
+            err.code === "51008" &&
+            typeof err.suggestion === "string" &&
+            err.suggestion.length > 0,
+        );
+      },
+    );
+  });
+
+  it("OkxApiError for unknown code has no suggestion", async () => {
+    await withFetch(
+      jsonFetch({ code: "99999", msg: "Unknown error", data: [] }),
+      async () => {
+        const client = new OkxRestClient(BASE_CONFIG);
+        await assert.rejects(
+          () => client.publicGet("/api/v5/market/ticker"),
+          (err: unknown) =>
+            err instanceof OkxApiError &&
+            err.code === "99999" &&
+            err.suggestion === undefined,
+        );
+      },
+    );
   });
 });
 
