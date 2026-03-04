@@ -77,6 +77,37 @@ When a tool call fails, your AI client shows a structured error block:
 - **`traceId`** — Paste this when contacting OKX support; they can trace the server-side request.
 - **`serverVersion`** — Tells you which release you're running.
 
+### `okx-trade-mcp` command not found after `npm install -g`
+
+**Cause**: The npm global `bin` directory is not in your `$PATH`. The executable is installed but the shell cannot find it.
+
+**Diagnose**:
+
+```bash
+# Find where npm puts global binaries
+npm prefix -g
+# Check if that path is in $PATH
+echo $PATH | grep "$(npm prefix -g)"
+```
+
+If the second command returns nothing, the path is missing.
+
+**Fix**: Add the npm global bin directory to your shell profile:
+
+```bash
+echo 'export PATH="$(npm prefix -g)/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+Use `~/.bashrc` instead if you're on bash. Then verify:
+
+```bash
+which okx-trade-mcp
+okx-trade-mcp --help
+```
+
+**If the path is correct but the command still fails**: Check that the package was published with its build output. The entry file must start with `#!/usr/bin/env node`.
+
 ### Claude Desktop reports "Failed to spawn process" or `{metadata: undefined}`
 
 **Symptoms**: After configuration, Claude Desktop shows `Failed to spawn process: No such file or directory`, or the connection log shows `server started and connected successfully {metadata: undefined}` but no tools load.
@@ -185,6 +216,37 @@ okx-trade-mcp --profile live --modules market spot account
 - **`suggestion`** — Server 生成的操作建议。
 - **`traceId`** — 联系 OKX 客服时提供，可追溯服务端请求。
 - **`serverVersion`** — 当前运行的版本号。
+
+### `npm install -g` 安装后提示 `command not found`
+
+**原因**：npm 全局 bin 目录不在 `$PATH` 中，可执行文件已安装但 shell 找不到它。
+
+**排查**：
+
+```bash
+# 查看 npm 全局 bin 路径
+npm prefix -g
+# 检查该路径是否在 $PATH 中
+echo $PATH | grep "$(npm prefix -g)"
+```
+
+如果第二条命令没有输出，说明路径缺失。
+
+**解法**：将 npm 全局 bin 目录加入 shell 配置：
+
+```bash
+echo 'export PATH="$(npm prefix -g)/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+如果使用 bash，将 `~/.zshrc` 替换为 `~/.bashrc`。然后验证：
+
+```bash
+which okx-trade-mcp
+okx-trade-mcp --help
+```
+
+**路径正确但命令仍失败**：检查包发布时是否包含构建产物，入口文件首行必须是 `#!/usr/bin/env node`。
 
 ### Claude Desktop 报 "Failed to spawn process" 或 `{metadata: undefined}`
 
