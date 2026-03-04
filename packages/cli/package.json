@@ -1,6 +1,6 @@
 {
   "name": "agent-tradekit-cli",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "OKX CLI - Command line tool for OKX exchange",
   "type": "module",
   "license": "MIT",
