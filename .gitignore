@@ -7,6 +7,11 @@ npm-debug.log*
 docs/
 _tmp_*
 .cursor/
+.claude/
+coverage/
+package-lock.json
+sonar-project.properties
+.gitlab-ci.yml
 scripts/idea-agent/*.log
 scripts/idea-agent/work-log.md
 scripts/smoke-test/report.md
