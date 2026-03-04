@@ -134,7 +134,11 @@ export function runSetup(options: SetupOptions): void {
 
   const entry = buildEntry(client, args);
   mergeJsonConfig(configPath, serverName, entry);
-  process.stdout.write(`✓ Configured ${name}\n  ${configPath}\n`);
+  process.stdout.write(
+    `✓ Configured ${name}\n` +
+      `  ${configPath}\n` +
+      `  Server args: ${args.join(" ")}\n`
+  );
   if (client !== "vscode") {
     process.stdout.write(`  Restart ${name} to apply changes.\n`);
   }
