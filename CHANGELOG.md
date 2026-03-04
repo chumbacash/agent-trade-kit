@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Option module (10 tools)**: new `option` module for options trading — `option_place_order`, `option_cancel_order`, `option_batch_cancel`, `option_amend_order` (write); `option_get_order`, `option_get_orders`, `option_get_positions` (with Greeks), `option_get_fills`, `option_get_instruments` (option chain), `option_get_greeks` (IV + Delta/Gamma/Theta/Vega) (read)
+
 - **Audit log — `trade_get_history`**: query the local NDJSON audit log of all MCP tool calls; supports `limit`, `tool`, `level`, and `since` filters
 - **Audit logging**: MCP server automatically writes NDJSON entries to `~/.okx/logs/trade-YYYY-MM-DD.log`; `--no-log` disables logging, `--log-level` sets the minimum level (default `info`); sensitive fields (apiKey, secretKey, passphrase) are automatically redacted
 
