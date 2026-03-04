@@ -16,7 +16,7 @@ Thank you for your interest in contributing! This guide covers everything you ne
 npm install -g pnpm
 
 # Clone the repository
-git clone https://github.com/USER/REPO.git   # replace with actual URL
+git clone https://github.com/okx/agent-tools.git
 cd okx-hub
 
 # Install dependencies
@@ -173,4 +173,4 @@ Fill in the pull request template — describe what changed, how it was tested, 
 
 ## Questions?
 
-Open a [GitHub Discussion](https://github.com/USER/REPO/discussions) or file an issue with the `question` label.
+Open a [GitHub Discussion](https://github.com/okx/agent-tools/discussions) or file an issue with the `question` label.
