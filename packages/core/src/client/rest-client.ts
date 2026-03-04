@@ -4,7 +4,47 @@ import {
   ConfigError,
   NetworkError,
   OkxApiError,
+  RateLimitError,
 } from "../utils/errors.js";
+
+type CodeBehavior =
+  | { retry: true; suggestion: string }
+  | { retry: false; suggestion: string };
+
+const OKX_CODE_BEHAVIORS: Record<string, CodeBehavior> = {
+  // Rate limit → throw RateLimitError
+  "50011": { retry: true,  suggestion: "Rate limited. Back off and retry after a delay." },
+  "50061": { retry: true,  suggestion: "Too many connections. Reduce request frequency and retry." },
+
+  // Server temporarily unavailable → retryable
+  "50001": { retry: true,  suggestion: "OKX system upgrade in progress. Retry in a few minutes." },
+  "50004": { retry: true,  suggestion: "Endpoint temporarily unavailable. Retry later." },
+  "50013": { retry: true,  suggestion: "System busy. Retry after 1-2 seconds." },
+  "50026": { retry: true,  suggestion: "Order book system upgrading. Retry in a few minutes." },
+
+  // Region / compliance restriction → do not retry
+  "51155": { retry: false, suggestion: "Feature unavailable in your region. Do not retry." },
+  "51734": { retry: false, suggestion: "Feature not supported for your KYC country. Do not retry." },
+
+  // Account issues → do not retry
+  "50007": { retry: false, suggestion: "Account suspended. Contact OKX support. Do not retry." },
+  "50009": { retry: false, suggestion: "Account blocked by risk control. Contact OKX support. Do not retry." },
+  "51009": { retry: false, suggestion: "Account mode not supported for this operation. Check account settings." },
+
+  // API key permission / expiry → do not retry
+  "50100": { retry: false, suggestion: "API key lacks required permissions. Update API key permissions." },
+  "50110": { retry: false, suggestion: "API key expired. Generate a new API key." },
+
+  // Insufficient funds / margin → do not retry
+  "51008": { retry: false, suggestion: "Insufficient balance. Top up account before retrying." },
+  "51119": { retry: false, suggestion: "Insufficient margin. Add margin before retrying." },
+  "51127": { retry: false, suggestion: "Insufficient available margin. Reduce position or add margin." },
+
+  // Instrument unavailable → do not retry
+  "51021": { retry: false, suggestion: "Instrument does not exist. Check instId." },
+  "51022": { retry: false, suggestion: "Instrument not available for trading." },
+  "51027": { retry: false, suggestion: "Contract has expired." },
+};
 import { RateLimiter } from "../utils/rate-limiter.js";
 import type { OkxConfig } from "../config.js";
 import type {
@@ -208,6 +248,8 @@ export class OkxRestClient {
     const responseCode = parsed.code;
     if (responseCode && responseCode !== "0") {
       const message = parsed.msg ?? "OKX API request failed.";
+      const endpoint = `${config.method} ${config.path}`;
+
       if (
         responseCode === "50111" ||
         responseCode === "50112" ||
@@ -216,14 +258,21 @@ export class OkxRestClient {
         throw new AuthenticationError(
           message,
           "Check API key, secret, passphrase and permissions.",
-          `${config.method} ${config.path}`,
+          endpoint,
           traceId,
         );
       }
 
+      const behavior = OKX_CODE_BEHAVIORS[responseCode];
+
+      if (responseCode === "50011" || responseCode === "50061") {
+        throw new RateLimitError(message, behavior?.suggestion, endpoint, traceId);
+      }
+
       throw new OkxApiError(message, {
         code: responseCode,
-        endpoint: `${config.method} ${config.path}`,
+        endpoint,
+        suggestion: behavior?.suggestion,
         traceId,
       });
     }
