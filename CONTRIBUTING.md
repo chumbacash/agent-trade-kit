@@ -17,7 +17,7 @@ npm install -g pnpm
 
 # Clone the repository
 git clone https://github.com/USER/REPO.git   # replace with actual URL
-cd agent-tradekit
+cd agent-tools
 
 # Install dependencies
 pnpm install
