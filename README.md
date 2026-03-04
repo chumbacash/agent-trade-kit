@@ -29,7 +29,7 @@ It runs as a **local process** with your API keys stored only on your machine. N
 
 | | |
 |---|---|
-| **67 tools across 6 modules** | Full trading lifecycle: market data → orders → algo orders → account management → trading bots |
+| **77 tools across 7 modules** | Full trading lifecycle: market data → orders → algo orders → account management → trading bots |
 | **Algo orders built-in** | Conditional, OCO take-profit/stop-loss, trailing stop |
 | **Safety controls** | `--read-only` flag, per-module filtering, built-in rate limiter |
 | **Zero infrastructure** | Local stdio process, no server or database required |
@@ -44,6 +44,7 @@ It runs as a **local process** with your API keys stored only on your machine. N
 | `spot` | 13 | Place/cancel/amend orders, batch orders, fills (+archive), order history (+archive), conditional orders, OCO | [→](docs/modules/spot.md) |
 | `swap` | 17 | Perpetual trading, batch orders, positions, leverage, conditional orders, OCO, trailing stop | [→](docs/modules/swap.md) |
 | `futures` | 6 | Delivery contract trading, positions, fills, order history | [→](docs/modules/futures.md) |
+| `option` | 10 | Options trading: place/cancel/amend/batch-cancel, order history, positions (with Greeks), fills, option chain, IV + Greeks | [→](docs/modules/option.md) |
 | `account` | 14 | Balance, bills (+archive), positions, positions history, fee rates, config, position mode, max withdrawal, max avail size, audit log | [→](docs/modules/account.md) |
 | `bot` | 5 | Trading Bot — grid strategies: list/details/sub-orders (read), create/stop (write). Spot Grid, Contract Grid, Moon Grid | [→](docs/modules/bot.md) |
 
