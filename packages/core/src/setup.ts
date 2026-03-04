@@ -68,22 +68,27 @@ function mergeJsonConfig(
   serverName: string,
   entry: Record<string, unknown>
 ): void {
+  const dir = path.dirname(configPath);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+
   let data: Record<string, unknown> = {};
   if (fs.existsSync(configPath)) {
+    const raw = fs.readFileSync(configPath, "utf-8");
     try {
-      data = JSON.parse(fs.readFileSync(configPath, "utf-8")) as Record<string, unknown>;
+      data = JSON.parse(raw) as Record<string, unknown>;
     } catch {
       throw new Error(`Failed to parse existing config at ${configPath}`);
     }
+    // Backup before modifying
+    const backupPath = configPath + ".bak";
+    fs.copyFileSync(configPath, backupPath);
+    process.stdout.write(`  Backup → ${backupPath}\n`);
   }
 
   if (typeof data.mcpServers !== "object" || data.mcpServers === null) {
     data.mcpServers = {};
   }
   (data.mcpServers as Record<string, unknown>)[serverName] = entry;
-
-  const dir = path.dirname(configPath);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 
   fs.writeFileSync(configPath, JSON.stringify(data, null, 2) + "\n", "utf-8");
 }
