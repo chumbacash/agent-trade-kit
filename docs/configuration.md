@@ -72,12 +72,47 @@ Your AI can switch between them simply by calling tools on the appropriate serve
 
 ---
 
-## Client Setup
+## Setup Command
+
+The fastest way to configure a client is the `setup` subcommand — no manual JSON editing required.
+
+```bash
+# Configure Claude Desktop
+okx-trade-mcp setup --client claude-desktop
+
+# Configure Cursor
+okx-trade-mcp setup --client cursor
+
+# Configure VS Code (writes .mcp.json in current directory)
+okx-trade-mcp setup --client vscode
+
+# Configure Claude Code CLI
+okx-trade-mcp setup --client claude-code
+
+# Use a specific profile and modules
+okx-trade-mcp setup --client claude-desktop --profile live --modules market,spot,account
+```
+
+Also available as `okx setup --client <client>` if `okx-trade-cli` is installed.
+
+| `--client` | Target |
+|------------|--------|
+| `claude-desktop` | `~/Library/Application\ Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\...` (Windows) |
+| `cursor` | `~/.cursor/mcp.json` |
+| `windsurf` | `~/.codeium/windsurf/mcp_config.json` |
+| `vscode` | `.mcp.json` in current directory |
+| `claude-code` | runs `claude mcp add` |
+
+The command reads existing config and merges the new entry — it will not overwrite other MCP servers.
+
+---
+
+## Client Setup (Manual)
 
 ### Claude Desktop
 
 Config file:
-- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- macOS: `~/Library/Application\ Support/Claude/claude_desktop_config.json`
 - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
 ```json
@@ -357,12 +392,47 @@ AI 可以直接通过调用对应 Server 的工具来切换账号。
 
 ---
 
-## 客户端配置
+## Setup 命令
+
+最快的配置方式是 `setup` 子命令，无需手动编辑 JSON。
+
+```bash
+# 配置 Claude Desktop
+okx-trade-mcp setup --client claude-desktop
+
+# 配置 Cursor
+okx-trade-mcp setup --client cursor
+
+# 配置 VS Code（在当前目录写 .mcp.json）
+okx-trade-mcp setup --client vscode
+
+# 配置 Claude Code CLI
+okx-trade-mcp setup --client claude-code
+
+# 指定 profile 和模块
+okx-trade-mcp setup --client claude-desktop --profile live --modules market,spot,account
+```
+
+安装了 `okx-trade-cli` 的话，也可以用 `okx setup --client <client>`。
+
+| `--client` | 目标 |
+|------------|------|
+| `claude-desktop` | macOS: `~/Library/Application\ Support/Claude/...` / Windows: `%APPDATA%\Claude\...` |
+| `cursor` | `~/.cursor/mcp.json` |
+| `windsurf` | `~/.codeium/windsurf/mcp_config.json` |
+| `vscode` | 当前目录下的 `.mcp.json` |
+| `claude-code` | 调用 `claude mcp add` |
+
+命令会读取现有配置并合并写入，不会覆盖其他已有的 MCP Server 条目。
+
+---
+
+## 客户端配置（手动）
 
 ### Claude Desktop
 
 配置文件路径：
-- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- macOS: `~/Library/Application\ Support/Claude/claude_desktop_config.json`
 - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
 ```json

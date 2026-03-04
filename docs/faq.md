@@ -24,12 +24,6 @@ No `~/.okx/config.toml` entry required.
 
 ## Demo Mode
 
-### Why do grid bot tools fail in demo mode?
-
-OKX does not expose the `tradingBot/grid/*` endpoints for simulated trading accounts. All 5 `bot` module tools will return a 404 error in demo mode. Use a live account to test grid bots.
-
-All other modules (market, spot, swap, futures, account) work normally in demo mode.
-
 ### How do I get a demo API key?
 
 OKX website → Trading → Demo Trading → API Management. Create a key there — it is separate from your live API key.
@@ -83,6 +77,53 @@ When a tool call fails, your AI client shows a structured error block:
 - **`traceId`** — Paste this when contacting OKX support; they can trace the server-side request.
 - **`serverVersion`** — Tells you which release you're running.
 
+### `okx-trade-mcp` command not found after `npm install -g`
+
+**Cause**: The npm global `bin` directory is not in your `$PATH`. The executable is installed but the shell cannot find it.
+
+**Diagnose**:
+
+```bash
+# Find where npm puts global binaries
+npm prefix -g
+# Check if that path is in $PATH
+echo $PATH | grep "$(npm prefix -g)"
+```
+
+If the second command returns nothing, the path is missing.
+
+**Fix**: Add the npm global bin directory to your shell profile:
+
+```bash
+echo 'export PATH="$(npm prefix -g)/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+Use `~/.bashrc` instead if you're on bash. Then verify:
+
+```bash
+which okx-trade-mcp
+okx-trade-mcp --help
+```
+
+**If the path is correct but the command still fails**: Check that the package was published with its build output. The entry file must start with `#!/usr/bin/env node`.
+
+### Claude Desktop reports "Failed to spawn process" or `{metadata: undefined}`
+
+**Symptoms**: After configuration, Claude Desktop shows `Failed to spawn process: No such file or directory`, or the connection log shows `server started and connected successfully {metadata: undefined}` but no tools load.
+
+**Cause**: Claude Desktop uses the system Node.js (typically `/usr/local/bin/node` or `/usr/bin/node`), which is different from the version managed by nvm/fnm in your terminal. If `okx-trade-mcp` was installed via the terminal's npm, the system Node environment used by Claude Desktop cannot find the package.
+
+**Diagnose**: Run `which node` in your terminal and compare it to the path Claude Desktop actually uses.
+
+**Fix**: Reinstall using the system Node's npm:
+
+```bash
+/usr/local/bin/npm install -g okx-trade-mcp
+```
+
+Then restart Claude Desktop.
+
 ### The AI says a tool is "not available" or "not found"
 
 The module containing that tool is probably not loaded. Check your `--modules` argument. Run `system_get_capabilities` tool to see what's currently enabled.
@@ -122,12 +163,6 @@ okx-trade-mcp --modules market
 ---
 
 ## 模拟盘
-
-### 为什么网格机器人工具在模拟盘下报错？
-
-OKX 不对模拟交易账号开放 `tradingBot/grid/*` 端点，`bot` 模块全部5个工具在模拟盘下均会返回 404。如需测试网格机器人，请使用实盘账号。
-
-其他模块（market、spot、swap、futures、account）在模拟盘下均正常工作。
 
 ### 如何获取模拟盘 API Key？
 
@@ -181,6 +216,53 @@ okx-trade-mcp --profile live --modules market spot account
 - **`suggestion`** — Server 生成的操作建议。
 - **`traceId`** — 联系 OKX 客服时提供，可追溯服务端请求。
 - **`serverVersion`** — 当前运行的版本号。
+
+### `npm install -g` 安装后提示 `command not found`
+
+**原因**：npm 全局 bin 目录不在 `$PATH` 中，可执行文件已安装但 shell 找不到它。
+
+**排查**：
+
+```bash
+# 查看 npm 全局 bin 路径
+npm prefix -g
+# 检查该路径是否在 $PATH 中
+echo $PATH | grep "$(npm prefix -g)"
+```
+
+如果第二条命令没有输出，说明路径缺失。
+
+**解法**：将 npm 全局 bin 目录加入 shell 配置：
+
+```bash
+echo 'export PATH="$(npm prefix -g)/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+如果使用 bash，将 `~/.zshrc` 替换为 `~/.bashrc`。然后验证：
+
+```bash
+which okx-trade-mcp
+okx-trade-mcp --help
+```
+
+**路径正确但命令仍失败**：检查包发布时是否包含构建产物，入口文件首行必须是 `#!/usr/bin/env node`。
+
+### Claude Desktop 报 "Failed to spawn process" 或 `{metadata: undefined}`
+
+**现象**：配置完成后 Claude Desktop 提示 `Failed to spawn process: No such file or directory`，或连接日志显示 `server started and connected successfully {metadata: undefined}`，工具列表无法加载。
+
+**原因**：Claude Desktop 使用的是系统 Node.js（通常是 `/usr/local/bin/node` 或 `/usr/bin/node`），与终端里通过 nvm/fnm 管理的版本不同。如果 `okx-trade-mcp` 是用终端的 npm 安装的，Claude Desktop 对应的 Node 环境里找不到这个包。
+
+**排查**：在终端运行 `which node`，对比 Claude Desktop 实际使用的路径是否一致。
+
+**解法**：用系统 Node 对应的 npm 重新安装一次：
+
+```bash
+/usr/local/bin/npm install -g okx-trade-mcp
+```
+
+安装完成后重启 Claude Desktop 即可。
 
 ### AI 提示工具"不可用"或"未找到"
 
