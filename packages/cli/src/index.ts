@@ -187,6 +187,7 @@ async function main(): Promise<void> {
     args: process.argv.slice(2),
     options: {
       profile: { type: "string" },
+      site: { type: "string" },
       demo: { type: "boolean", default: false },
       json: { type: "boolean", default: false },
       help: { type: "boolean", default: false },
