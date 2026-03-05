@@ -16,13 +16,19 @@ GLAB_ENV = {
 
 
 def _run(args: list[str], check: bool = True) -> subprocess.CompletedProcess:
-    return subprocess.run(
+    result = subprocess.run(
         args,
         capture_output=True,
         text=True,
         env=GLAB_ENV,
-        check=check,
+        check=False,
     )
+    if result.returncode != 0 and check:
+        print(f"[gitlab] CMD: {args}", file=sys.stderr)
+        print(f"[gitlab] STDERR: {result.stderr.strip()}", file=sys.stderr)
+        print(f"[gitlab] STDOUT: {result.stdout.strip()}", file=sys.stderr)
+        raise subprocess.CalledProcessError(result.returncode, args, result.stdout, result.stderr)
+    return result
 
 
 def list_open_ideas() -> list[dict]:
