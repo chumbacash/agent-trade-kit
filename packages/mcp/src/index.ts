@@ -15,7 +15,7 @@ import { createServer } from "./server.js";
 
 function printHelp(): void {
   const help = `
-Usage: agent-tradekit-mcp [options]
+Usage: okx-trade-mcp [options]
 
 Options:
   --modules <list>     Comma-separated list of modules to load
@@ -123,7 +123,7 @@ export async function main(): Promise<void> {
     return;
   }
 
-  checkForUpdates("agent-tradekit-mcp", SERVER_VERSION);
+  checkForUpdates("okx-trade-mcp", SERVER_VERSION);
 
   const cli = parseCli();
 
