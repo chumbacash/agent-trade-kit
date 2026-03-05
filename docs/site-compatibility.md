@@ -39,8 +39,8 @@ pnpm tsx scripts/smoke-test/run.ts --profile demo --read-only
 # US (demo)
 pnpm tsx scripts/smoke-test/run.ts --profile us-demo --read-only
 
-# EEA (live, read-only — demo not supported on EEA)
-pnpm tsx scripts/smoke-test/run.ts --profile eu-live --read-only --live
+# EEA (demo)
+pnpm tsx scripts/smoke-test/run.ts --profile eu-demo --read-only
 ```
 
 ---
@@ -85,6 +85,6 @@ pnpm tsx scripts/smoke-test/run.ts --profile demo --read-only
 # US（模拟盘）
 pnpm tsx scripts/smoke-test/run.ts --profile us-demo --read-only
 
-# EEA（实盘只读，EEA 不支持模拟盘）
-pnpm tsx scripts/smoke-test/run.ts --profile eu-live --read-only --live
+# EEA（模拟盘）
+pnpm tsx scripts/smoke-test/run.ts --profile eu-demo --read-only
 ```

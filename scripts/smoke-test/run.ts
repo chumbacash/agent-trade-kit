@@ -208,7 +208,6 @@ function classify(err: unknown, isProbe = false): [Status, string] {
 function parseArgs() {
   const argv = process.argv.slice(2);
   const readOnly = argv.includes("--read-only");
-  const live = argv.includes("--live");
   const moduleFilter: string[] = [];
   let futuresInst: string | undefined;
   let profile: string | undefined;
@@ -225,7 +224,7 @@ function parseArgs() {
     }
   }
 
-  return { readOnly, live, moduleFilter, futuresInst, profile };
+  return { readOnly, moduleFilter, futuresInst, profile };
 }
 
 // ─── report ───────────────────────────────────────────────────────────────────
@@ -273,18 +272,18 @@ function tally(results: Result[]) {
 // ─── main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
-  const { readOnly, live, moduleFilter, futuresInst, profile } = parseArgs();
+  const { readOnly, moduleFilter, futuresInst, profile } = parseArgs();
 
   const config = loadConfig({
     readOnly: false,
-    demo: !live,
+    demo: true,
     modules: moduleFilter.length > 0 ? moduleFilter.join(",") : "all",
     profile,
     userAgent: "okx-smoke-test/1.0",
   });
 
-  if (!config.demo && !live) {
-    console.error("⚠️  Not in demo mode. Set OKX_DEMO=1 or pass --live to confirm live API. Refusing to run.");
+  if (!config.demo) {
+    console.error("⚠️  Not in demo mode. Set OKX_DEMO=1. Refusing to run against live API.");
     process.exit(1);
   }
   if (!config.hasAuth) {
