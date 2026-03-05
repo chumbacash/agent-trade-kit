@@ -79,7 +79,7 @@ jobs:
         env:
           OKX_SITE: ${{ matrix.site }}
           OKX_DEMO: "true"
-        run: pnpm tsx scripts/smoke-test/run.ts
+        run: pnpm tsx scripts/smoke-test/run.ts --read-only
 
       - name: Upload report
         if: always() && steps.check.outputs.skip == 'false'
