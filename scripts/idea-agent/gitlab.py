@@ -9,6 +9,9 @@ from pathlib import Path
 REPO = "retail-ai/okx-trade-mcp"
 GLAB_CONFIG_DIR = str(Path.home() / "meili/jay.fan_dacs_at_okg.com/113/.config/glab-cli")
 
+# Issues with any of these labels will be picked up by the agent
+IDEA_LABELS = ["idea", "bug", "enhancement"]
+
 GLAB_ENV = {
     "GLAB_CONFIG_DIR": GLAB_CONFIG_DIR,
     **os.environ,
@@ -32,14 +35,21 @@ def _run(args: list[str], check: bool = True) -> subprocess.CompletedProcess:
 
 
 def list_open_ideas() -> list[dict]:
-    """Return open issues with label 'idea'."""
-    result = _run([
-        "glab", "issue", "list",
-        "--label", "idea",
-        "-O", "json",
-        "--repo", REPO,
-    ])
-    return json.loads(result.stdout)
+    """Return open issues with any of IDEA_LABELS, deduped by iid."""
+    seen_iids: set[int] = set()
+    issues: list[dict] = []
+    for label in IDEA_LABELS:
+        result = _run([
+            "glab", "issue", "list",
+            "--label", label,
+            "-O", "json",
+            "--repo", REPO,
+        ])
+        for issue in json.loads(result.stdout):
+            if issue["iid"] not in seen_iids:
+                seen_iids.add(issue["iid"])
+                issues.append(issue)
+    return issues
 
 
 def get_notes(iid: int) -> list[dict]:

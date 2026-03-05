@@ -248,7 +248,12 @@ def run_once(dry_run: bool = False, issue_filter: int | None = None, force_mode:
 
     reconcile()
 
-    issues = list_open_ideas()
+    try:
+        issues = list_open_ideas()
+    except Exception as e:
+        print(f"[agent] Failed to list issues (network?): {e}")
+        return
+
     if issue_filter:
         issues = [i for i in issues if i["iid"] == issue_filter]
         if not issues:
@@ -261,7 +266,11 @@ def run_once(dry_run: bool = False, issue_filter: int | None = None, force_mode:
         updated_at = issue.get("updated_at", "")
         if not force_mode and seen.get(str(iid)) == updated_at:
             continue  # no changes since last poll
-        process_issue(issue, dry_run=dry_run, force_mode=force_mode)
+        try:
+            process_issue(issue, dry_run=dry_run, force_mode=force_mode)
+        except Exception as e:
+            print(f"[agent] Error processing #{iid}: {e}")
+            continue
         if not dry_run:
             mark_seen(iid, updated_at)
 
