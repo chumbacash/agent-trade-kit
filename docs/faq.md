@@ -162,6 +162,40 @@ Open a GitHub issue and include the full error block (for MCP) or full stderr ou
 
 ---
 
+## API Coverage
+
+### Which OKX API features are NOT supported by the MCP server or CLI?
+
+The MCP server and CLI currently cover **7 modules / 77 tools** focused on the core trading lifecycle:
+
+| Module | Tools |
+|---|---|
+| `market` | Tickers, order book, candlesticks, instruments |
+| `spot` | Place, amend, cancel orders; order history |
+| `swap` | Perpetual swaps + algo/conditional orders |
+| `futures` | Delivery futures |
+| `option` | Options trading |
+| `account` | Balances, positions, leverage, fees |
+| `bot` | Grid trading bots |
+
+The following OKX REST API modules are **not yet supported**:
+
+| Module | Reason |
+|---|---|
+| **Asset** (deposit / withdrawal / transfer) | Involves on-chain operations; excluded for security |
+| **Convert** (flash swap) | Narrow use case, lower priority |
+| **Sub-account** | Institutional feature, not needed by most users |
+| **Earn / Savings / Staking** | Financial products, outside core trading |
+| **Copy Trading** | Newer API endpoints, under evaluation |
+| **Spread Trading** | Professional strategy, limited audience |
+| **Recurring Buy** | Simple operation, lower priority |
+| **Block Trading / RFQ** | Institutional OTC trading |
+| **Broker / Affiliate** | Platform-level APIs, not end-user features |
+
+> Want a specific module added? [Open an issue](https://github.com/okx/agent-tools/issues) with the label `idea`.
+
+---
+
 # 常见问题（中文）
 
 ## 概述
@@ -323,3 +357,37 @@ agent-tradekit-mcp --help
 ### 如何提交 Bug？
 
 在 GitHub 开 Issue，附上完整错误块（MCP）或完整 stderr 输出（CLI）。`traceId` 和 `serverVersion` 会自动包含在错误信息中，无需额外步骤。
+
+---
+
+## API 覆盖范围
+
+### MCP Server 和 CLI 目前不支持哪些 OKX API 功能？
+
+MCP Server 和 CLI 当前覆盖 **7 个模块 / 77 个工具**，聚焦核心交易链路：
+
+| 模块 | 功能 |
+|---|---|
+| `market` | 行情、深度、K 线、合约信息 |
+| `spot` | 现货下单、改单、撤单、历史查询 |
+| `swap` | 永续合约 + 条件单 / 止盈止损 |
+| `futures` | 交割合约 |
+| `option` | 期权交易 |
+| `account` | 余额、持仓、杠杆、手续费 |
+| `bot` | 网格机器人 |
+
+以下 OKX REST API 模块**暂未支持**：
+
+| 模块 | 原因 |
+|---|---|
+| **Asset**（充值 / 提币 / 划转） | 涉及链上操作，出于安全考虑暂不开放 |
+| **Convert**（闪兑） | 使用场景较窄，优先级较低 |
+| **Sub-account**（子账户） | 面向机构用户，大多数用户不需要 |
+| **Earn / Savings / Staking** | 金融产品类，非交易核心链路 |
+| **Copy Trading**（跟单） | API 较新，评估中 |
+| **Spread Trading**（价差交易） | 专业策略工具，覆盖面较窄 |
+| **Recurring Buy**（定投） | 操作简单，优先级较低 |
+| **Block Trading / RFQ**（大宗交易） | 面向机构 OTC |
+| **Broker / Affiliate** | 平台级接口，非终端用户功能 |
+
+> 希望新增某个模块？请在 [GitHub Issues](https://github.com/okx/agent-tools/issues) 中提交，标签选 `idea`。

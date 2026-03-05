@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **docs/faq.md**: added "General" section with 3 new Q&As — "What is OKX Trade MCP?", "What trading pairs are supported?", and "What risks should I understand?" (bilingual EN + ZH)
+- **docs/faq.md**: added "API Coverage" section explaining which OKX REST API modules are supported vs. not yet supported by the MCP server and CLI (bilingual EN + ZH)
 
 ### Fixed
 
