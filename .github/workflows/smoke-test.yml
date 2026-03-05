@@ -1,10 +1,10 @@
 name: Smoke Test (Demo)
 
 # Runs against the real OKX demo API for all three sites.
-# Requires per-site secrets (see README for setup instructions):
-#   OKX_GLOBAL_API_KEY / OKX_GLOBAL_SECRET_KEY / OKX_GLOBAL_PASSPHRASE
-#   OKX_EEA_API_KEY    / OKX_EEA_SECRET_KEY    / OKX_EEA_PASSPHRASE
-#   OKX_US_API_KEY     / OKX_US_SECRET_KEY      / OKX_US_PASSPHRASE
+# Requires per-site secrets:
+#   global: OKX_API_KEY / OKX_SECRET_KEY / OKX_PASSPHRASE  (existing)
+#   eea:    OKX_EEA_API_KEY / OKX_EEA_SECRET_KEY / OKX_EEA_PASSPHRASE
+#   us:     OKX_US_API_KEY  / OKX_US_SECRET_KEY  / OKX_US_PASSPHRASE
 # Sites with missing credentials are skipped automatically.
 
 on:
@@ -48,19 +48,19 @@ jobs:
         run: |
           case "${{ matrix.site }}" in
             global)
-              echo "OKX_API_KEY=${{ secrets.OKX_GLOBAL_API_KEY }}"     >> $GITHUB_ENV
-              echo "OKX_SECRET_KEY=${{ secrets.OKX_GLOBAL_SECRET_KEY }}" >> $GITHUB_ENV
-              echo "OKX_PASSPHRASE=${{ secrets.OKX_GLOBAL_PASSPHRASE }}" >> $GITHUB_ENV
+              echo "OKX_API_KEY=${{ secrets.OKX_API_KEY }}"         >> $GITHUB_ENV
+              echo "OKX_SECRET_KEY=${{ secrets.OKX_SECRET_KEY }}"   >> $GITHUB_ENV
+              echo "OKX_PASSPHRASE=${{ secrets.OKX_PASSPHRASE }}"   >> $GITHUB_ENV
               ;;
             eea)
-              echo "OKX_API_KEY=${{ secrets.OKX_EEA_API_KEY }}"        >> $GITHUB_ENV
-              echo "OKX_SECRET_KEY=${{ secrets.OKX_EEA_SECRET_KEY }}"   >> $GITHUB_ENV
-              echo "OKX_PASSPHRASE=${{ secrets.OKX_EEA_PASSPHRASE }}"   >> $GITHUB_ENV
+              echo "OKX_API_KEY=${{ secrets.OKX_EEA_API_KEY }}"     >> $GITHUB_ENV
+              echo "OKX_SECRET_KEY=${{ secrets.OKX_EEA_SECRET_KEY }}" >> $GITHUB_ENV
+              echo "OKX_PASSPHRASE=${{ secrets.OKX_EEA_PASSPHRASE }}" >> $GITHUB_ENV
               ;;
             us)
-              echo "OKX_API_KEY=${{ secrets.OKX_US_API_KEY }}"         >> $GITHUB_ENV
-              echo "OKX_SECRET_KEY=${{ secrets.OKX_US_SECRET_KEY }}"    >> $GITHUB_ENV
-              echo "OKX_PASSPHRASE=${{ secrets.OKX_US_PASSPHRASE }}"    >> $GITHUB_ENV
+              echo "OKX_API_KEY=${{ secrets.OKX_US_API_KEY }}"      >> $GITHUB_ENV
+              echo "OKX_SECRET_KEY=${{ secrets.OKX_US_SECRET_KEY }}" >> $GITHUB_ENV
+              echo "OKX_PASSPHRASE=${{ secrets.OKX_US_PASSPHRASE }}" >> $GITHUB_ENV
               ;;
           esac
 
