@@ -299,6 +299,24 @@ describe("OkxRestClient — OKX error code behaviors", () => {
     );
   });
 
+  it("OkxApiError for KYC restriction (51734) carries 'Do not retry' suggestion with site context", async () => {
+    await withFetch(
+      jsonFetch({ code: "51734", msg: "Feature not supported for your KYC country", data: [] }),
+      async () => {
+        const client = new OkxRestClient({ ...BASE_CONFIG, site: "eea" });
+        await assert.rejects(
+          () => client.publicGet("/api/v5/trade/order"),
+          (err: unknown) =>
+            err instanceof OkxApiError &&
+            err.code === "51734" &&
+            typeof err.suggestion === "string" &&
+            err.suggestion.includes("Do not retry") &&
+            err.suggestion.includes("eea"),
+        );
+      },
+    );
+  });
+
   it("OkxApiError for system busy (50013) carries retry suggestion", async () => {
     await withFetch(
       jsonFetch({ code: "50013", msg: "System busy", data: [] }),

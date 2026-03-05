@@ -5,6 +5,9 @@
  */
 import { describe, it, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
+import { mkdirSync, writeFileSync, rmSync, mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { loadConfig } from "../src/config.js";
 import { OKX_SITES } from "../src/constants.js";
 import { ConfigError } from "../src/utils/errors.js";
@@ -172,5 +175,88 @@ describe("loadConfig — site ConfigError suggestion", () => {
         err.suggestion.includes("eea") &&
         err.suggestion.includes("us"),
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Whitespace trimming
+// ---------------------------------------------------------------------------
+
+describe("loadConfig — site whitespace trimming", () => {
+  let saved: SavedEnv;
+  beforeEach(() => { saved = saveEnv(); });
+  afterEach(() => { restoreEnv(saved); });
+
+  it("trims whitespace from OKX_SITE env var", () => {
+    process.env.OKX_SITE = "  eea  ";
+    const config = loadConfig(BASE_CLI);
+    assert.equal(config.site, "eea");
+    assert.equal(config.baseUrl, OKX_SITES.eea.apiBaseUrl);
+  });
+
+  it("trims whitespace from cli.site arg", () => {
+    const config = loadConfig({ ...BASE_CLI, site: "  us  " });
+    assert.equal(config.site, "us");
+    assert.equal(config.baseUrl, OKX_SITES.us.apiBaseUrl);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Site from toml profile
+// ---------------------------------------------------------------------------
+
+describe("loadConfig — site from toml profile", () => {
+  let saved: SavedEnv;
+  let savedHome: string | undefined;
+  let tmpHome: string;
+
+  beforeEach(() => {
+    saved = saveEnv();
+    savedHome = process.env.HOME;
+    tmpHome = mkdtempSync(join(tmpdir(), "okx-cfg-test-"));
+    mkdirSync(join(tmpHome, ".okx"));
+    process.env.HOME = tmpHome;
+  });
+
+  afterEach(() => {
+    restoreEnv(saved);
+    if (savedHome === undefined) {
+      delete process.env.HOME;
+    } else {
+      process.env.HOME = savedHome;
+    }
+    rmSync(tmpHome, { recursive: true, force: true });
+  });
+
+  function writeToml(content: string): void {
+    writeFileSync(join(tmpHome, ".okx", "config.toml"), content, "utf-8");
+  }
+
+  it("uses site from toml profile when cli.site and OKX_SITE not set", () => {
+    writeToml('[profiles.default]\nsite = "eea"\n');
+    const config = loadConfig(BASE_CLI);
+    assert.equal(config.site, "eea");
+    assert.equal(config.baseUrl, OKX_SITES.eea.apiBaseUrl);
+  });
+
+  it("cli.site takes precedence over toml site", () => {
+    writeToml('[profiles.default]\nsite = "eea"\n');
+    const config = loadConfig({ ...BASE_CLI, site: "us" });
+    assert.equal(config.site, "us");
+    assert.equal(config.baseUrl, OKX_SITES.us.apiBaseUrl);
+  });
+
+  it("OKX_SITE env var takes precedence over toml site", () => {
+    writeToml('[profiles.default]\nsite = "eea"\n');
+    process.env.OKX_SITE = "us";
+    const config = loadConfig(BASE_CLI);
+    assert.equal(config.site, "us");
+    assert.equal(config.baseUrl, OKX_SITES.us.apiBaseUrl);
+  });
+
+  it("falls back to 'global' when toml profile has no site field", () => {
+    writeToml('[profiles.default]\ndemo = false\n');
+    const config = loadConfig(BASE_CLI);
+    assert.equal(config.site, "global");
   });
 });
