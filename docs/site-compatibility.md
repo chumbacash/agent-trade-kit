@@ -6,7 +6,7 @@ based on smoke-test results against live / demo accounts (read-only mode).
 | | Global | EEA | US |
 |---|:---:|:---:|:---:|
 | API base URL | `www.okx.com` | `eea.okx.com` | `app.okx.com` |
-| Simulated trading (`x-simulated-trading: 1`) | Yes | **No** | Yes |
+| Simulated trading (`x-simulated-trading: 1`) | Yes | Yes | Yes |
 | Public market endpoints | All pass | All pass | All pass |
 | Private read endpoints | All pass | See below | All pass |
 
@@ -17,7 +17,6 @@ based on smoke-test results against live / demo accounts (read-only mode).
 | Endpoint | Status | Note |
 |---|:---:|---|
 | `swap_get_leverage` | `404` | `/api/v5/account/leverage-info` not available on EEA |
-| All private endpoints | N/A in demo | EEA does not support simulated trading; use live credentials |
 
 ### US (`app.okx.com`)
 
@@ -52,7 +51,7 @@ pnpm tsx scripts/smoke-test/run.ts --profile eu-demo --read-only
 | | Global | EEA | US |
 |---|:---:|:---:|:---:|
 | API 域名 | `www.okx.com` | `eea.okx.com` | `app.okx.com` |
-| 模拟盘（`x-simulated-trading: 1`）| 支持 | **不支持** | 支持 |
+| 模拟盘（`x-simulated-trading: 1`）| 支持 | 支持 | 支持 |
 | 公开行情接口 | 全部通过 | 全部通过 | 全部通过 |
 | 私有只读接口 | 全部通过 | 见下方 | 全部通过 |
 
@@ -63,7 +62,6 @@ pnpm tsx scripts/smoke-test/run.ts --profile eu-demo --read-only
 | 接口 | 状态 | 说明 |
 |---|:---:|---|
 | `swap_get_leverage` | `404` | EEA 站不提供 `/api/v5/account/leverage-info` |
-| 所有私有接口 | 模拟盘不可用 | EEA 不支持模拟盘，需使用实盘 credentials |
 
 ### US（`app.okx.com`）
 
