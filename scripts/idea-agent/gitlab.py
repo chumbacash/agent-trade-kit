@@ -1,4 +1,4 @@
-"""glab CLI wrapper for agent-tradekit idea-agent."""
+"""glab CLI wrapper for okx-trade-mcp idea-agent."""
 
 import json
 import os
@@ -6,7 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-REPO = "retail-ai/agent-tradekit"
+REPO = "retail-ai/okx-trade-mcp"
 GLAB_CONFIG_DIR = str(Path.home() / "meili/jay.fan_dacs_at_okg.com/113/.config/glab-cli")
 
 GLAB_ENV = {
@@ -30,8 +30,7 @@ def list_open_ideas() -> list[dict]:
     result = _run([
         "glab", "issue", "list",
         "--label", "idea",
-        "--state", "opened",
-        "--output", "json",
+        "-O", "json",
         "--repo", REPO,
     ])
     return json.loads(result.stdout)
@@ -39,14 +38,12 @@ def list_open_ideas() -> list[dict]:
 
 def get_notes(iid: int) -> list[dict]:
     """Return all notes (comments) for an issue, oldest first."""
+    project = REPO.replace("/", "%2F")
     result = _run([
-        "glab", "issue", "note", "list", str(iid),
-        "--output", "json",
-        "--repo", REPO,
+        "glab", "api",
+        f"projects/{project}/issues/{iid}/notes?order_by=created_at&sort=asc&per_page=100",
     ])
-    notes = json.loads(result.stdout)
-    # glab returns newest-first; reverse to get chronological order
-    return list(reversed(notes))
+    return json.loads(result.stdout)
 
 
 def post_note(iid: int, message: str, dry_run: bool = False) -> None:
