@@ -1,19 +1,10 @@
-import { readTomlProfile, configFilePath, OKX_SITES } from "@agent-tradekit/core";
+import { readFullConfig, configFilePath, OKX_SITES, tomlStringify } from "@agent-tradekit/core";
 import type { SiteId } from "@agent-tradekit/core";
 import { writeCliConfig } from "../config/toml.js";
 import { printJson, printKv } from "../formatter.js";
-import { existsSync, readFileSync } from "node:fs";
-import { parse, stringify } from "smol-toml";
 import type { OkxTomlConfig, OkxProfile } from "@agent-tradekit/core";
 import { createInterface } from "node:readline";
 import { spawnSync } from "node:child_process";
-
-function readFullConfig(): OkxTomlConfig {
-  const path = configFilePath();
-  if (!existsSync(path)) return { profiles: {} };
-  const raw = readFileSync(path, "utf-8");
-  return parse(raw) as unknown as OkxTomlConfig;
-}
 
 function prompt(rl: ReturnType<typeof createInterface>, question: string): Promise<string> {
   return new Promise((resolve) => rl.question(question, resolve));
@@ -157,7 +148,7 @@ export async function cmdConfigInit(): Promise<void> {
         process.stderr.write(`权限不足，请检查 ${configPath} 及其父目录的读写权限。\n`);
       }
       process.stderr.write("请手动将以下内容写入 " + configPath + ":\n\n");
-      process.stdout.write(stringify(config as unknown as Record<string, unknown>) + "\n");
+      process.stdout.write(tomlStringify(config as unknown as Record<string, unknown>) + "\n");
       process.exitCode = 1;
     }
   } finally {

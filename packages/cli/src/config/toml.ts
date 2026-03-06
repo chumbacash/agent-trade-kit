@@ -1,6 +1,4 @@
-import { writeFileSync, mkdirSync, existsSync } from "node:fs";
-import { stringify } from "smol-toml";
-import { configFilePath } from "@agent-tradekit/core";
+import { writeFullConfig, configFilePath } from "@agent-tradekit/core";
 import type { OkxTomlConfig } from "@agent-tradekit/core";
 
 // Re-export for backward compat within CLI
@@ -12,9 +10,5 @@ export function configDir(): string {
 }
 
 export function writeCliConfig(config: OkxTomlConfig): void {
-  const dir = configDir();
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
-  }
-  writeFileSync(configFilePath(), stringify(config as unknown as Record<string, unknown>), "utf-8");
+  writeFullConfig(config);
 }
