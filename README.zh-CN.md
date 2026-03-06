@@ -8,7 +8,7 @@
 [![npm downloads: cli](https://img.shields.io/npm/dm/okx-trade-cli?label=cli+downloads)](https://www.npmjs.com/package/okx-trade-cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-[English](README.md) | [中文](README.zh.md)
+[English](README.md) | [中文](README.zh-CN.md)
 
 OKX 工具集，包含两个独立包：
 
@@ -144,3 +144,14 @@ packages/
 ├── mcp/     # MCP Server
 └── cli/     # CLI 工具
 ```
+
+---
+
+## 文档导航
+
+| 文档 | 说明 |
+|------|------|
+| [架构](ARCHITECTURE.zh-CN.md) | 系统设计与模块概览 |
+| [贡献指南](CONTRIBUTING.zh-CN.md) | 开发环境搭建与 PR 规范 |
+| [更新日志](CHANGELOG.zh-CN.md) | 版本历史 |
+| [安全政策](SECURITY.md) | 漏洞上报 |

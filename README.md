@@ -8,7 +8,7 @@
 [![npm downloads: cli](https://img.shields.io/npm/dm/okx-trade-cli?label=cli+downloads)](https://www.npmjs.com/package/okx-trade-cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-[English](README.md) | [中文](README.zh.md)
+[English](README.md) | [中文](README.zh-CN.md)
 
 OKX toolkit with two standalone packages:
 
@@ -146,3 +146,14 @@ packages/
 ├── mcp/     # MCP Server
 └── cli/     # CLI tool
 ```
+
+---
+
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [Architecture](ARCHITECTURE.md) | System design and module overview |
+| [Contributing](CONTRIBUTING.md) | Development setup and PR guidelines |
+| [Changelog](CHANGELOG.md) | Version history |
+| [Security](SECURITY.md) | Vulnerability reporting |
