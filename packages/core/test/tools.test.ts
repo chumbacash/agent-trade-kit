@@ -12,6 +12,7 @@ import { registerSwapTradeTools } from "../src/tools/swap-trade.js";
 import { registerAccountTools } from "../src/tools/account.js";
 import { registerFuturesTools } from "../src/tools/futures-trade.js";
 import { registerOptionTools } from "../src/tools/option-trade.js";
+import { registerAlgoTradeTools } from "../src/tools/algo-trade.js";
 import { registerGridTools } from "../src/tools/bot/grid.js";
 import { registerDcaTools } from "../src/tools/bot/dca.js";
 import { assertNotDemo } from "../src/tools/common.js";
@@ -844,6 +845,43 @@ describe("spot_get_algo_orders", () => {
     assert.equal(getLastCall()?.endpoint, "/api/v5/trade/orders-algo-history");
   });
 
+  it("defaults state to effective for history queries", async () => {
+    const { client, getLastCall } = makeMockClient();
+    await tool.handler({ status: "history", ordType: "conditional" }, makeContext(client));
+    assert.equal(getLastCall()?.params.state, "effective");
+  });
+
+  it("passes explicit state for history queries", async () => {
+    const { client, getLastCall } = makeMockClient();
+    await tool.handler({ status: "history", ordType: "oco", state: "canceled" }, makeContext(client));
+    assert.equal(getLastCall()?.params.state, "canceled");
+  });
+
+  it("does not pass state for pending queries", async () => {
+    const { client, getLastCall } = makeMockClient();
+    await tool.handler({ ordType: "conditional" }, makeContext(client));
+    assert.equal(getLastCall()?.params.state, undefined);
+  });
+
+  it("all parallel history requests include state", async () => {
+    const calls: Record<string, unknown>[] = [];
+    const fakeResponse = (endpoint: string) => ({
+      endpoint,
+      requestTime: "2024-01-01T00:00:00.000Z",
+      data: [],
+    });
+    const capturingClient = {
+      publicGet: async (ep: string, p: Record<string, unknown>) => { calls.push(p); return fakeResponse(ep); },
+      privateGet: async (ep: string, p: Record<string, unknown>) => { calls.push(p); return fakeResponse(ep); },
+      privatePost: async (ep: string, p: Record<string, unknown>) => { calls.push(p); return fakeResponse(ep); },
+    };
+    await tool.handler({ status: "history" }, makeContext(capturingClient));
+    assert.equal(calls.length, 2);
+    for (const params of calls) {
+      assert.equal(params.state, "effective", "each parallel request must include state");
+    }
+  });
+
   it("makes two parallel requests when ordType is omitted", async () => {
     let callCount = 0;
     const fakeResponse = (endpoint: string) => ({
@@ -1483,6 +1521,52 @@ describe("dca_get_sub_orders", () => {
     await tool.handler({ algoId: "123" }, makeContext(client));
     assert.equal(getLastCall()?.endpoint, "/api/v5/tradingBot/dca/sub-orders");
     assert.equal((getLastCall()?.params as Record<string, unknown>).algoId, "123");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Algo trade — swap_get_algo_orders state parameter
+// ---------------------------------------------------------------------------
+
+describe("swap_get_algo_orders", () => {
+  const tools = registerAlgoTradeTools();
+  const tool = tools.find((t) => t.name === "swap_get_algo_orders")!;
+
+  it("defaults state to effective for history queries", async () => {
+    const { client, getLastCall } = makeMockClient();
+    await tool.handler({ status: "history", ordType: "conditional" }, makeContext(client));
+    assert.equal(getLastCall()?.params.state, "effective");
+  });
+
+  it("passes explicit state for history queries", async () => {
+    const { client, getLastCall } = makeMockClient();
+    await tool.handler({ status: "history", ordType: "oco", state: "canceled" }, makeContext(client));
+    assert.equal(getLastCall()?.params.state, "canceled");
+  });
+
+  it("does not pass state for pending queries", async () => {
+    const { client, getLastCall } = makeMockClient();
+    await tool.handler({ ordType: "conditional" }, makeContext(client));
+    assert.equal(getLastCall()?.params.state, undefined);
+  });
+
+  it("all parallel history requests include state", async () => {
+    const calls: Record<string, unknown>[] = [];
+    const fakeResponse = (endpoint: string) => ({
+      endpoint,
+      requestTime: "2024-01-01T00:00:00.000Z",
+      data: [],
+    });
+    const capturingClient = {
+      publicGet: async (ep: string, p: Record<string, unknown>) => { calls.push(p); return fakeResponse(ep); },
+      privateGet: async (ep: string, p: Record<string, unknown>) => { calls.push(p); return fakeResponse(ep); },
+      privatePost: async (ep: string, p: Record<string, unknown>) => { calls.push(p); return fakeResponse(ep); },
+    };
+    await tool.handler({ status: "history" }, makeContext(capturingClient));
+    assert.equal(calls.length, 3);
+    for (const params of calls) {
+      assert.equal(params.state, "effective", "each parallel request must include state");
+    }
   });
 });
 
