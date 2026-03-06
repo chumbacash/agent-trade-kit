@@ -19,7 +19,7 @@ Usage: okx-trade-mcp [options]
 
 Options:
   --modules <list>     Comma-separated list of modules to load
-                       Available: market, spot, swap, account
+                       Available: market, spot, swap, futures, option, account, bot
                        Special: "all" loads all modules
                        Default: spot,swap,account
 
