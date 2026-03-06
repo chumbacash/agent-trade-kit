@@ -103,33 +103,103 @@ Strategy trading bot tools. Requires API key with **Read + Trade** permissions.
 
 ## CLI
 
-Grid strategies are fully supported by the `okx` CLI. DCA and Recurring are MCP-only.
+All bot types (Grid, Spot DCA, Contract DCA, Recurring Buy) are supported by the `okx` CLI.
 
 ```bash
-# List grid bots
-okx bot grid orders --algoOrdType grid --profile demo
-okx bot grid orders --algoOrdType contract_grid --history --profile demo
+# ── Spot Grid (algoOrdType: grid) ─────────────────────────────────────────────
+okx bot grid orders --algoOrdType grid
+okx bot grid orders --algoOrdType grid --history
+okx bot grid details --algoOrdType grid --algoId <id>
+okx bot grid sub-orders --algoOrdType grid --algoId <id>
 
-# Grid details and sub-orders
-okx bot grid details --algoOrdType grid --algoId <id> --profile demo
-okx bot grid sub-orders --algoOrdType grid --algoId <id> --profile demo
+# Invest in quote currency (USDT)
+okx bot grid create --instId BTC-USDT --algoOrdType grid \
+  --maxPx 77000 --minPx 63000 --gridNum 10 --quoteSz 100
 
-# Create spot grid
-okx bot grid create \
-  --instId BTC-USDT --algoOrdType grid \
+# Invest in base currency (BTC)
+okx bot grid create --instId BTC-USDT --algoOrdType grid \
+  --maxPx 77000 --minPx 63000 --gridNum 10 --baseSz 0.001
+
+# Stop (stopType: 1=sell all, 2=keep holdings)
+okx bot grid stop --algoId <id> --algoOrdType grid --instId BTC-USDT --stopType 2
+
+# ── Contract Grid (algoOrdType: contract_grid) ────────────────────────────────
+okx bot grid orders --algoOrdType contract_grid
+okx bot grid orders --algoOrdType contract_grid --history
+okx bot grid details --algoOrdType contract_grid --algoId <id>
+okx bot grid sub-orders --algoOrdType contract_grid --algoId <id>
+
+# Neutral direction, 3x leverage, 100 USDT margin
+okx bot grid create --instId BTC-USDT-SWAP --algoOrdType contract_grid \
   --maxPx 77000 --minPx 63000 --gridNum 10 \
-  --quoteSz 100 --profile demo
+  --direction neutral --lever 3 --sz 100
 
-# Create contract grid
-okx bot grid create \
-  --instId BTC-USDT-SWAP --algoOrdType contract_grid \
+# Long direction, 5x leverage
+okx bot grid create --instId BTC-USDT-SWAP --algoOrdType contract_grid \
   --maxPx 77000 --minPx 63000 --gridNum 10 \
-  --direction neutral --lever 3 --sz 100 --profile demo
+  --direction long --lever 5 --sz 100
 
-# Stop grid (stopType: 1=sell all, 2=keep holdings)
-okx bot grid stop \
-  --algoId <id> --algoOrdType grid --instId BTC-USDT \
-  --stopType 2 --profile demo
+# Stop (stopType: 1=close position+stop, 2=keep position+stop)
+okx bot grid stop --algoId <id> --algoOrdType contract_grid --instId BTC-USDT-SWAP --stopType 1
+
+# ── Spot DCA ──────────────────────────────────────────────────────────────────
+okx bot dca orders
+okx bot dca orders --history
+okx bot dca details --algoId <id>
+okx bot dca sub-orders --algoId <id>          # filled sub-orders
+okx bot dca sub-orders --algoId <id> --live   # pending sub-orders
+okx bot dca ai-param --instId BTC-USDT --userRiskMode moderate
+
+# Create spot DCA bot
+okx bot dca create \
+  --instId BTC-USDT \
+  --initOrdAmt 50 --safetyOrdAmt 30 --maxSafetyOrds 3 \
+  --pxSteps 0.05 --pxStepsMult 1 --volMult 1 \
+  --tpPct 0.03 --slPct 0.20
+
+# Stop spot DCA (stopType: 1=sell holdings, 2=keep holdings)
+okx bot dca stop --algoId <id> --instId BTC-USDT --stopType 2
+
+# ── Contract DCA ──────────────────────────────────────────────────────────────
+okx bot contract-dca list
+okx bot contract-dca list --history
+okx bot contract-dca positions --algoId <id>
+okx bot contract-dca cycles --algoId <id>
+okx bot contract-dca orders --algoId <id> --cycleId <cycleId>
+
+# Create contract DCA bot
+okx bot contract-dca create \
+  --instId BTC-USDT-SWAP --lever 3 --side buy \
+  --initOrdAmt 50 --safetyOrdAmt 30 --maxSafetyOrds 3 \
+  --pxSteps 0.02 --pxStepsMult 1 --volMult 1 --tpPct 0.02
+
+okx bot contract-dca stop --algoId <id>
+okx bot contract-dca manual-buy --algoId <id> --amt 30
+okx bot contract-dca margin-add --algoId <id> --amt 20
+okx bot contract-dca margin-reduce --algoId <id> --amt 10
+okx bot contract-dca set-tp --algoId <id> --tpPrice 31500
+okx bot contract-dca set-reinvest --algoId <id> --allowReinvest true
+
+# ── Recurring Buy ─────────────────────────────────────────────────────────────
+okx bot recurring orders
+okx bot recurring orders --history
+okx bot recurring details --algoId <id>
+okx bot recurring sub-orders --algoId <id>
+
+# Create daily recurring buy (100% BTC, 10 USDT/day at 9am UTC+8)
+okx bot recurring create \
+  --stgyName "Daily BTC" \
+  --recurringList '[{"ccy":"BTC","ratio":"1"}]' \
+  --amt 10 --period daily --recurringTime 9 --timeZone 8
+
+# Create weekly recurring buy (60% BTC + 40% ETH, every Monday)
+okx bot recurring create \
+  --stgyName "Weekly Portfolio" \
+  --recurringList '[{"ccy":"BTC","ratio":"0.6"},{"ccy":"ETH","ratio":"0.4"}]' \
+  --amt 100 --period weekly --recurringDay 1
+
+okx bot recurring amend --algoId <id> --stgyName "New Name"
+okx bot recurring stop --algoId <id>
 ```
 
 ---
@@ -247,33 +317,103 @@ okx-trade-mcp --modules bot
 
 ## CLI
 
-网格策略完整支持 `okx` CLI。DCA 和定期投资仅支持 MCP。
+网格、现货 DCA、合约 DCA、定期投资均支持 `okx` CLI。
 
 ```bash
-# 查看网格列表
-okx bot grid orders --algoOrdType grid --profile demo
-okx bot grid orders --algoOrdType contract_grid --history --profile demo
+# ── 现货网格（algoOrdType: grid）─────────────────────────────────────────────
+okx bot grid orders --algoOrdType grid
+okx bot grid orders --algoOrdType grid --history
+okx bot grid details --algoOrdType grid --algoId <id>
+okx bot grid sub-orders --algoOrdType grid --algoId <id>
 
-# 查看详情和子订单
-okx bot grid details --algoOrdType grid --algoId <id> --profile demo
-okx bot grid sub-orders --algoOrdType grid --algoId <id> --profile demo
+# 用计价货币（USDT）投入
+okx bot grid create --instId BTC-USDT --algoOrdType grid \
+  --maxPx 77000 --minPx 63000 --gridNum 10 --quoteSz 100
 
-# 创建现货网格
-okx bot grid create \
-  --instId BTC-USDT --algoOrdType grid \
+# 用基础货币（BTC）投入
+okx bot grid create --instId BTC-USDT --algoOrdType grid \
+  --maxPx 77000 --minPx 63000 --gridNum 10 --baseSz 0.001
+
+# 停止（stopType: 1=卖出全部持仓, 2=保留持仓）
+okx bot grid stop --algoId <id> --algoOrdType grid --instId BTC-USDT --stopType 2
+
+# ── 合约网格（algoOrdType: contract_grid）────────────────────────────────────
+okx bot grid orders --algoOrdType contract_grid
+okx bot grid orders --algoOrdType contract_grid --history
+okx bot grid details --algoOrdType contract_grid --algoId <id>
+okx bot grid sub-orders --algoOrdType contract_grid --algoId <id>
+
+# neutral 方向，3倍杠杆，100 USDT 保证金
+okx bot grid create --instId BTC-USDT-SWAP --algoOrdType contract_grid \
   --maxPx 77000 --minPx 63000 --gridNum 10 \
-  --quoteSz 100 --profile demo
+  --direction neutral --lever 3 --sz 100
 
-# 创建合约网格
-okx bot grid create \
-  --instId BTC-USDT-SWAP --algoOrdType contract_grid \
+# 做多，5倍杠杆
+okx bot grid create --instId BTC-USDT-SWAP --algoOrdType contract_grid \
   --maxPx 77000 --minPx 63000 --gridNum 10 \
-  --direction neutral --lever 3 --sz 100 --profile demo
+  --direction long --lever 5 --sz 100
 
-# 停止网格（stopType: 1=卖出持仓, 2=保留持仓）
-okx bot grid stop \
-  --algoId <id> --algoOrdType grid --instId BTC-USDT \
-  --stopType 2 --profile demo
+# 停止（stopType: 1=平仓并停止, 2=保留仓位并停止）
+okx bot grid stop --algoId <id> --algoOrdType contract_grid --instId BTC-USDT-SWAP --stopType 1
+
+# ── 现货 DCA ──────────────────────────────────────────────────────────────────
+okx bot dca orders
+okx bot dca orders --history
+okx bot dca details --algoId <id>
+okx bot dca sub-orders --algoId <id>          # 已成交子订单
+okx bot dca sub-orders --algoId <id> --live   # 挂单中子订单
+okx bot dca ai-param --instId BTC-USDT --userRiskMode moderate
+
+# 创建现货 DCA 机器人
+okx bot dca create \
+  --instId BTC-USDT \
+  --initOrdAmt 50 --safetyOrdAmt 30 --maxSafetyOrds 3 \
+  --pxSteps 0.05 --pxStepsMult 1 --volMult 1 \
+  --tpPct 0.03 --slPct 0.20
+
+# 停止现货 DCA（stopType: 1=卖出持仓, 2=保留持仓）
+okx bot dca stop --algoId <id> --instId BTC-USDT --stopType 2
+
+# ── 合约 DCA ──────────────────────────────────────────────────────────────────
+okx bot contract-dca list
+okx bot contract-dca list --history
+okx bot contract-dca positions --algoId <id>
+okx bot contract-dca cycles --algoId <id>
+okx bot contract-dca orders --algoId <id> --cycleId <cycleId>
+
+# 创建合约 DCA 机器人
+okx bot contract-dca create \
+  --instId BTC-USDT-SWAP --lever 3 --side buy \
+  --initOrdAmt 50 --safetyOrdAmt 30 --maxSafetyOrds 3 \
+  --pxSteps 0.02 --pxStepsMult 1 --volMult 1 --tpPct 0.02
+
+okx bot contract-dca stop --algoId <id>
+okx bot contract-dca manual-buy --algoId <id> --amt 30
+okx bot contract-dca margin-add --algoId <id> --amt 20
+okx bot contract-dca margin-reduce --algoId <id> --amt 10
+okx bot contract-dca set-tp --algoId <id> --tpPrice 31500
+okx bot contract-dca set-reinvest --algoId <id> --allowReinvest true
+
+# ── 定期投资 ──────────────────────────────────────────────────────────────────
+okx bot recurring orders
+okx bot recurring orders --history
+okx bot recurring details --algoId <id>
+okx bot recurring sub-orders --algoId <id>
+
+# 创建每日定投（100% BTC，每天 UTC+8 早上 9 点投入 10 USDT）
+okx bot recurring create \
+  --stgyName "每日定投BTC" \
+  --recurringList '[{"ccy":"BTC","ratio":"1"}]' \
+  --amt 10 --period daily --recurringTime 9 --timeZone 8
+
+# 创建每周定投（60% BTC + 40% ETH，每周一）
+okx bot recurring create \
+  --stgyName "周度组合" \
+  --recurringList '[{"ccy":"BTC","ratio":"0.6"},{"ccy":"ETH","ratio":"0.4"}]' \
+  --amt 100 --period weekly --recurringDay 1
+
+okx bot recurring amend --algoId <id> --stgyName "新名称"
+okx bot recurring stop --algoId <id>
 ```
 
 ---
