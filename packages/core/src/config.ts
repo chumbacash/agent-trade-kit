@@ -1,4 +1,4 @@
-import { DEFAULT_MODULES, MODULES, OKX_API_BASE_URL, OKX_SITES, SITE_IDS, type ModuleId, type SiteId } from "./constants.js";
+import { BOT_DEFAULT_SUB_MODULES, BOT_SUB_MODULE_IDS, DEFAULT_MODULES, MODULES, OKX_API_BASE_URL, OKX_SITES, SITE_IDS, type BotSubModuleId, type ModuleId, type SiteId } from "./constants.js";
 import { ConfigError } from "./utils/errors.js";
 import { readTomlProfile } from "./config/toml.js";
 
@@ -25,6 +25,11 @@ export interface OkxConfig {
   userAgent?: string;
 }
 
+/** Base (non-bot) modules — used when expanding "all". */
+const BASE_MODULES = MODULES.filter(
+  (m) => !BOT_SUB_MODULE_IDS.includes(m as BotSubModuleId),
+);
+
 function parseModuleList(rawModules?: string): ModuleId[] {
   if (!rawModules || rawModules.trim().length === 0) {
     return [...DEFAULT_MODULES];
@@ -32,7 +37,8 @@ function parseModuleList(rawModules?: string): ModuleId[] {
 
   const trimmed = rawModules.trim().toLowerCase();
   if (trimmed === "all") {
-    return [...MODULES];
+    // "all" → every non-bot module + default bot sub-modules
+    return [...BASE_MODULES, ...BOT_DEFAULT_SUB_MODULES] as ModuleId[];
   }
 
   const requested = trimmed
@@ -46,10 +52,15 @@ function parseModuleList(rawModules?: string): ModuleId[] {
 
   const deduped = new Set<ModuleId>();
   for (const moduleId of requested) {
+    // "bot" shorthand → expand to default bot sub-modules
+    if (moduleId === "bot") {
+      for (const sub of BOT_DEFAULT_SUB_MODULES) deduped.add(sub);
+      continue;
+    }
     if (!MODULES.includes(moduleId as ModuleId)) {
       throw new ConfigError(
         `Unknown module "${moduleId}".`,
-        `Use one of: ${MODULES.join(", ")} or "all".`,
+        `Use one of: ${MODULES.join(", ")}, "bot", or "all".`,
       );
     }
     deduped.add(moduleId as ModuleId);

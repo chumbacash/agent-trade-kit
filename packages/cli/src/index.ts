@@ -87,6 +87,11 @@ import {
   cmdGridSubOrders,
   cmdGridCreate,
   cmdGridStop,
+  cmdDcaCreate,
+  cmdDcaStop,
+  cmdDcaOrders,
+  cmdDcaDetails,
+  cmdDcaSubOrders,
 } from "./commands/bot.js";
 
 // Re-export for tests and external consumers
@@ -533,6 +538,38 @@ export function handleBotGridCommand(
     });
 }
 
+export function handleBotDcaCommand(
+  run: ToolRunner,
+  subAction: string,
+  v: CliValues,
+  json: boolean,
+): Promise<void> | void {
+  if (subAction === "orders")
+    return cmdDcaOrders(run, { history: v.history ?? false, json });
+  if (subAction === "details")
+    return cmdDcaDetails(run, { algoId: v.algoId!, json });
+  if (subAction === "sub-orders")
+    return cmdDcaSubOrders(run, { algoId: v.algoId!, live: v.live ?? false, json });
+  if (subAction === "create")
+    return cmdDcaCreate(run, {
+      instId: v.instId!,
+      initOrdAmt: v.initOrdAmt!,
+      safetyOrdAmt: v.safetyOrdAmt!,
+      maxSafetyOrds: v.maxSafetyOrds!,
+      pxSteps: v.pxSteps!,
+      pxStepsMult: v.pxStepsMult!,
+      volMult: v.volMult!,
+      tpPct: v.tpPct!,
+      slPct: v.slPct,
+      reserveFunds: v.reserveFunds,
+      triggerType: v.triggerType,
+      direction: v.direction,
+      json,
+    });
+  if (subAction === "stop")
+    return cmdDcaStop(run, { algoId: v.algoId!, instId: v.instId!, stopType: v.stopType!, json });
+}
+
 export function handleBotCommand(
   run: ToolRunner,
   action: string,
@@ -541,6 +578,7 @@ export function handleBotCommand(
   json: boolean
 ): Promise<void> | void {
   if (action === "grid") return handleBotGridCommand(run, v, rest, json);
+  if (action === "dca") return handleBotDcaCommand(run, rest[0], v, json);
 }
 
 // ---------------------------------------------------------------------------

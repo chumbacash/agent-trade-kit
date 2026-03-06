@@ -58,6 +58,17 @@ export interface CliValues {
   autoCxl?: boolean;
   clOrdId?: string;
   newPx?: string;
+  // dca bot
+  initOrdAmt?: string;
+  safetyOrdAmt?: string;
+  maxSafetyOrds?: string;
+  pxSteps?: string;
+  pxStepsMult?: string;
+  volMult?: string;
+  tpPct?: string;
+  slPct?: string;
+  reserveFunds?: string;
+  triggerType?: string;
 }
 
 export const CLI_OPTIONS = {
@@ -130,6 +141,17 @@ export const CLI_OPTIONS = {
   autoCxl: { type: "boolean", default: false },
   clOrdId: { type: "string" },
   newPx: { type: "string" },
+  // dca bot
+  initOrdAmt: { type: "string" },
+  safetyOrdAmt: { type: "string" },
+  maxSafetyOrds: { type: "string" },
+  pxSteps: { type: "string" },
+  pxStepsMult: { type: "string" },
+  volMult: { type: "string" },
+  tpPct: { type: "string" },
+  slPct: { type: "string" },
+  reserveFunds: { type: "string" },
+  triggerType: { type: "string" },
 } as const;
 
 export function parseCli(argv: string[]): { values: CliValues; positionals: string[] } {

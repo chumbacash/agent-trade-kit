@@ -159,3 +159,140 @@ export async function cmdGridStop(
     `Grid bot stopped: ${r?.["algoId"]} (${r?.["sCode"] === "0" ? "OK" : r?.["sMsg"]})\n`,
   );
 }
+
+// ---------------------------------------------------------------------------
+// DCA (Spot) commands
+// ---------------------------------------------------------------------------
+
+export async function cmdDcaCreate(
+  run: ToolRunner,
+  opts: {
+    instId: string;
+    initOrdAmt: string;
+    safetyOrdAmt: string;
+    maxSafetyOrds: string;
+    pxSteps: string;
+    pxStepsMult: string;
+    volMult: string;
+    tpPct: string;
+    slPct?: string;
+    reserveFunds?: string;
+    triggerType?: string;
+    direction?: string;
+    json: boolean;
+  },
+): Promise<void> {
+  const result = await run("dca_create_order", {
+    instId: opts.instId,
+    initOrdAmt: opts.initOrdAmt,
+    safetyOrdAmt: opts.safetyOrdAmt,
+    maxSafetyOrds: opts.maxSafetyOrds,
+    pxSteps: opts.pxSteps,
+    pxStepsMult: opts.pxStepsMult,
+    volMult: opts.volMult,
+    tpPct: opts.tpPct,
+    slPct: opts.slPct,
+    reserveFunds: opts.reserveFunds,
+    triggerType: opts.triggerType,
+    direction: opts.direction,
+  });
+  const data = getData(result) as Record<string, unknown>[];
+  if (opts.json) return printJson(data);
+  const r = data?.[0];
+  process.stdout.write(
+    `DCA bot created: ${r?.["algoId"]} (${r?.["sCode"] === "0" ? "OK" : r?.["sMsg"]})\n`,
+  );
+}
+
+export async function cmdDcaStop(
+  run: ToolRunner,
+  opts: { algoId: string; instId: string; stopType: string; json: boolean },
+): Promise<void> {
+  const result = await run("dca_stop_order", {
+    algoOrdType: "spot_dca",
+    algoId: opts.algoId,
+    instId: opts.instId,
+    stopType: opts.stopType,
+  });
+  const data = getData(result) as Record<string, unknown>[];
+  if (opts.json) return printJson(data);
+  const r = data?.[0];
+  process.stdout.write(
+    `DCA bot stopped: ${r?.["algoId"]} (${r?.["sCode"] === "0" ? "OK" : r?.["sMsg"]})\n`,
+  );
+}
+
+export async function cmdDcaOrders(
+  run: ToolRunner,
+  opts: { history: boolean; json: boolean },
+): Promise<void> {
+  const result = await run("dca_get_orders", {
+    algoOrdType: "spot_dca",
+    status: opts.history ? "history" : "active",
+  });
+  const orders = (getData(result) as Record<string, unknown>[]) ?? [];
+  if (opts.json) return printJson(orders);
+  if (!orders.length) { process.stdout.write("No DCA bots\n"); return; }
+  printTable(
+    orders.map((o) => ({
+      algoId:    o["algoId"],
+      instId:    o["instId"],
+      state:     o["state"],
+      pnl:       o["pnl"],
+      pnlRatio:  o["pnlRatio"],
+      createdAt: new Date(Number(o["cTime"])).toLocaleString(),
+    })),
+  );
+}
+
+export async function cmdDcaDetails(
+  run: ToolRunner,
+  opts: { algoId: string; json: boolean },
+): Promise<void> {
+  const result = await run("dca_get_order_details", {
+    algoOrdType: "spot_dca",
+    algoId: opts.algoId,
+  });
+  const detail = ((getData(result) as Record<string, unknown>[]) ?? [])[0];
+  if (!detail) { process.stdout.write("DCA bot not found\n"); return; }
+  if (opts.json) return printJson(detail);
+  printKv({
+    algoId:       detail["algoId"],
+    instId:       detail["instId"],
+    state:        detail["state"],
+    initOrdAmt:   detail["initOrdAmt"],
+    safetyOrdAmt: detail["safetyOrdAmt"],
+    maxSafetyOrds: detail["maxSafetyOrds"],
+    tpPct:        detail["tpPct"],
+    slPct:        detail["slPct"],
+    pnl:          detail["pnl"],
+    pnlRatio:     detail["pnlRatio"],
+    createdAt:    new Date(Number(detail["cTime"])).toLocaleString(),
+  });
+}
+
+export async function cmdDcaSubOrders(
+  run: ToolRunner,
+  opts: { algoId: string; live: boolean; json: boolean },
+): Promise<void> {
+  const result = await run("dca_get_sub_orders", {
+    algoOrdType: "spot_dca",
+    algoId: opts.algoId,
+    type: opts.live ? "live" : "filled",
+  });
+  const orders = (getData(result) as Record<string, unknown>[]) ?? [];
+  if (opts.json) return printJson(orders);
+  if (!orders.length) { process.stdout.write("No sub-orders\n"); return; }
+  printTable(
+    orders.map((o) => ({
+      ordId:  o["ordId"],
+      side:   o["side"],
+      px:     o["px"],
+      sz:     o["sz"],
+      fillPx: o["fillPx"],
+      fillSz: o["fillSz"],
+      state:  o["state"],
+      fee:    o["fee"],
+    })),
+  );
+}

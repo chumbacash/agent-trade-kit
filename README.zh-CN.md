@@ -29,7 +29,7 @@ OKX Agent TradeKit 通过 [Model Context Protocol](https://modelcontextprotocol.
 
 | 特性 | 说明 |
 |------|------|
-| **77 个工具，7 大模块** | 完整交易生命周期：行情 → 下单 → 算法单 → 账户管理 → 交易机器人 |
+| **82 个工具，7 大模块** | 完整交易生命周期：行情 → 下单 → 算法单 → 账户管理 → 交易机器人 |
 | **内置算法单** | 条件单、OCO 止盈止损、追踪止损 |
 | **安全控制** | `--read-only` 只读模式、按模块过滤、内置限速器 |
 | **零基础设施** | 本地 stdio 进程，无需服务器或数据库 |
@@ -46,7 +46,7 @@ OKX Agent TradeKit 通过 [Model Context Protocol](https://modelcontextprotocol.
 | `futures` | 6 | 交割合约下单/撤单/改单、持仓、成交记录、订单历史 | [→](docs/modules/futures.md) |
 | `option` | 10 | 期权交易：下单/撤单/改单/批量撤单、订单历史、持仓（含 Greeks）、成交记录、期权链、IV + Greeks | [→](docs/modules/option.md) |
 | `account` | 14 | 余额、账单（含归档）、持仓、持仓历史、手续费率、配置、仓位模式、最大可提币量、最大可用仓位、操作审计日志 | [→](docs/modules/account.md) |
-| `bot` | 5 | Trading Bot — 网格策略：列表/详情/子订单（只读），创建/停止（写）。支持现货网格、合约网格、Moon Grid | [→](docs/modules/bot.md) |
+| `bot` | 10 | 交易机器人：网格 (5)、DCA (5)。子模块：`bot.grid`、`bot.dca` | [→](docs/modules/bot.md) |
 
 ---
 

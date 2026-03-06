@@ -12,6 +12,8 @@ import { registerSwapTradeTools } from "../src/tools/swap-trade.js";
 import { registerAccountTools } from "../src/tools/account.js";
 import { registerFuturesTools } from "../src/tools/futures-trade.js";
 import { registerOptionTools } from "../src/tools/option-trade.js";
+import { registerGridTools } from "../src/tools/bot/grid.js";
+import { registerDcaTools } from "../src/tools/bot/dca.js";
 import { assertNotDemo } from "../src/tools/common.js";
 import { ConfigError } from "../src/utils/errors.js";
 
@@ -1395,5 +1397,105 @@ describe("option_get_greeks", () => {
     const { client, getLastCall } = makeMockClient();
     await tool.handler({ uly: "BTC-USD" }, makeContext(client));
     assert.equal((getLastCall()?.params as Record<string, unknown>).expTime, undefined);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Grid tools — module field
+// ---------------------------------------------------------------------------
+
+describe("grid tools module field", () => {
+  const tools = registerGridTools();
+
+  it("all grid tools have module 'bot.grid'", () => {
+    for (const tool of tools) {
+      assert.equal(tool.module, "bot.grid", `${tool.name} should have module bot.grid`);
+    }
+  });
+
+  it("registers exactly 5 grid tools", () => {
+    assert.equal(tools.length, 5);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// DCA tools
+// ---------------------------------------------------------------------------
+
+describe("dca_create_order", () => {
+  const tools = registerDcaTools();
+  const tool = tools.find((t) => t.name === "dca_create_order")!;
+
+  it("calls /dca/order-algo endpoint", async () => {
+    const { client, getLastCall } = makeMockClient();
+    await tool.handler({
+      instId: "BTC-USDT", investmentAmount: "100", investmentCcy: "USDT",
+    }, makeContext(client));
+    assert.equal(getLastCall()?.endpoint, "/api/v5/tradingBot/dca/order-algo");
+  });
+
+  it("passes optional params when provided", async () => {
+    const { client, getLastCall } = makeMockClient();
+    await tool.handler({
+      instId: "BTC-USDT", investmentAmount: "100", investmentCcy: "USDT",
+      maxPx: "80000", minPx: "60000",
+    }, makeContext(client));
+    const params = getLastCall()?.params as Record<string, unknown>;
+    assert.equal(params.maxPx, "80000");
+    assert.equal(params.minPx, "60000");
+  });
+});
+
+describe("dca_stop_order", () => {
+  const tools = registerDcaTools();
+  const tool = tools.find((t) => t.name === "dca_stop_order")!;
+
+  it("calls /dca/stop-order-algo with algoId in array", async () => {
+    const { client, getLastCall } = makeMockClient();
+    await tool.handler({ algoId: "123" }, makeContext(client));
+    assert.equal(getLastCall()?.endpoint, "/api/v5/tradingBot/dca/stop-order-algo");
+  });
+});
+
+describe("dca_get_orders", () => {
+  const tools = registerDcaTools();
+  const tool = tools.find((t) => t.name === "dca_get_orders")!;
+
+  it("calls pending endpoint by default", async () => {
+    const { client, getLastCall } = makeMockClient();
+    await tool.handler({}, makeContext(client));
+    assert.equal(getLastCall()?.endpoint, "/api/v5/tradingBot/dca/orders-algo-pending");
+  });
+
+  it("calls history endpoint when status=history", async () => {
+    const { client, getLastCall } = makeMockClient();
+    await tool.handler({ status: "history" }, makeContext(client));
+    assert.equal(getLastCall()?.endpoint, "/api/v5/tradingBot/dca/orders-algo-history");
+  });
+});
+
+describe("dca_get_sub_orders", () => {
+  const tools = registerDcaTools();
+  const tool = tools.find((t) => t.name === "dca_get_sub_orders")!;
+
+  it("calls /dca/sub-orders with algoId", async () => {
+    const { client, getLastCall } = makeMockClient();
+    await tool.handler({ algoId: "123" }, makeContext(client));
+    assert.equal(getLastCall()?.endpoint, "/api/v5/tradingBot/dca/sub-orders");
+    assert.equal((getLastCall()?.params as Record<string, unknown>).algoId, "123");
+  });
+});
+
+describe("dca tools registration", () => {
+  const tools = registerDcaTools();
+
+  it("registers exactly 5 DCA tools", () => {
+    assert.equal(tools.length, 5);
+  });
+
+  it("all DCA tools have module bot.dca", () => {
+    for (const tool of tools) {
+      assert.equal(tool.module, "bot.dca", `${tool.name} should have module bot.dca`);
+    }
   });
 });

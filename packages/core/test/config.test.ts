@@ -260,3 +260,38 @@ describe("loadConfig — site from toml profile", () => {
     assert.equal(config.site, "global");
   });
 });
+
+// ---------------------------------------------------------------------------
+// Bot sub-module parsing
+// ---------------------------------------------------------------------------
+
+describe("loadConfig — bot sub-modules", () => {
+  let saved: SavedEnv;
+  beforeEach(() => { saved = saveEnv(); });
+  afterEach(() => restoreEnv(saved));
+
+  it('"bot" expands to all bot sub-modules (bot.grid + bot.dca)', () => {
+    const config = loadConfig({ ...BASE_CLI, modules: "bot" });
+    assert.ok(config.modules.includes("bot.grid" as never));
+    assert.ok(config.modules.includes("bot.dca" as never));
+  });
+
+  it('"all" includes all bot defaults (bot.grid + bot.dca)', () => {
+    const config = loadConfig({ ...BASE_CLI, modules: "all" });
+    assert.ok(config.modules.includes("bot.grid" as never));
+    assert.ok(config.modules.includes("bot.dca" as never));
+    assert.ok(config.modules.includes("market" as never));
+  });
+
+  it("individual bot sub-modules can be selected", () => {
+    const config = loadConfig({ ...BASE_CLI, modules: "spot,bot.dca" });
+    assert.ok(config.modules.includes("spot" as never));
+    assert.ok(config.modules.includes("bot.dca" as never));
+    assert.ok(!config.modules.includes("bot.grid" as never));
+  });
+
+  it("default modules include bot.grid", () => {
+    const config = loadConfig(BASE_CLI);
+    assert.ok(config.modules.includes("bot.grid" as never));
+  });
+});
