@@ -17,6 +17,12 @@
 
 ### 修复
 
+---
+
+## [1.0.9] - 2026-03-06
+
+### 修复
+
 - **策略委托单**: `swap_get_algo_orders` 和 `spot_get_algo_orders` 查询历史记录时现在会传递必需的 `state` 参数（`/api/v5/trade/orders-algo-history`），默认值为 `effective` (#28)
 
 ---
