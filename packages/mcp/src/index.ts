@@ -20,10 +20,11 @@ Usage: okx-trade-mcp [options]
 Options:
   --modules <list>     Comma-separated list of modules to load
                        Available: market, spot, swap, futures, option, account
-                                  bot-grid, bot-dca, bot-contract-dca, bot-recurring
-                       Alias: "bot" expands to all four bot-* sub-modules
-                       Special: "all" loads all modules
-                       Default: spot,swap,account,bot-grid
+                                  bot.grid, bot.dca, bot.contract_dca, bot.recurring
+                       Alias: "bot" = bot.grid (default bot sub-module)
+                              "bot.all" = all bot sub-modules
+                       Special: "all" loads all modules (bot = bot.grid only)
+                       Default: spot,swap,account,bot.grid
 
   --profile <name>     Profile to load from ~/.okx/config.toml
                        Falls back to default_profile in config, then "default"

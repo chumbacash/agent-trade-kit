@@ -1,4 +1,4 @@
-import { BOT_MODULE_IDS, DEFAULT_MODULES, MODULES, OKX_API_BASE_URL, OKX_SITES, SITE_IDS, type ModuleId, type SiteId } from "./constants.js";
+import { BOT_DEFAULT_SUB_MODULES, BOT_SUB_MODULE_IDS, DEFAULT_MODULES, MODULES, OKX_API_BASE_URL, OKX_SITES, SITE_IDS, type ModuleId, type SiteId } from "./constants.js";
 import { ConfigError } from "./utils/errors.js";
 import { readTomlProfile } from "./config/toml.js";
 
@@ -25,6 +25,11 @@ export interface OkxConfig {
   userAgent?: string;
 }
 
+// Non-bot top-level modules (used by "all" expansion)
+const BASE_MODULES = MODULES.filter(
+  (m) => !m.startsWith("bot."),
+) as ModuleId[];
+
 function parseModuleList(rawModules?: string): ModuleId[] {
   if (!rawModules || rawModules.trim().length === 0) {
     return [...DEFAULT_MODULES];
@@ -32,7 +37,8 @@ function parseModuleList(rawModules?: string): ModuleId[] {
 
   const trimmed = rawModules.trim().toLowerCase();
   if (trimmed === "all") {
-    return [...MODULES];
+    // "all" = every non-bot module + bot defaults (grid only)
+    return [...BASE_MODULES, ...BOT_DEFAULT_SUB_MODULES];
   }
 
   const requested = trimmed
@@ -46,15 +52,20 @@ function parseModuleList(rawModules?: string): ModuleId[] {
 
   const deduped = new Set<ModuleId>();
   for (const moduleId of requested) {
-    // "bot" is a convenience alias that expands to all bot sub-modules
+    // "bot" → bot defaults only (grid)
     if (moduleId === "bot") {
-      BOT_MODULE_IDS.forEach((id) => deduped.add(id));
+      BOT_DEFAULT_SUB_MODULES.forEach((id) => deduped.add(id));
+      continue;
+    }
+    // "bot.all" → every bot sub-module
+    if (moduleId === "bot.all") {
+      BOT_SUB_MODULE_IDS.forEach((id) => deduped.add(id));
       continue;
     }
     if (!MODULES.includes(moduleId as ModuleId)) {
       throw new ConfigError(
         `Unknown module "${moduleId}".`,
-        `Use one of: ${MODULES.join(", ")}, "bot" (alias for all bot sub-modules), or "all".`,
+        `Use one of: ${MODULES.join(", ")}, "bot" (= bot.grid), "bot.all", or "all".`,
       );
     }
     deduped.add(moduleId as ModuleId);
