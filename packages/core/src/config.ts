@@ -57,10 +57,15 @@ function parseModuleList(rawModules?: string): ModuleId[] {
       for (const sub of BOT_DEFAULT_SUB_MODULES) deduped.add(sub);
       continue;
     }
+    // "bot.all" → expand to all bot sub-modules
+    if (moduleId === "bot.all") {
+      for (const sub of BOT_SUB_MODULE_IDS) deduped.add(sub);
+      continue;
+    }
     if (!MODULES.includes(moduleId as ModuleId)) {
       throw new ConfigError(
         `Unknown module "${moduleId}".`,
-        `Use one of: ${MODULES.join(", ")}, "bot", or "all".`,
+        `Use one of: ${MODULES.join(", ")}, "bot", "bot.all", or "all".`,
       );
     }
     deduped.add(moduleId as ModuleId);

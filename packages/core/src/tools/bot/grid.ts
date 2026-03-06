@@ -247,21 +247,26 @@ export function registerGridTools(): ToolSpec[] {
       },
       handler: async (rawArgs, context) => {
         const args = asRecord(rawArgs);
+        const algoOrdType = requireString(args, "algoOrdType");
+        const body: Record<string, unknown> = compactObject({
+          instId: requireString(args, "instId"),
+          algoOrdType,
+          maxPx: requireString(args, "maxPx"),
+          minPx: requireString(args, "minPx"),
+          gridNum: requireString(args, "gridNum"),
+          runType: readString(args, "runType"),
+          quoteSz: readString(args, "quoteSz"),
+          baseSz: readString(args, "baseSz"),
+          direction: readString(args, "direction"),
+          lever: readString(args, "lever"),
+          sz: readString(args, "sz"),
+        });
+        if (algoOrdType === "contract_grid") {
+          body.triggerParams = [{ triggerAction: "start", triggerStrategy: "instant" }];
+        }
         const response = await context.client.privatePost(
           "/api/v5/tradingBot/grid/order-algo",
-          compactObject({
-            instId: requireString(args, "instId"),
-            algoOrdType: requireString(args, "algoOrdType"),
-            maxPx: requireString(args, "maxPx"),
-            minPx: requireString(args, "minPx"),
-            gridNum: requireString(args, "gridNum"),
-            runType: readString(args, "runType"),
-            quoteSz: readString(args, "quoteSz"),
-            baseSz: readString(args, "baseSz"),
-            direction: readString(args, "direction"),
-            lever: readString(args, "lever"),
-            sz: readString(args, "sz"),
-          }),
+          body,
           privateRateLimit("grid_create_order", 20),
         );
         return normalize(response);
