@@ -91,6 +91,13 @@ Commands:
                   [--direction <long|short|neutral>] [--lever <n>] [--sz <n>]
   bot grid stop --algoId <id> --algoOrdType <type> --instId <id> [--stopType <1|2|3|5|6>]
 
+  bot dca orders [--history]
+  bot dca details --algoId <id>
+  bot dca sub-orders --algoId <id> [--live]
+  bot dca create --instId <id> --initOrdAmt <n> --safetyOrdAmt <n> --maxSafetyOrds <n>
+                 --pxSteps <n> --pxStepsMult <n> --volMult <n> --tpPct <n> [--slPct <n>]
+  bot dca stop --algoId <id> --instId <id> --stopType <1|2>
+
   config init
   config show
   config set <key> <value>
