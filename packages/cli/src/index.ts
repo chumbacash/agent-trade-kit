@@ -1,10 +1,12 @@
-import { parseArgs } from "node:util";
 import { createRequire } from "node:module";
 import { OkxRestClient, toToolErrorPayload, checkForUpdates } from "@agent-tradekit/core";
 
 const _require = createRequire(import.meta.url);
 const CLI_VERSION = (_require("../package.json") as { version: string }).version;
 import { loadProfileConfig } from "./config/loader.js";
+import { printHelp } from "./help.js";
+import { parseCli } from "./parser.js";
+import type { CliValues } from "./parser.js";
 import {
   cmdMarketTicker,
   cmdMarketTickers,
@@ -86,165 +88,13 @@ import {
   cmdGridStop,
 } from "./commands/bot.js";
 
-export function printHelp(): void {
-  process.stdout.write(`
-Usage: okx [--profile <name>] [--json] <command> [args]
+// Re-export for tests and external consumers
+export { printHelp } from "./help.js";
+export type { CliValues } from "./parser.js";
 
-Global Options:
-  --profile <name>   Use a named profile from ~/.okx/config.toml
-  --demo             Use simulated trading (demo) mode
-  --json             Output raw JSON
-  --help             Show this help
-
-Commands:
-  market ticker <instId>
-  market tickers <instType>               (SPOT|SWAP|FUTURES|OPTION)
-  market orderbook <instId> [--sz <n>]
-  market candles <instId> [--bar <bar>] [--limit <n>]
-  market instruments --instType <type> [--instId <id>]
-  market funding-rate <instId> [--history] [--limit <n>]
-  market mark-price --instType <MARGIN|SWAP|FUTURES|OPTION> [--instId <id>]
-  market trades <instId> [--limit <n>]
-  market index-ticker [--instId <id>] [--quoteCcy <ccy>]
-  market index-candles <instId> [--bar <bar>] [--limit <n>] [--history]
-  market price-limit <instId>
-  market open-interest --instType <SWAP|FUTURES|OPTION> [--instId <id>]
-
-  account balance [<ccy>]
-  account asset-balance [--ccy <ccy>]
-  account positions [--instType <type>] [--instId <id>]
-  account positions-history [--instType <type>] [--instId <id>] [--limit <n>]
-  account bills [--instType <type>] [--ccy <ccy>] [--limit <n>] [--archive]
-  account fees --instType <type> [--instId <id>]
-  account config
-  account set-position-mode --posMode <long_short_mode|net_mode>
-  account max-size --instId <id> --tdMode <cross|isolated> [--px <price>]
-  account max-avail-size --instId <id> --tdMode <cross|isolated|cash>
-  account max-withdrawal [--ccy <ccy>]
-  account transfer --ccy <ccy> --amt <n> --from <acct> --to <acct> [--transferType <0|1|2|3>]
-
-  spot orders [--instId <id>] [--history]
-  spot get --instId <id> --ordId <id>
-  spot fills [--instId <id>] [--ordId <id>]
-  spot place --instId <id> --side <buy|sell> --ordType <type> --sz <n> [--px <price>]
-  spot amend --instId <id> --ordId <id> [--newSz <n>] [--newPx <price>]
-  spot cancel <instId> --ordId <id>
-  spot algo orders [--instId <id>] [--history] [--ordType <conditional|oco>]
-  spot algo place --instId <id> --side <buy|sell> --sz <n> [--ordType <conditional|oco>]
-                  [--tpTriggerPx <price>] [--tpOrdPx <price|-1>]
-                  [--slTriggerPx <price>] [--slOrdPx <price|-1>]
-  spot algo amend --instId <id> --algoId <id> [--newSz <n>]
-                  [--newTpTriggerPx <price>] [--newTpOrdPx <price|-1>]
-                  [--newSlTriggerPx <price>] [--newSlOrdPx <price|-1>]
-  spot algo cancel --instId <id> --algoId <id>
-
-  swap positions [<instId>]
-  swap orders [--instId <id>] [--history] [--archive]
-  swap get --instId <id> --ordId <id>
-  swap fills [--instId <id>] [--ordId <id>] [--archive]
-  swap place --instId <id> --side <buy|sell> --ordType <type> --sz <n> [--posSide <side>] [--px <price>] [--tdMode <cross|isolated>]
-  swap cancel <instId> --ordId <id>
-  swap amend --instId <id> --ordId <id> [--newSz <n>] [--newPx <price>]
-  swap close --instId <id> --mgnMode <cross|isolated> [--posSide <net|long|short>] [--autoCxl]
-  swap leverage --instId <id> --lever <n> --mgnMode <cross|isolated> [--posSide <side>]
-  swap get-leverage --instId <id> --mgnMode <cross|isolated>
-  swap algo orders [--instId <id>] [--history] [--ordType <conditional|oco>]
-  swap algo trail --instId <id> --side <buy|sell> --sz <n> --callbackRatio <ratio>
-                  [--activePx <price>] [--posSide <net|long|short>] [--tdMode <cross|isolated>] [--reduceOnly]
-  swap algo place --instId <id> --side <buy|sell> --sz <n> [--ordType <conditional|oco>]
-                  [--tpTriggerPx <price>] [--tpOrdPx <price|-1>]
-                  [--slTriggerPx <price>] [--slOrdPx <price|-1>]
-                  [--posSide <net|long|short>] [--tdMode <cross|isolated>] [--reduceOnly]
-  swap algo amend --instId <id> --algoId <id> [--newSz <n>]
-                  [--newTpTriggerPx <price>] [--newTpOrdPx <price|-1>]
-                  [--newSlTriggerPx <price>] [--newSlOrdPx <price|-1>]
-  swap algo cancel --instId <id> --algoId <id>
-
-  futures orders [--instId <id>] [--history] [--archive]
-  futures positions [--instId <id>]
-  futures fills [--instId <id>] [--ordId <id>] [--archive]
-  futures place --instId <id> --side <buy|sell> --ordType <type> --sz <n> [--tdMode <cross|isolated>]
-                [--posSide <net|long|short>] [--px <price>] [--reduceOnly]
-  futures cancel <instId> --ordId <id>
-  futures get --instId <id> --ordId <id>
-
-  bot grid orders --algoOrdType <grid|contract_grid|moon_grid> [--instId <id>] [--algoId <id>] [--history]
-  bot grid details --algoOrdType <type> --algoId <id>
-  bot grid sub-orders --algoOrdType <type> --algoId <id> [--live]
-  bot grid create --instId <id> --algoOrdType <grid|contract_grid> --maxPx <px> --minPx <px> --gridNum <n>
-                  [--runType <1|2>] [--quoteSz <n>] [--baseSz <n>]
-                  [--direction <long|short|neutral>] [--lever <n>] [--sz <n>]
-  bot grid stop --algoId <id> --algoOrdType <type> --instId <id> [--stopType <1|2|3|5|6>]
-
-  config init
-  config show
-  config set <key> <value>
-  config setup-clients
-
-  setup --client <client> [--profile <name>] [--modules <list>]
-
-  Clients: ${SUPPORTED_CLIENTS.join(", ")}
-`);
-}
-
-export interface CliValues {
-  profile?: string;
-  demo?: boolean;
-  json?: boolean;
-  help?: boolean;
-  client?: string;
-  modules?: string;
-  bar?: string;
-  limit?: string;
-  sz?: string;
-  instId?: string;
-  history?: boolean;
-  ordId?: string;
-  side?: string;
-  ordType?: string;
-  px?: string;
-  posSide?: string;
-  tdMode?: string;
-  lever?: string;
-  mgnMode?: string;
-  tpTriggerPx?: string;
-  tpOrdPx?: string;
-  slTriggerPx?: string;
-  slOrdPx?: string;
-  algoId?: string;
-  reduceOnly?: boolean;
-  newSz?: string;
-  newTpTriggerPx?: string;
-  newTpOrdPx?: string;
-  newSlTriggerPx?: string;
-  newSlOrdPx?: string;
-  callbackRatio?: string;
-  callbackSpread?: string;
-  activePx?: string;
-  algoOrdType?: string;
-  gridNum?: string;
-  maxPx?: string;
-  minPx?: string;
-  runType?: string;
-  quoteSz?: string;
-  baseSz?: string;
-  direction?: string;
-  stopType?: string;
-  live?: boolean;
-  instType?: string;
-  quoteCcy?: string;
-  archive?: boolean;
-  posMode?: string;
-  ccy?: string;
-  from?: string;
-  to?: string;
-  transferType?: string;
-  subAcct?: string;
-  amt?: string;
-  autoCxl?: boolean;
-  clOrdId?: string;
-  newPx?: string;
-}
+// ---------------------------------------------------------------------------
+// Command handlers
+// ---------------------------------------------------------------------------
 
 export function handleConfigCommand(action: string, rest: string[], json: boolean): Promise<void> | void {
   if (action === "init") return cmdConfigInit();
@@ -692,83 +542,14 @@ export function handleBotCommand(
   if (action === "grid") return handleBotGridCommand(client, v, rest, json);
 }
 
+// ---------------------------------------------------------------------------
+// Main entry point
+// ---------------------------------------------------------------------------
+
 async function main(): Promise<void> {
   checkForUpdates("@okx_ai/okx-trade-cli", CLI_VERSION);
 
-  const { values, positionals } = parseArgs({
-    args: process.argv.slice(2),
-    options: {
-      profile: { type: "string" },
-      demo: { type: "boolean", default: false },
-      json: { type: "boolean", default: false },
-      help: { type: "boolean", default: false },
-      // setup command
-      client: { type: "string" },
-      modules: { type: "string" },
-      // market candles
-      bar: { type: "string" },
-      limit: { type: "string" },
-      sz: { type: "string" },
-      // orders
-      instId: { type: "string" },
-      history: { type: "boolean", default: false },
-      ordId: { type: "string" },
-      // trade
-      side: { type: "string" },
-      ordType: { type: "string" },
-      px: { type: "string" },
-      posSide: { type: "string" },
-      tdMode: { type: "string" },
-      // leverage
-      lever: { type: "string" },
-      mgnMode: { type: "string" },
-      // algo orders
-      tpTriggerPx: { type: "string" },
-      tpOrdPx: { type: "string" },
-      slTriggerPx: { type: "string" },
-      slOrdPx: { type: "string" },
-      algoId: { type: "string" },
-      reduceOnly: { type: "boolean", default: false },
-      // algo amend
-      newSz: { type: "string" },
-      newTpTriggerPx: { type: "string" },
-      newTpOrdPx: { type: "string" },
-      newSlTriggerPx: { type: "string" },
-      newSlOrdPx: { type: "string" },
-      // trailing stop
-      callbackRatio: { type: "string" },
-      callbackSpread: { type: "string" },
-      activePx: { type: "string" },
-      // grid bot
-      algoOrdType: { type: "string" },
-      gridNum: { type: "string" },
-      maxPx: { type: "string" },
-      minPx: { type: "string" },
-      runType: { type: "string" },
-      quoteSz: { type: "string" },
-      baseSz: { type: "string" },
-      direction: { type: "string" },
-      stopType: { type: "string" },
-      live: { type: "boolean", default: false },
-      // market extras
-      instType: { type: "string" },
-      quoteCcy: { type: "string" },
-      // account extras
-      archive: { type: "boolean", default: false },
-      posMode: { type: "string" },
-      ccy: { type: "string" },
-      from: { type: "string" },
-      to: { type: "string" },
-      transferType: { type: "string" },
-      subAcct: { type: "string" },
-      amt: { type: "string" },
-      // swap/order extras
-      autoCxl: { type: "boolean", default: false },
-      clOrdId: { type: "string" },
-      newPx: { type: "string" },
-    },
-    allowPositionals: true,
-  });
+  const { values, positionals } = parseCli(process.argv.slice(2));
 
   if (values.help || positionals.length === 0) {
     printHelp();
@@ -776,7 +557,7 @@ async function main(): Promise<void> {
   }
 
   const [module, action, ...rest] = positionals;
-  const v = values as CliValues;
+  const v = values;
   const json = v.json ?? false;
 
   if (module === "config") return handleConfigCommand(action, rest, json);
