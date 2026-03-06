@@ -39,7 +39,7 @@ export const BOT_SUB_MODULE_IDS = [
 
 export type BotSubModuleId = (typeof BOT_SUB_MODULE_IDS)[number];
 
-export const BOT_DEFAULT_SUB_MODULES: BotSubModuleId[] = [...BOT_SUB_MODULE_IDS];
+export const BOT_DEFAULT_SUB_MODULES: BotSubModuleId[] = ["bot.grid"];
 
 export const MODULES = [
   "market",

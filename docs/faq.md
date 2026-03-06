@@ -166,7 +166,7 @@ Open a GitHub issue and include the full error block (for MCP) or full stderr ou
 
 ### Which OKX API features are NOT supported by the MCP server or CLI?
 
-The MCP server and CLI currently cover **7 modules / 77 tools** focused on the core trading lifecycle:
+The MCP server and CLI currently cover the following modules, focused on the core trading lifecycle:
 
 | Module | Tools |
 |---|---|
