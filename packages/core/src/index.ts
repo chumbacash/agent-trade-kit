@@ -1,5 +1,6 @@
 export { OkxRestClient } from "./client/rest-client.js";
-export { buildTools } from "./tools/index.js";
+export { buildTools, createToolRunner } from "./tools/index.js";
+export type { ToolResult, ToolRunner } from "./tools/index.js";
 export { toMcpTool } from "./tools/types.js";
 export { loadConfig } from "./config.js";
 export { MODULES, DEFAULT_MODULES, OKX_API_BASE_URL, OKX_SITES, SITE_IDS } from "./constants.js";

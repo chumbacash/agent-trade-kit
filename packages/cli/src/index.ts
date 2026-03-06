@@ -1,5 +1,6 @@
 import { createRequire } from "node:module";
-import { OkxRestClient, toToolErrorPayload, checkForUpdates } from "@agent-tradekit/core";
+import { OkxRestClient, toToolErrorPayload, checkForUpdates, createToolRunner } from "@agent-tradekit/core";
+import type { ToolRunner } from "@agent-tradekit/core";
 
 const _require = createRequire(import.meta.url);
 const CLI_VERSION = (_require("../package.json") as { version: string }).version;
@@ -125,27 +126,27 @@ export function handleSetupCommand(v: CliValues): void {
 }
 
 export function handleMarketPublicCommand(
-  client: OkxRestClient,
+  run: ToolRunner,
   action: string,
   rest: string[],
   v: CliValues,
   json: boolean
 ): Promise<void> | void {
-  if (action === "ticker") return cmdMarketTicker(client, rest[0], json);
-  if (action === "tickers") return cmdMarketTickers(client, rest[0], json);
+  if (action === "ticker") return cmdMarketTicker(run, rest[0], json);
+  if (action === "tickers") return cmdMarketTickers(run, rest[0], json);
   if (action === "instruments")
-    return cmdMarketInstruments(client, { instType: v.instType!, instId: v.instId, json });
+    return cmdMarketInstruments(run, { instType: v.instType!, instId: v.instId, json });
   if (action === "mark-price")
-    return cmdMarketMarkPrice(client, { instType: v.instType!, instId: v.instId, json });
+    return cmdMarketMarkPrice(run, { instType: v.instType!, instId: v.instId, json });
   if (action === "index-ticker")
-    return cmdMarketIndexTicker(client, { instId: v.instId, quoteCcy: v.quoteCcy, json });
-  if (action === "price-limit") return cmdMarketPriceLimit(client, rest[0], json);
+    return cmdMarketIndexTicker(run, { instId: v.instId, quoteCcy: v.quoteCcy, json });
+  if (action === "price-limit") return cmdMarketPriceLimit(run, rest[0], json);
   if (action === "open-interest")
-    return cmdMarketOpenInterest(client, { instType: v.instType!, instId: v.instId, json });
+    return cmdMarketOpenInterest(run, { instType: v.instType!, instId: v.instId, json });
 }
 
 export function handleMarketDataCommand(
-  client: OkxRestClient,
+  run: ToolRunner,
   action: string,
   rest: string[],
   v: CliValues,
@@ -153,45 +154,45 @@ export function handleMarketDataCommand(
 ): Promise<void> | void {
   const limit = v.limit !== undefined ? Number(v.limit) : undefined;
   if (action === "orderbook")
-    return cmdMarketOrderbook(client, rest[0], v.sz !== undefined ? Number(v.sz) : undefined, json);
+    return cmdMarketOrderbook(run, rest[0], v.sz !== undefined ? Number(v.sz) : undefined, json);
   if (action === "candles")
-    return cmdMarketCandles(client, rest[0], { bar: v.bar, limit, json });
+    return cmdMarketCandles(run, rest[0], { bar: v.bar, limit, json });
   if (action === "funding-rate")
-    return cmdMarketFundingRate(client, rest[0], { history: v.history ?? false, limit, json });
+    return cmdMarketFundingRate(run, rest[0], { history: v.history ?? false, limit, json });
   if (action === "trades")
-    return cmdMarketTrades(client, rest[0], { limit, json });
+    return cmdMarketTrades(run, rest[0], { limit, json });
   if (action === "index-candles")
-    return cmdMarketIndexCandles(client, rest[0], { bar: v.bar, limit, history: v.history ?? false, json });
+    return cmdMarketIndexCandles(run, rest[0], { bar: v.bar, limit, history: v.history ?? false, json });
 }
 
 export function handleMarketCommand(
-  client: OkxRestClient,
+  run: ToolRunner,
   action: string,
   rest: string[],
   v: CliValues,
   json: boolean
 ): Promise<void> | void {
   return (
-    handleMarketPublicCommand(client, action, rest, v, json) ??
-    handleMarketDataCommand(client, action, rest, v, json)
+    handleMarketPublicCommand(run, action, rest, v, json) ??
+    handleMarketDataCommand(run, action, rest, v, json)
   );
 }
 
 export function handleAccountWriteCommand(
-  client: OkxRestClient,
+  run: ToolRunner,
   action: string,
   v: CliValues,
   json: boolean
 ): Promise<void> | void {
   if (action === "set-position-mode")
-    return cmdAccountSetPositionMode(client, v.posMode!, json);
+    return cmdAccountSetPositionMode(run, v.posMode!, json);
   if (action === "max-size")
-    return cmdAccountMaxSize(client, { instId: v.instId!, tdMode: v.tdMode!, px: v.px, json });
+    return cmdAccountMaxSize(run, { instId: v.instId!, tdMode: v.tdMode!, px: v.px, json });
   if (action === "max-avail-size")
-    return cmdAccountMaxAvailSize(client, { instId: v.instId!, tdMode: v.tdMode!, json });
-  if (action === "max-withdrawal") return cmdAccountMaxWithdrawal(client, v.ccy, json);
+    return cmdAccountMaxAvailSize(run, { instId: v.instId!, tdMode: v.tdMode!, json });
+  if (action === "max-withdrawal") return cmdAccountMaxWithdrawal(run, v.ccy, json);
   if (action === "transfer")
-    return cmdAccountTransfer(client, {
+    return cmdAccountTransfer(run, {
       ccy: v.ccy!,
       amt: v.amt!,
       from: v.from!,
@@ -203,26 +204,26 @@ export function handleAccountWriteCommand(
 }
 
 function handleAccountCommand(
-  client: OkxRestClient,
+  run: ToolRunner,
   action: string,
   rest: string[],
   v: CliValues,
   json: boolean
 ): Promise<void> | void {
   const limit = v.limit !== undefined ? Number(v.limit) : undefined;
-  if (action === "balance") return cmdAccountBalance(client, rest[0], json);
-  if (action === "asset-balance") return cmdAccountAssetBalance(client, v.ccy, json);
+  if (action === "balance") return cmdAccountBalance(run, rest[0], json);
+  if (action === "asset-balance") return cmdAccountAssetBalance(run, v.ccy, json);
   if (action === "positions")
-    return cmdAccountPositions(client, { instType: v.instType, instId: v.instId, json });
+    return cmdAccountPositions(run, { instType: v.instType, instId: v.instId, json });
   if (action === "positions-history")
-    return cmdAccountPositionsHistory(client, {
+    return cmdAccountPositionsHistory(run, {
       instType: v.instType,
       instId: v.instId,
       limit,
       json,
     });
   if (action === "bills")
-    return cmdAccountBills(client, {
+    return cmdAccountBills(run, {
       archive: v.archive ?? false,
       instType: v.instType,
       ccy: v.ccy,
@@ -230,19 +231,19 @@ function handleAccountCommand(
       json,
     });
   if (action === "fees")
-    return cmdAccountFees(client, { instType: v.instType!, instId: v.instId, json });
-  if (action === "config") return cmdAccountConfig(client, json);
-  return handleAccountWriteCommand(client, action, v, json);
+    return cmdAccountFees(run, { instType: v.instType!, instId: v.instId, json });
+  if (action === "config") return cmdAccountConfig(run, json);
+  return handleAccountWriteCommand(run, action, v, json);
 }
 
 function handleSpotAlgoCommand(
-  client: OkxRestClient,
+  run: ToolRunner,
   subAction: string,
   v: CliValues,
   json: boolean
 ): Promise<void> | void {
   if (subAction === "place")
-    return cmdSpotAlgoPlace(client, {
+    return cmdSpotAlgoPlace(run, {
       instId: v.instId!,
       side: v.side!,
       ordType: v.ordType ?? "conditional",
@@ -254,7 +255,7 @@ function handleSpotAlgoCommand(
       json,
     });
   if (subAction === "amend")
-    return cmdSpotAlgoAmend(client, {
+    return cmdSpotAlgoAmend(run, {
       instId: v.instId!,
       algoId: v.algoId!,
       newSz: v.newSz,
@@ -265,9 +266,9 @@ function handleSpotAlgoCommand(
       json,
     });
   if (subAction === "cancel")
-    return cmdSpotAlgoCancel(client, v.instId!, v.algoId!, json);
+    return cmdSpotAlgoCancel(run, v.instId!, v.algoId!, json);
   if (subAction === "orders")
-    return cmdSpotAlgoOrders(client, {
+    return cmdSpotAlgoOrders(run, {
       instId: v.instId,
       status: v.history ? "history" : "pending",
       ordType: v.ordType,
@@ -276,24 +277,24 @@ function handleSpotAlgoCommand(
 }
 
 function handleSpotCommand(
-  client: OkxRestClient,
+  run: ToolRunner,
   action: string,
   rest: string[],
   v: CliValues,
   json: boolean
 ): Promise<void> | void {
   if (action === "orders")
-    return cmdSpotOrders(client, {
+    return cmdSpotOrders(run, {
       instId: v.instId,
       status: v.history ? "history" : "open",
       json,
     });
   if (action === "get")
-    return cmdSpotGet(client, { instId: v.instId!, ordId: v.ordId, clOrdId: v.clOrdId, json });
+    return cmdSpotGet(run, { instId: v.instId!, ordId: v.ordId, clOrdId: v.clOrdId, json });
   if (action === "fills")
-    return cmdSpotFills(client, { instId: v.instId, ordId: v.ordId, json });
+    return cmdSpotFills(run, { instId: v.instId, ordId: v.ordId, json });
   if (action === "amend")
-    return cmdSpotAmend(client, {
+    return cmdSpotAmend(run, {
       instId: v.instId!,
       ordId: v.ordId,
       clOrdId: v.clOrdId,
@@ -302,7 +303,7 @@ function handleSpotCommand(
       json,
     });
   if (action === "place")
-    return cmdSpotPlace(client, {
+    return cmdSpotPlace(run, {
       instId: v.instId!,
       side: v.side!,
       ordType: v.ordType!,
@@ -311,19 +312,19 @@ function handleSpotCommand(
       json,
     });
   if (action === "cancel")
-    return cmdSpotCancel(client, rest[0], v.ordId!, json);
+    return cmdSpotCancel(run, rest[0], v.ordId!, json);
   if (action === "algo")
-    return handleSpotAlgoCommand(client, rest[0], v, json);
+    return handleSpotAlgoCommand(run, rest[0], v, json);
 }
 
 function handleSwapAlgoCommand(
-  client: OkxRestClient,
+  run: ToolRunner,
   subAction: string,
   v: CliValues,
   json: boolean
 ): Promise<void> | void {
   if (subAction === "trail")
-    return cmdSwapAlgoTrailPlace(client, {
+    return cmdSwapAlgoTrailPlace(run, {
       instId: v.instId!,
       side: v.side!,
       sz: v.sz!,
@@ -336,7 +337,7 @@ function handleSwapAlgoCommand(
       json,
     });
   if (subAction === "place")
-    return cmdSwapAlgoPlace(client, {
+    return cmdSwapAlgoPlace(run, {
       instId: v.instId!,
       side: v.side!,
       ordType: v.ordType ?? "conditional",
@@ -351,7 +352,7 @@ function handleSwapAlgoCommand(
       json,
     });
   if (subAction === "amend")
-    return cmdSwapAlgoAmend(client, {
+    return cmdSwapAlgoAmend(run, {
       instId: v.instId!,
       algoId: v.algoId!,
       newSz: v.newSz,
@@ -362,9 +363,9 @@ function handleSwapAlgoCommand(
       json,
     });
   if (subAction === "cancel")
-    return cmdSwapAlgoCancel(client, v.instId!, v.algoId!, json);
+    return cmdSwapAlgoCancel(run, v.instId!, v.algoId!, json);
   if (subAction === "orders")
-    return cmdSwapAlgoOrders(client, {
+    return cmdSwapAlgoOrders(run, {
       instId: v.instId,
       status: v.history ? "history" : "pending",
       ordType: v.ordType,
@@ -373,31 +374,31 @@ function handleSwapAlgoCommand(
 }
 
 export function handleSwapCommand(
-  client: OkxRestClient,
+  run: ToolRunner,
   action: string,
   rest: string[],
   v: CliValues,
   json: boolean
 ): Promise<void> | void {
   if (action === "positions")
-    return cmdSwapPositions(client, rest[0] ?? v.instId, json);
+    return cmdSwapPositions(run, rest[0] ?? v.instId, json);
   if (action === "orders")
-    return cmdSwapOrders(client, {
+    return cmdSwapOrders(run, {
       instId: v.instId,
       status: v.history ? "history" : "open",
       json,
     });
   if (action === "get")
-    return cmdSwapGet(client, { instId: v.instId!, ordId: v.ordId, clOrdId: v.clOrdId, json });
+    return cmdSwapGet(run, { instId: v.instId!, ordId: v.ordId, clOrdId: v.clOrdId, json });
   if (action === "fills")
-    return cmdSwapFills(client, {
+    return cmdSwapFills(run, {
       instId: v.instId,
       ordId: v.ordId,
       archive: v.archive ?? false,
       json,
     });
   if (action === "close")
-    return cmdSwapClose(client, {
+    return cmdSwapClose(run, {
       instId: v.instId!,
       mgnMode: v.mgnMode!,
       posSide: v.posSide,
@@ -405,9 +406,9 @@ export function handleSwapCommand(
       json,
     });
   if (action === "get-leverage")
-    return cmdSwapGetLeverage(client, { instId: v.instId!, mgnMode: v.mgnMode!, json });
+    return cmdSwapGetLeverage(run, { instId: v.instId!, mgnMode: v.mgnMode!, json });
   if (action === "place")
-    return cmdSwapPlace(client, {
+    return cmdSwapPlace(run, {
       instId: v.instId!,
       side: v.side!,
       ordType: v.ordType!,
@@ -418,9 +419,9 @@ export function handleSwapCommand(
       json,
     });
   if (action === "cancel")
-    return cmdSwapCancel(client, rest[0], v.ordId!, json);
+    return cmdSwapCancel(run, rest[0], v.ordId!, json);
   if (action === "amend")
-    return cmdSwapAmend(client, {
+    return cmdSwapAmend(run, {
       instId: v.instId!,
       ordId: v.ordId,
       clOrdId: v.clOrdId,
@@ -429,7 +430,7 @@ export function handleSwapCommand(
       json,
     });
   if (action === "leverage")
-    return cmdSwapSetLeverage(client, {
+    return cmdSwapSetLeverage(run, {
       instId: v.instId!,
       lever: v.lever!,
       mgnMode: v.mgnMode!,
@@ -437,11 +438,11 @@ export function handleSwapCommand(
       json,
     });
   if (action === "algo")
-    return handleSwapAlgoCommand(client, rest[0], v, json);
+    return handleSwapAlgoCommand(run, rest[0], v, json);
 }
 
 function handleFuturesCommand(
-  client: OkxRestClient,
+  run: ToolRunner,
   action: string,
   rest: string[],
   v: CliValues,
@@ -451,18 +452,18 @@ function handleFuturesCommand(
     let status: "archive" | "history" | "open" = "open";
     if (v.archive) status = "archive";
     else if (v.history) status = "history";
-    return cmdFuturesOrders(client, { instId: v.instId, status, json });
+    return cmdFuturesOrders(run, { instId: v.instId, status, json });
   }
-  if (action === "positions") return cmdFuturesPositions(client, v.instId, json);
+  if (action === "positions") return cmdFuturesPositions(run, v.instId, json);
   if (action === "fills")
-    return cmdFuturesFills(client, {
+    return cmdFuturesFills(run, {
       instId: v.instId,
       ordId: v.ordId,
       archive: v.archive ?? false,
       json,
     });
   if (action === "place")
-    return cmdFuturesPlace(client, {
+    return cmdFuturesPlace(run, {
       instId: v.instId!,
       side: v.side!,
       ordType: v.ordType!,
@@ -474,20 +475,20 @@ function handleFuturesCommand(
       json,
     });
   if (action === "cancel")
-    return cmdFuturesCancel(client, rest[0] ?? v.instId!, v.ordId!, json);
+    return cmdFuturesCancel(run, rest[0] ?? v.instId!, v.ordId!, json);
   if (action === "get")
-    return cmdFuturesGet(client, { instId: rest[0] ?? v.instId!, ordId: v.ordId, json });
+    return cmdFuturesGet(run, { instId: rest[0] ?? v.instId!, ordId: v.ordId, json });
 }
 
 export function handleBotGridCommand(
-  client: OkxRestClient,
+  run: ToolRunner,
   v: CliValues,
   rest: string[],
   json: boolean
 ): Promise<void> | void {
   const subAction = rest[0];
   if (subAction === "orders")
-    return cmdGridOrders(client, {
+    return cmdGridOrders(run, {
       algoOrdType: v.algoOrdType!,
       instId: v.instId,
       algoId: v.algoId,
@@ -495,20 +496,20 @@ export function handleBotGridCommand(
       json,
     });
   if (subAction === "details")
-    return cmdGridDetails(client, {
+    return cmdGridDetails(run, {
       algoOrdType: v.algoOrdType!,
       algoId: v.algoId!,
       json,
     });
   if (subAction === "sub-orders")
-    return cmdGridSubOrders(client, {
+    return cmdGridSubOrders(run, {
       algoOrdType: v.algoOrdType!,
       algoId: v.algoId!,
       type: v.live ? "live" : "filled",
       json,
     });
   if (subAction === "create")
-    return cmdGridCreate(client, {
+    return cmdGridCreate(run, {
       instId: v.instId!,
       algoOrdType: v.algoOrdType!,
       maxPx: v.maxPx!,
@@ -523,7 +524,7 @@ export function handleBotGridCommand(
       json,
     });
   if (subAction === "stop")
-    return cmdGridStop(client, {
+    return cmdGridStop(run, {
       algoId: v.algoId!,
       algoOrdType: v.algoOrdType!,
       instId: v.instId!,
@@ -533,13 +534,13 @@ export function handleBotGridCommand(
 }
 
 export function handleBotCommand(
-  client: OkxRestClient,
+  run: ToolRunner,
   action: string,
   rest: string[],
   v: CliValues,
   json: boolean
 ): Promise<void> | void {
-  if (action === "grid") return handleBotGridCommand(client, v, rest, json);
+  if (action === "grid") return handleBotGridCommand(run, v, rest, json);
 }
 
 // ---------------------------------------------------------------------------
@@ -565,13 +566,14 @@ async function main(): Promise<void> {
 
   const config = loadProfileConfig({ profile: v.profile, demo: v.demo, userAgent: `okx-trade-cli/${CLI_VERSION}` });
   const client = new OkxRestClient(config);
+  const run = createToolRunner(client, config);
 
-  if (module === "market") return handleMarketCommand(client, action, rest, v, json);
-  if (module === "account") return handleAccountCommand(client, action, rest, v, json);
-  if (module === "spot") return handleSpotCommand(client, action, rest, v, json);
-  if (module === "swap") return handleSwapCommand(client, action, rest, v, json);
-  if (module === "futures") return handleFuturesCommand(client, action, rest, v, json);
-  if (module === "bot") return handleBotCommand(client, action, rest, v, json);
+  if (module === "market") return handleMarketCommand(run, action, rest, v, json);
+  if (module === "account") return handleAccountCommand(run, action, rest, v, json);
+  if (module === "spot") return handleSpotCommand(run, action, rest, v, json);
+  if (module === "swap") return handleSwapCommand(run, action, rest, v, json);
+  if (module === "futures") return handleFuturesCommand(run, action, rest, v, json);
+  if (module === "bot") return handleBotCommand(run, action, rest, v, json);
 
   process.stderr.write(`Unknown command: ${module} ${action ?? ""}\n`);
   process.exitCode = 1;
