@@ -38,7 +38,6 @@
 
 ### 修复
 
-- **构建**：`smol-toml` 已加入 `@okx_ai/okx-trade-mcp` 和 `@okx_ai/okx-trade-cli` 的运行时 `dependencies` — 修复通过 npm 全局安装后执行时出现的 `ERR_MODULE_NOT_FOUND: Cannot find package 'smol-toml'` 错误
 - **重复工具**：移除重复注册的 `swap_amend_order` 工具，避免工具列表中出现两次
 - **CLI swap amend 分发**：`okx swap amend` 现在正确路由到合约处理器，而非现货处理器
 

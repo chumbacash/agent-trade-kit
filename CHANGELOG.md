@@ -38,7 +38,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **Build**: `smol-toml` added to runtime `dependencies` of `@okx_ai/okx-trade-mcp` and `@okx_ai/okx-trade-cli` — fixes `ERR_MODULE_NOT_FOUND: Cannot find package 'smol-toml'` when packages are installed globally via npm
 - **Duplicate tool**: removed duplicate `swap_amend_order` tool registration that caused the tool to appear twice in tool listings
 - **CLI swap amend dispatch**: `okx swap amend` now correctly dispatches to the swap handler instead of the spot handler
 
