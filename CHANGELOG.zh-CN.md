@@ -19,6 +19,14 @@
 
 ---
 
+## [1.1.1] - 2026-03-07
+
+### 修复
+
+- **构建**：CLI 产物中 `smol-toml` 未被内联打包（尽管 `noExternal` 已配置），npm registry 上的 `1.1.0` 包含外部 `import from "smol-toml"` 导致运行时报错。已将 `smol-toml` 加入运行时 `dependencies` 作为可靠修复，并升版重新发布。
+
+---
+
 ## [1.1.0] - 2026-03-07
 
 ### 新增
