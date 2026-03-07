@@ -1,16 +1,36 @@
-node_modules/
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# AI Assistant
+.cursor/
+.claude/
+
+# Build output
 dist/
-coverage/
 *.tsbuildinfo
+coverage/
+
+# Dependencies
+node_modules/
+package-lock.json
+
+# Logs
+npm-debug.log*
+
+# Environment / credentials
 .env
 .env.local
-npm-debug.log*
-_tmp_*
-.cursor/
-scripts/idea-agent/*.log
-scripts/idea-agent/work-log.md
-scripts/idea-agent/.pid
-scripts/idea-agent/.disabled
-scripts/idea-agent/agent-state.json
+
+# Internal / not for open source
+docs/
+sonar-project.properties
+.gitlab-ci.yml
 scripts/smoke-test/report.md
-scripts/idea-agent/__pycache__/
+_tmp_*
