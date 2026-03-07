@@ -47,15 +47,17 @@ okx-trade-mcp --modules all          # 加载所有模块
 {
   "mcpServers": {
     "okx-live": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "live", "--modules", "all"]
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "live", "--modules", "all"]
     },
     "okx-demo": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "demo"]
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "demo"]
     }
   }
 }
 ```
+
+> **提示：** 运行 `okx-trade-mcp setup --client claude-desktop` 可自动生成以上配置。
 
 更多说明请参考[仓库根目录 README](../../README.zh-CN.md)。
