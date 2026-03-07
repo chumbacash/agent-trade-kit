@@ -19,6 +19,29 @@
 
 ---
 
+## [1.1.0] - 2026-03-07
+
+### 新增
+
+- **合约 DCA 机器人**：`bot.dca` 子模块现支持合约（永续）DCA，新增工具 `dca_get_contract_orders`、`dca_get_contract_order_details`、`dca_create_contract_order`、`dca_stop_contract_order`
+- **`okx setup` 子命令**：交互式向导，自动生成并写入 MCP 服务器配置，支持 Claude Code、VS Code、Windsurf 等 MCP 客户端
+- **CLI `--version` / `-v` 参数**：输出当前包版本后退出
+- **CLI `swap amend` 命令**：通过 CLI 改单（`okx swap amend`）
+
+### 修复
+
+- **构建**：`smol-toml` 现已打包进 MCP 服务器和 CLI 产物，消除了全局安装时缺少运行时依赖的问题
+- **重复工具**：移除重复注册的 `swap_amend_order` 工具，避免工具列表中出现两次
+- **CLI swap amend 分发**：`okx swap amend` 现在正确路由到合约处理器，而非现货处理器
+
+### 变更
+
+- **`bot.dca` 改为按需加载**：DCA 子模块不再默认加载；通过 `--modules bot.dca` 或在 `~/.okx/config.toml` 的 `modules` 列表中添加 `bot.dca` 来启用
+- **Bot 工具重组为子模块**：`bot` 模块采用子模块体系，`bot.grid` 和 `bot.dca` 可独立加载
+- **CLI 架构**：CLI 命令现在通过 `ToolRunner` 直接调用 Core 工具处理器，减少 MCP 与 CLI 之间的代码重复
+
+---
+
 ## [1.0.9] - 2026-03-06
 
 ### 修复
