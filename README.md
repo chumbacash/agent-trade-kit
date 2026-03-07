@@ -52,6 +52,24 @@ It runs as a **local process** with your API keys stored only on your machine. N
 
 ## Quick Start
 
+### One-line install (recommended)
+
+**macOS / Linux:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/okx/agent-tradekit/master/scripts/install.sh | bash
+```
+
+**Windows (PowerShell):**
+
+```powershell
+irm https://raw.githubusercontent.com/okx/agent-tradekit/master/scripts/install.ps1 | iex
+```
+
+The installer checks Node.js, installs the package, and detects your MCP clients automatically.
+
+### Manual install
+
 **Prerequisites:** Node.js >= 18
 
 ```bash
