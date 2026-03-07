@@ -169,47 +169,17 @@ okx bot grid details --algoOrdType moon_grid --algoId <algoId>
 okx bot dca orders
 okx bot dca orders --history
 okx bot dca details --algoId <algoId>
-okx bot dca sub-orders --algoId <algoId>
-okx bot dca ai-param --instId BTC-USDT --userRiskMode moderate
+okx bot dca sub-orders --algoId <algoId>            # filled sub-orders
+okx bot dca sub-orders --algoId <algoId> --live     # live (pending) sub-orders
 
 okx bot dca create \
   --instId BTC-USDT \
+  --triggerType 1 \
   --initOrdAmt 50 --safetyOrdAmt 30 --maxSafetyOrds 3 \
   --pxSteps 0.05 --pxStepsMult 1 --volMult 1 \
   --tpPct 0.03 --slPct 0.20
 
 okx bot dca stop --algoId <algoId> --instId BTC-USDT --stopType 2
-
-# ── Contract DCA ──────────────────────────────────────────────────────────────
-okx bot contract-dca list
-okx bot contract-dca list --history
-okx bot contract-dca positions --algoId <algoId>
-okx bot contract-dca cycles --algoId <algoId>
-okx bot contract-dca orders --algoId <algoId> --cycleId <cycleId>
-
-okx bot contract-dca create \
-  --instId BTC-USDT-SWAP --lever 3 --side buy \
-  --initOrdAmt 50 --safetyOrdAmt 30 --maxSafetyOrds 3 \
-  --pxSteps 0.02 --pxStepsMult 1 --volMult 1 --tpPct 0.02
-
-okx bot contract-dca stop --algoId <algoId>
-okx bot contract-dca manual-buy --algoId <algoId> --amt 30
-okx bot contract-dca margin-add --algoId <algoId> --amt 20
-okx bot contract-dca set-tp --algoId <algoId> --tpPrice 31500
-okx bot contract-dca set-reinvest --algoId <algoId> --allowReinvest true
-
-# ── Recurring Buy ─────────────────────────────────────────────────────────────
-okx bot recurring orders
-okx bot recurring details --algoId <algoId>
-okx bot recurring sub-orders --algoId <algoId>
-
-okx bot recurring create \
-  --stgyName "Daily BTC" \
-  --recurringList '[{"ccy":"BTC","ratio":"1"}]' \
-  --amt 10 --period daily
-
-okx bot recurring amend --algoId <algoId> --stgyName "New Name"
-okx bot recurring stop --algoId <algoId>
 ```
 
 ---
@@ -414,47 +384,17 @@ okx bot grid details --algoOrdType moon_grid --algoId <algoId>
 okx bot dca orders
 okx bot dca orders --history
 okx bot dca details --algoId <algoId>
-okx bot dca sub-orders --algoId <algoId>
-okx bot dca ai-param --instId BTC-USDT --userRiskMode moderate
+okx bot dca sub-orders --algoId <algoId>            # 已成交子订单
+okx bot dca sub-orders --algoId <algoId> --live     # 挂单中子订单
 
 okx bot dca create \
   --instId BTC-USDT \
+  --triggerType 1 \
   --initOrdAmt 50 --safetyOrdAmt 30 --maxSafetyOrds 3 \
   --pxSteps 0.05 --pxStepsMult 1 --volMult 1 \
   --tpPct 0.03 --slPct 0.20
 
 okx bot dca stop --algoId <algoId> --instId BTC-USDT --stopType 2
-
-# ── 合约 DCA ──────────────────────────────────────────────────────────────────
-okx bot contract-dca list
-okx bot contract-dca list --history
-okx bot contract-dca positions --algoId <algoId>
-okx bot contract-dca cycles --algoId <algoId>
-okx bot contract-dca orders --algoId <algoId> --cycleId <cycleId>
-
-okx bot contract-dca create \
-  --instId BTC-USDT-SWAP --lever 3 --side buy \
-  --initOrdAmt 50 --safetyOrdAmt 30 --maxSafetyOrds 3 \
-  --pxSteps 0.02 --pxStepsMult 1 --volMult 1 --tpPct 0.02
-
-okx bot contract-dca stop --algoId <algoId>
-okx bot contract-dca manual-buy --algoId <algoId> --amt 30
-okx bot contract-dca margin-add --algoId <algoId> --amt 20
-okx bot contract-dca set-tp --algoId <algoId> --tpPrice 31500
-okx bot contract-dca set-reinvest --algoId <algoId> --allowReinvest true
-
-# ── 定期投资 ──────────────────────────────────────────────────────────────────
-okx bot recurring orders
-okx bot recurring details --algoId <algoId>
-okx bot recurring sub-orders --algoId <algoId>
-
-okx bot recurring create \
-  --stgyName "每日定投BTC" \
-  --recurringList '[{"ccy":"BTC","ratio":"1"}]' \
-  --amt 10 --period daily
-
-okx bot recurring amend --algoId <algoId> --stgyName "新名称"
-okx bot recurring stop --algoId <algoId>
 ```
 
 ---
