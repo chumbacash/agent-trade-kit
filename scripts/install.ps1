@@ -124,7 +124,7 @@ function Test-Install {
 # ---------------------------------------------------------------------------
 # Step 5 — Detect clients & show next steps
 # ---------------------------------------------------------------------------
-function Find-Clients {
+function Find-AndSetup-Clients {
     $detected = @()
 
     # Claude Desktop — standard install
@@ -151,11 +151,49 @@ function Find-Clients {
     $windsurfDir = Join-Path $env:USERPROFILE ".codeium\windsurf"
     if (Test-Path $windsurfDir) { $detected += "windsurf" }
 
-    if ($detected.Count -gt 0) {
+    if ($detected.Count -eq 0) {
+        Write-Info "No MCP clients detected. You can configure one later with:"
+        Write-Host "    okx-trade-mcp setup --client <client>"
+        return
+    }
+
+    Write-Host ""
+    Write-Info "Detected MCP clients: $($detected -join ', ')"
+    Write-Host ""
+
+    # When piped (irm | iex), there is no interactive console — auto-configure
+    $interactive = [Environment]::UserInteractive -and [Console]::KeyAvailable -ne $null
+    $autoSetup = $true
+
+    try {
+        $answer = Read-Host "  Auto-configure these clients? (Y/n)"
+        if (-not $answer) { $answer = "Y" }
+        $autoSetup = $answer -match '^[Yy]$'
+    }
+    catch {
+        # Non-interactive — auto-configure
+        Write-Info "Non-interactive mode, auto-configuring all detected clients ..."
+        $autoSetup = $true
+    }
+
+    if ($autoSetup) {
+        foreach ($client in $detected) {
+            try {
+                okx-trade-mcp setup --client $client 2>$null
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Ok "Configured $client"
+                } else {
+                    throw "exit code $LASTEXITCODE"
+                }
+            }
+            catch {
+                Write-Warn "Failed to configure $client. Run manually: okx-trade-mcp setup --client $client"
+            }
+        }
+    }
+    else {
         Write-Host ""
-        Write-Info "Detected MCP clients: $($detected -join ', ')"
-        Write-Host ""
-        Write-Host "  Configure with:"
+        Write-Host "  Skipped. Configure later with:"
         foreach ($client in $detected) {
             Write-Host "    okx-trade-mcp setup --client $client"
         }
@@ -167,13 +205,9 @@ function Show-NextSteps {
     Write-Host "------------------------------------------------------------"
     Write-Ok "Installation complete!"
     Write-Host ""
-    Write-Host "  Quick start:"
+    Write-Host "  Next step - configure your API credentials:"
     Write-Host ""
-    Write-Host "    # 1. Initialize your API credentials"
     Write-Host "    npx @okx_ai/okx-trade-cli config init"
-    Write-Host ""
-    Write-Host "    # 2. Set up your MCP client"
-    Write-Host "    okx-trade-mcp setup --client claude-desktop"
     Write-Host ""
     Write-Host "  Documentation: $REPO_URL"
     Write-Host "------------------------------------------------------------"
@@ -191,5 +225,5 @@ Test-Node
 Test-Npm
 Install-Package
 Test-Install
-Find-Clients
+Find-AndSetup-Clients
 Show-NextSteps

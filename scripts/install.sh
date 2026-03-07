@@ -122,7 +122,7 @@ verify_install() {
 # ---------------------------------------------------------------------------
 # Step 5 — Detect clients & show next steps
 # ---------------------------------------------------------------------------
-detect_clients() {
+detect_and_setup_clients() {
   local home="${HOME:-}"
   [ -z "${home}" ] && return
 
@@ -143,11 +143,45 @@ detect_clients() {
   # Windsurf
   [ -d "${home}/.codeium/windsurf" ] && detected+=("windsurf")
 
-  if [ ${#detected[@]} -gt 0 ]; then
+  if [ ${#detected[@]} -eq 0 ]; then
+    info "No MCP clients detected. You can configure one later with:"
+    echo "    okx-trade-mcp setup --client <client>"
+    return
+  fi
+
+  echo ""
+  info "Detected MCP clients: ${detected[*]}"
+
+  # When piped (curl | bash), stdin is the script itself — skip interactive prompt
+  if [ ! -t 0 ]; then
     echo ""
-    info "Detected MCP clients: ${detected[*]}"
+    info "Running in non-interactive mode, auto-configuring all detected clients ..."
+    for client in "${detected[@]}"; do
+      if okx-trade-mcp setup --client "${client}" 2>/dev/null; then
+        ok "Configured ${client}"
+      else
+        warn "Failed to configure ${client}. Run manually: okx-trade-mcp setup --client ${client}"
+      fi
+    done
+    return
+  fi
+
+  echo ""
+  printf "  Auto-configure these clients? (Y/n): "
+  read -r answer </dev/tty
+  answer="${answer:-Y}"
+
+  if [[ "${answer}" =~ ^[Yy]$ ]]; then
+    for client in "${detected[@]}"; do
+      if okx-trade-mcp setup --client "${client}" 2>/dev/null; then
+        ok "Configured ${client}"
+      else
+        warn "Failed to configure ${client}. Run manually: okx-trade-mcp setup --client ${client}"
+      fi
+    done
+  else
     echo ""
-    echo "  Configure with:"
+    echo "  Skipped. Configure later with:"
     for client in "${detected[@]}"; do
       echo "    okx-trade-mcp setup --client ${client}"
     done
@@ -159,13 +193,9 @@ show_next_steps() {
   echo "------------------------------------------------------------"
   ok "Installation complete!"
   echo ""
-  echo "  Quick start:"
+  echo "  Next step — configure your API credentials:"
   echo ""
-  echo "    # 1. Initialize your API credentials"
   echo "    npx @okx_ai/okx-trade-cli config init"
-  echo ""
-  echo "    # 2. Set up your MCP client"
-  echo "    okx-trade-mcp setup --client claude-desktop"
   echo ""
   echo "  Documentation: ${REPO_URL}"
   echo "------------------------------------------------------------"
@@ -184,7 +214,7 @@ main() {
   check_npm
   install_package
   verify_install
-  detect_clients
+  detect_and_setup_clients
   show_next_steps
 }
 
