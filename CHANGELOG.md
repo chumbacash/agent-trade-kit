@@ -1,3 +1,5 @@
+[English](CHANGELOG.md) | [中文](CHANGELOG.zh-CN.md)
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
@@ -14,6 +16,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
+
+---
+
+## [1.1.1] - 2026-03-07
+
+### Fixed
+
+- **Build**: `smol-toml` was not bundled into the CLI output despite `noExternal` config — npm registry `1.1.0` shipped with an external `import from "smol-toml"` that fails at runtime. Added `smol-toml` to runtime `dependencies` as a reliable fix and bumped version to republish.
+
+---
+
+## [1.1.0] - 2026-03-07
+
+### Added
+
+- **Contract DCA bot**: `bot.dca` submodule now supports contract (perpetual) DCA in addition to spot — new tools `dca_get_contract_orders`, `dca_get_contract_order_details`, `dca_create_contract_order`, `dca_stop_contract_order`
+- **`okx setup` subcommand**: interactive wizard to generate and insert MCP server config into Claude Code, VS Code, Windsurf, and other MCP clients
+- **CLI `--version` / `-v` flag**: print the current package version and exit
+- **CLI `swap amend` command**: amend an open swap order via the CLI (`okx swap amend`)
+
+### Fixed
+
+- **Duplicate tool**: removed duplicate `swap_amend_order` tool registration that caused the tool to appear twice in tool listings
+- **CLI swap amend dispatch**: `okx swap amend` now correctly dispatches to the swap handler instead of the spot handler
+
+### Changed
+
+- **`bot.dca` is opt-in**: the DCA submodule is no longer loaded by default; enable it with `--modules bot.dca` or by adding `bot.dca` to the `modules` list in `~/.okx/config.toml`
+- **Bot tools reorganized into submodules**: `bot` module now uses a submodule system — `bot.grid` and `bot.dca` can be loaded independently
+- **CLI architecture**: CLI commands now invoke Core tool handlers directly via `ToolRunner`, reducing duplication between MCP and CLI code paths
+
+---
+
+## [1.0.9] - 2026-03-06
+
+### Fixed
+
+- **algo orders**: `swap_get_algo_orders` and `spot_get_algo_orders` now pass the required `state` parameter when querying history (`/api/v5/trade/orders-algo-history`), defaulting to `effective` (#28)
 
 ---
 
@@ -51,10 +91,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Release prep**: version bump for publish
 - **`okx config init`**: site selection (Global / EEA / US) and demo/live choice are now asked upfront; the CLI opens the targeted API creation page with `?go-demo-trading=1` or `?go-live-trading=1` query param so users land directly on the correct tab. EEA (`my.okx.com`) and US (`app.okx.com`) sites are supported and saved as `base_url` in the profile.
 - **docs/configuration.md**, **README.md**, **README.zh.md**: updated API key creation links to direct URLs with `?go-demo-trading=1` / `?go-live-trading=1` parameters (bilingual EN + ZH).
-- **npm scope**: packages are now published under the `@okx_ai` organisation. Please reinstall:
+- **npm scope**: packages are now published under the `@okx_retail` organisation. Please reinstall:
   ```
   npm uninstall -g okx-trade-mcp okx-trade-cli
-  npm install -g @okx_ai/okx-trade-mcp @okx_ai/okx-trade-cli
+  npm install -g @okx_retail/okx-trade-mcp @okx_retail/okx-trade-cli
   ```
   Binary names are unchanged — `okx-trade-mcp` and `okx` still work after reinstall.
 

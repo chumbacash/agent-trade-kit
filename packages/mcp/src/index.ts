@@ -8,6 +8,7 @@ import {
   runSetup,
   printSetupUsage,
   SUPPORTED_CLIENTS,
+  configFilePath,
 } from "@agent-tradekit/core";
 import type { LogLevel, ClientId } from "@agent-tradekit/core";
 import { SERVER_NAME, SERVER_VERSION } from "./constants.js";
@@ -20,13 +21,12 @@ Usage: okx-trade-mcp [options]
 Options:
   --modules <list>     Comma-separated list of modules to load
                        Available: market, spot, swap, futures, option, account
-                                  bot.grid, bot.dca, bot.contract_dca, bot.recurring
-                       Alias: "bot" = bot.grid (default bot sub-module)
-                              "bot.all" = all bot sub-modules
-                       Special: "all" loads all modules (bot = bot.grid only)
-                       Default: spot,swap,account,bot.grid
+                                  bot.grid, bot.dca
+                       Alias: "bot" = all bot sub-modules (bot.grid + bot.dca)
+                       Special: "all" loads all modules
+                       Default: spot,swap,account,bot.grid,bot.dca
 
-  --profile <name>     Profile to load from ~/.okx/config.toml
+  --profile <name>     Profile to load from ${configFilePath()}
                        Falls back to default_profile in config, then "default"
   --site <site>        OKX site to connect to: global, eea, us (default: global)
                        global → www.okx.com, eea → eea.okx.com, us → app.okx.com
@@ -37,7 +37,7 @@ Options:
   --help               Show this help message
   --version            Show version
 
-Credentials (priority: env vars > ~/.okx/config.toml > none):
+Credentials (priority: env vars > ${configFilePath()} > none):
   OKX_API_KEY          OKX API key
   OKX_SECRET_KEY       OKX secret key
   OKX_PASSPHRASE       OKX passphrase

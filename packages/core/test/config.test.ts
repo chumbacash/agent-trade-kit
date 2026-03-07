@@ -260,3 +260,54 @@ describe("loadConfig — site from toml profile", () => {
     assert.equal(config.site, "global");
   });
 });
+
+// ---------------------------------------------------------------------------
+// Bot sub-module parsing
+// ---------------------------------------------------------------------------
+
+describe("loadConfig — bot sub-modules", () => {
+  let saved: SavedEnv;
+  beforeEach(() => { saved = saveEnv(); });
+  afterEach(() => restoreEnv(saved));
+
+  it('"bot" expands to default bot sub-modules (bot.grid only)', () => {
+    const config = loadConfig({ ...BASE_CLI, modules: "bot" });
+    assert.ok(config.modules.includes("bot.grid" as never));
+    assert.ok(!config.modules.includes("bot.dca" as never));
+  });
+
+  it('"bot.all" expands to all bot sub-modules (bot.grid + bot.dca)', () => {
+    const config = loadConfig({ ...BASE_CLI, modules: "bot.all" });
+    assert.ok(config.modules.includes("bot.grid" as never));
+    assert.ok(config.modules.includes("bot.dca" as never));
+  });
+
+  it('"all" includes default bot sub-modules (bot.grid only, not bot.dca)', () => {
+    const config = loadConfig({ ...BASE_CLI, modules: "all" });
+    assert.ok(config.modules.includes("bot.grid" as never));
+    assert.ok(!config.modules.includes("bot.dca" as never));
+    assert.ok(config.modules.includes("market" as never));
+  });
+
+  it("individual bot sub-modules can be selected", () => {
+    const config = loadConfig({ ...BASE_CLI, modules: "spot,bot.dca" });
+    assert.ok(config.modules.includes("spot" as never));
+    assert.ok(config.modules.includes("bot.dca" as never));
+    assert.ok(!config.modules.includes("bot.grid" as never));
+  });
+
+  it("default modules include bot.grid but not bot.dca", () => {
+    const config = loadConfig(BASE_CLI);
+    assert.ok(config.modules.includes("bot.grid" as never));
+    assert.ok(!config.modules.includes("bot.dca" as never));
+  });
+
+  it("unknown module throws ConfigError mentioning bot.all", () => {
+    assert.throws(
+      () => loadConfig({ ...BASE_CLI, modules: "invalid-module" }),
+      (err: unknown) =>
+        err instanceof ConfigError &&
+        err.suggestion?.includes("bot.all"),
+    );
+  });
+});

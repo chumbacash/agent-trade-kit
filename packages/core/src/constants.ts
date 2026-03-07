@@ -35,8 +35,6 @@ export const SITE_IDS = Object.keys(OKX_SITES) as SiteId[];
 export const BOT_SUB_MODULE_IDS = [
   "bot.grid",
   "bot.dca",
-  "bot.contract_dca",
-  "bot.recurring",
 ] as const;
 
 export type BotSubModuleId = (typeof BOT_SUB_MODULE_IDS)[number];

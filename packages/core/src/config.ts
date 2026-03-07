@@ -1,4 +1,4 @@
-import { BOT_DEFAULT_SUB_MODULES, BOT_SUB_MODULE_IDS, DEFAULT_MODULES, MODULES, OKX_API_BASE_URL, OKX_SITES, SITE_IDS, type ModuleId, type SiteId } from "./constants.js";
+import { BOT_DEFAULT_SUB_MODULES, BOT_SUB_MODULE_IDS, DEFAULT_MODULES, MODULES, OKX_API_BASE_URL, OKX_SITES, SITE_IDS, type BotSubModuleId, type ModuleId, type SiteId } from "./constants.js";
 import { ConfigError } from "./utils/errors.js";
 import { readTomlProfile } from "./config/toml.js";
 
@@ -25,10 +25,10 @@ export interface OkxConfig {
   userAgent?: string;
 }
 
-// Non-bot top-level modules (used by "all" expansion)
+/** Base (non-bot) modules — used when expanding "all". */
 const BASE_MODULES = MODULES.filter(
-  (m) => !m.startsWith("bot."),
-) as ModuleId[];
+  (m) => !BOT_SUB_MODULE_IDS.includes(m as BotSubModuleId),
+);
 
 function parseModuleList(rawModules?: string): ModuleId[] {
   if (!rawModules || rawModules.trim().length === 0) {
@@ -37,8 +37,8 @@ function parseModuleList(rawModules?: string): ModuleId[] {
 
   const trimmed = rawModules.trim().toLowerCase();
   if (trimmed === "all") {
-    // "all" = every non-bot module + bot defaults (grid only)
-    return [...BASE_MODULES, ...BOT_DEFAULT_SUB_MODULES];
+    // "all" → every non-bot module + default bot sub-modules
+    return [...BASE_MODULES, ...BOT_DEFAULT_SUB_MODULES] as ModuleId[];
   }
 
   const requested = trimmed
@@ -52,20 +52,20 @@ function parseModuleList(rawModules?: string): ModuleId[] {
 
   const deduped = new Set<ModuleId>();
   for (const moduleId of requested) {
-    // "bot" → bot defaults only (grid)
+    // "bot" shorthand → expand to default bot sub-modules
     if (moduleId === "bot") {
-      BOT_DEFAULT_SUB_MODULES.forEach((id) => deduped.add(id));
+      for (const sub of BOT_DEFAULT_SUB_MODULES) deduped.add(sub);
       continue;
     }
-    // "bot.all" → every bot sub-module
+    // "bot.all" → expand to all bot sub-modules
     if (moduleId === "bot.all") {
-      BOT_SUB_MODULE_IDS.forEach((id) => deduped.add(id));
+      for (const sub of BOT_SUB_MODULE_IDS) deduped.add(sub);
       continue;
     }
     if (!MODULES.includes(moduleId as ModuleId)) {
       throw new ConfigError(
         `Unknown module "${moduleId}".`,
-        `Use one of: ${MODULES.join(", ")}, "bot" (= bot.grid), "bot.all", or "all".`,
+        `Use one of: ${MODULES.join(", ")}, "bot", "bot.all", or "all".`,
       );
     }
     deduped.add(moduleId as ModuleId);
