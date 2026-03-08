@@ -38,6 +38,7 @@ Commands:
   account max-avail-size --instId <id> --tdMode <cross|isolated|cash>
   account max-withdrawal [--ccy <ccy>]
   account transfer --ccy <ccy> --amt <n> --from <acct> --to <acct> [--transferType <0|1|2|3>]
+  account audit [--tool <name>] [--since <ISO-date>] [--limit <n>]
 
   spot orders [--instId <id>] [--history]
   spot get --instId <id> --ordId <id>
@@ -53,6 +54,7 @@ Commands:
                   [--newTpTriggerPx <price>] [--newTpOrdPx <price|-1>]
                   [--newSlTriggerPx <price>] [--newSlOrdPx <price|-1>]
   spot algo cancel --instId <id> --algoId <id>
+  spot batch --action <place|amend|cancel> --orders '<json>'
 
   swap positions [<instId>]
   swap orders [--instId <id>] [--history] [--archive]
@@ -75,6 +77,7 @@ Commands:
                   [--newTpTriggerPx <price>] [--newTpOrdPx <price|-1>]
                   [--newSlTriggerPx <price>] [--newSlOrdPx <price|-1>]
   swap algo cancel --instId <id> --algoId <id>
+  swap batch --action <place|amend|cancel> --orders '<json>'
 
   futures orders [--instId <id>] [--history] [--archive]
   futures positions [--instId <id>]
@@ -84,6 +87,17 @@ Commands:
   futures cancel <instId> --ordId <id>
   futures get --instId <id> --ordId <id>
 
+  option orders [--instId <id>] [--uly <uly>] [--history] [--archive]
+  option get --instId <id> [--ordId <id>] [--clOrdId <id>]
+  option positions [--instId <id>] [--uly <uly>]
+  option fills [--instId <id>] [--ordId <id>] [--archive]
+  option instruments --uly <uly> [--expTime <date>]
+  option greeks --uly <uly> [--expTime <date>]
+  option place --instId <id> --tdMode <cash|cross|isolated> --side <buy|sell> --ordType <type> --sz <n> [--px <price>] [--reduceOnly] [--clOrdId <id>]
+  option cancel --instId <id> [--ordId <id>] [--clOrdId <id>]
+  option amend --instId <id> [--ordId <id>] [--clOrdId <id>] [--newSz <n>] [--newPx <price>]
+  option batch-cancel --orders '<json>'
+
   bot grid orders --algoOrdType <grid|contract_grid|moon_grid> [--instId <id>] [--algoId <id>] [--history]
   bot grid details --algoOrdType <type> --algoId <id>
   bot grid sub-orders --algoOrdType <type> --algoId <id> [--live]
@@ -92,14 +106,15 @@ Commands:
                   [--direction <long|short|neutral>] [--lever <n>] [--sz <n>]
   bot grid stop --algoId <id> --algoOrdType <type> --instId <id> [--stopType <1|2|3|5|6>]
 
-  bot dca orders [--history]
-  bot dca details --algoId <id>
-  bot dca sub-orders --algoId <id> [--live]
+  bot dca orders [--type <spot|contract>] [--history]
+  bot dca details [--type <spot|contract>] --algoId <id>
+  bot dca sub-orders [--type <spot|contract>] --algoId <id> [--live] [--cycleId <id>]
   bot dca create --instId <id> --initOrdAmt <n> --safetyOrdAmt <n> --maxSafetyOrds <n>
                  --pxSteps <n> --pxStepsMult <n> --volMult <n> --tpPct <n> [--slPct <n>]
-  bot dca stop --algoId <id> --instId <id> --stopType <1|2>
+                 [--type <spot|contract>] [--triggerType <1|2>] [--lever <n>] [--side <buy|sell>]
+  bot dca stop [--type <spot|contract>] --algoId <id> --instId <id> [--stopType <1|2>]
 
-  config init
+  config init [--lang zh]
   config show
   config set <key> <value>
   config setup-clients

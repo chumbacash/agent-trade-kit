@@ -47,15 +47,17 @@ Add to `claude_desktop_config.json`:
 {
   "mcpServers": {
     "okx-live": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "live", "--modules", "all"]
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "live", "--modules", "all"]
     },
     "okx-demo": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "demo"]
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "demo"]
     }
   }
 }
 ```
+
+> **Tip:** Run `okx-trade-mcp setup --client claude-desktop` to generate this config automatically.
 
 For more details, see the [repository README](../../README.md).

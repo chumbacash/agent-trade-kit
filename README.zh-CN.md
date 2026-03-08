@@ -59,7 +59,7 @@ OKX Agent TradeKit 通过 [Model Context Protocol](https://modelcontextprotocol.
 npm install -g @okx_ai/okx-trade-mcp @okx_ai/okx-trade-cli
 
 # 2. 配置 OKX API 凭证（交互式向导）
-okx config init
+okx config init --lang zh
 
 # 3. 将 MCP Server 注册到 AI 客户端
 okx-trade-mcp setup --client claude-desktop
@@ -68,6 +68,8 @@ okx-trade-mcp setup --client claude-code
 okx-trade-mcp setup --client vscode          # 在当前目录写入 .mcp.json
 ```
 
+> **也可使用** [一键安装脚本](docs/configuration.md#one-line-install) — 自动检查 Node.js、安装包、检测并配置 MCP 客户端。
+>
 > 实盘交易、多账户或其他客户端，见 [配置说明 →](docs/configuration.md)。
 
 ---
