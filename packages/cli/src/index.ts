@@ -606,6 +606,7 @@ export function handleBotGridCommand(
       direction: v.direction,
       lever: v.lever,
       sz: v.sz,
+      basePos: v.basePos,
       json,
     });
   if (subAction === "stop")
