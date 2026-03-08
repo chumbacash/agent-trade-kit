@@ -289,7 +289,7 @@ export function registerSpotTradeTools(): ToolSpec[] {
           tdMode: {
             type: "string",
             enum: ["cash", "cross", "isolated"],
-            description: "cash=simple spot account; cross=unified/margin account (default)",
+            description: "cash=non-margin spot (default); cross/isolated=margin mode",
           },
           side: {
             type: "string",
@@ -329,7 +329,7 @@ export function registerSpotTradeTools(): ToolSpec[] {
           "/api/v5/trade/order-algo",
           compactObject({
             instId: requireString(args, "instId"),
-            tdMode: readString(args, "tdMode") ?? "cross",
+            tdMode: readString(args, "tdMode") ?? "cash",
             side: requireString(args, "side"),
             ordType: requireString(args, "ordType"),
             sz: requireString(args, "sz"),
@@ -583,7 +583,7 @@ export function registerSpotTradeTools(): ToolSpec[] {
           orders: {
             type: "array",
             description:
-              "Array (max 20). place: {instId,side,ordType,sz,tdMode?,px?,clOrdId?,tpTriggerPx?,tpOrdPx?,slTriggerPx?,slOrdPx?} (tdMode defaults to cross; use cash for simple spot accounts). cancel: {instId,ordId|clOrdId}. amend: {instId,ordId|clOrdId,newSz?,newPx?}.",
+              "Array (max 20). place: {instId,side,ordType,sz,tdMode?,px?,clOrdId?,tpTriggerPx?,tpOrdPx?,slTriggerPx?,slOrdPx?} (tdMode defaults to cash for non-margin accounts; use cross for unified/margin accounts). cancel: {instId,ordId|clOrdId}. amend: {instId,ordId|clOrdId,newSz?,newPx?}.",
             items: {
               type: "object",
             },
@@ -617,7 +617,7 @@ export function registerSpotTradeTools(): ToolSpec[] {
                   Object.keys(algoEntry).length > 0 ? [algoEntry] : undefined;
                 return compactObject({
                   instId: requireString(o, "instId"),
-                  tdMode: readString(o, "tdMode") ?? "cross",
+                  tdMode: readString(o, "tdMode") ?? "cash",
                   side: requireString(o, "side"),
                   ordType: requireString(o, "ordType"),
                   sz: requireString(o, "sz"),

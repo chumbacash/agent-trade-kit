@@ -40,7 +40,7 @@ export async function cmdSpotPlace(
 ): Promise<void> {
   const result = await run("spot_place_order", {
     instId: opts.instId,
-    tdMode: opts.tdMode ?? "cross",
+    tdMode: opts.tdMode ?? "cash",
     side: opts.side,
     ordType: opts.ordType,
     sz: opts.sz,
@@ -82,7 +82,7 @@ export async function cmdSpotAlgoPlace(
 ): Promise<void> {
   const result = await run("spot_place_algo_order", {
     instId: opts.instId,
-    tdMode: opts.tdMode ?? "cross",
+    tdMode: opts.tdMode ?? "cash",
     side: opts.side,
     ordType: opts.ordType,
     sz: opts.sz,
