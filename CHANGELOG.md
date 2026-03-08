@@ -19,6 +19,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.4] - 2026-03-08
+
+### Fixed
+
+- **`--modules all` now includes `bot.dca`**: previously `all` expanded using `BOT_DEFAULT_SUB_MODULES` (bot.grid only), silently excluding the DCA module. Now correctly uses all bot sub-modules.
+- **`option` added to default modules**: the default module set is now `spot, swap, option, account, bot.grid`. MCP server help text updated to match actual defaults.
+
+---
+
 ## [1.1.3] - 2026-03-08
 
 ### Added

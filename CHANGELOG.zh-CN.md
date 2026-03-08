@@ -19,6 +19,15 @@
 
 ---
 
+## [1.1.4] - 2026-03-08
+
+### 修复
+
+- **`--modules all` 现在包含 `bot.dca`**：此前 `all` 使用 `BOT_DEFAULT_SUB_MODULES` 展开（仅含 bot.grid），导致 DCA 模块被静默排除。现已修正为包含所有 bot 子模块。
+- **`option` 加入默认模块**：默认模块集合更新为 `spot, swap, option, account, bot.grid`，MCP 服务器帮助文本同步修正以匹配实际默认值。
+
+---
+
 ## [1.1.3] - 2026-03-08
 
 ### 新增
