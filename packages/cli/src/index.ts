@@ -2,8 +2,11 @@ import { createRequire } from "node:module";
 import { OkxRestClient, toToolErrorPayload, checkForUpdates, createToolRunner } from "@agent-tradekit/core";
 import type { ToolRunner } from "@agent-tradekit/core";
 
+declare const __GIT_HASH__: string;
+
 const _require = createRequire(import.meta.url);
 const CLI_VERSION = (_require("../package.json") as { version: string }).version;
+const GIT_HASH: string = typeof __GIT_HASH__ !== "undefined" ? __GIT_HASH__ : "dev";
 import { loadProfileConfig } from "./config/loader.js";
 import { printHelp } from "./help.js";
 import { parseCli } from "./parser.js";
@@ -667,7 +670,7 @@ async function main(): Promise<void> {
   const { values, positionals } = parseCli(process.argv.slice(2));
 
   if (values.version) {
-    process.stdout.write(`${CLI_VERSION}\n`);
+    process.stdout.write(`${CLI_VERSION} (${GIT_HASH})\n`);
     return;
   }
 
