@@ -19,6 +19,39 @@
 
 ---
 
+## [1.1.5] - 2026-03-08
+
+### 新增
+
+- **多层级 `--help` 导航**：`okx --help`、`okx <模块> --help`、`okx <模块> <子组> --help` 现在输出带有每条命令描述的范围化帮助信息，AI Agent 无需阅读源码即可发现可用功能。
+
+### 修复
+
+- **`bot dca create` 帮助文本缺少 `--reserveFunds`**：该参数在代码中已支持，但未出现在帮助输出中。
+
+---
+
+## [1.1.4] - 2026-03-08
+
+### 修复
+
+- **`--modules all` 现在包含 `bot.dca`**：此前 `all` 使用 `BOT_DEFAULT_SUB_MODULES` 展开（仅含 bot.grid），导致 DCA 模块被静默排除。现已修正为包含所有 bot 子模块。
+- **`option` 加入默认模块**：默认模块集合更新为 `spot, swap, option, account, bot.grid`，MCP 服务器帮助文本同步修正以匹配实际默认值。
+
+---
+
+## [1.1.3] - 2026-03-08
+
+### 新增
+
+- **`--version` 输出 git commit hash**：CLI 和 MCP 服务器的版本号现在附带构建时的 commit hash，例如 `1.1.3 (abc1234)`，便于确认已发布包对应的具体提交
+
+### 修复
+
+- **现货 `tdMode` 不可配置**：`okx spot place`、`okx spot algo place`（止盈止损）、MCP `spot_place_algo_order`、MCP `spot_batch_orders` 此前均硬编码 `tdMode`，用户无法覆盖。现在 `--tdMode` 作为可选参数暴露（默认值：`cash`，适用于非保证金账户）。使用统一账户/保证金账户的用户可显式传 `--tdMode cross`。
+
+---
+
 ## [1.1.2] - 2026-03-08
 
 ### 新增

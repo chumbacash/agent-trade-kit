@@ -2,8 +2,11 @@ import { createRequire } from "node:module";
 import { OkxRestClient, toToolErrorPayload, checkForUpdates, createToolRunner } from "@agent-tradekit/core";
 import type { ToolRunner } from "@agent-tradekit/core";
 
+declare const __GIT_HASH__: string;
+
 const _require = createRequire(import.meta.url);
 const CLI_VERSION = (_require("../package.json") as { version: string }).version;
+const GIT_HASH: string = typeof __GIT_HASH__ !== "undefined" ? __GIT_HASH__ : "dev";
 import { loadProfileConfig } from "./config/loader.js";
 import { printHelp } from "./help.js";
 import { parseCli } from "./parser.js";
@@ -268,6 +271,7 @@ function handleSpotAlgoCommand(
   if (subAction === "place")
     return cmdSpotAlgoPlace(run, {
       instId: v.instId!,
+      tdMode: v.tdMode,
       side: v.side!,
       ordType: v.ordType ?? "conditional",
       sz: v.sz!,
@@ -328,6 +332,7 @@ function handleSpotCommand(
   if (action === "place")
     return cmdSpotPlace(run, {
       instId: v.instId!,
+      tdMode: v.tdMode,
       side: v.side!,
       ordType: v.ordType!,
       sz: v.sz!,
@@ -667,12 +672,20 @@ async function main(): Promise<void> {
   const { values, positionals } = parseCli(process.argv.slice(2));
 
   if (values.version) {
-    process.stdout.write(`${CLI_VERSION}\n`);
+    process.stdout.write(`${CLI_VERSION} (${GIT_HASH})\n`);
     return;
   }
 
   if (values.help || positionals.length === 0) {
-    printHelp();
+    // Multi-level help: resolve depth from positionals captured before --help
+    const [module, subgroup] = positionals;
+    if (!module) {
+      printHelp();
+    } else if (!subgroup) {
+      printHelp(module);
+    } else {
+      printHelp(module, subgroup);
+    }
     return;
   }
 

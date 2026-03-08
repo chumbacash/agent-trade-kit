@@ -11,7 +11,7 @@ import {
   configFilePath,
 } from "@agent-tradekit/core";
 import type { LogLevel, ClientId } from "@agent-tradekit/core";
-import { SERVER_NAME, SERVER_VERSION } from "./constants.js";
+import { SERVER_NAME, SERVER_VERSION, GIT_HASH } from "./constants.js";
 import { createServer } from "./server.js";
 
 function printHelp(): void {
@@ -24,7 +24,7 @@ Options:
                                   bot.grid, bot.dca
                        Alias: "bot" = all bot sub-modules (bot.grid + bot.dca)
                        Special: "all" loads all modules
-                       Default: spot,swap,account,bot.grid,bot.dca
+                       Default: spot,swap,option,account,bot.grid
 
   --profile <name>     Profile to load from ${configFilePath()}
                        Falls back to default_profile in config, then "default"
@@ -136,7 +136,7 @@ export async function main(): Promise<void> {
   }
 
   if (cli.version) {
-    process.stdout.write(`${SERVER_VERSION}\n`);
+    process.stdout.write(`${SERVER_VERSION} (${GIT_HASH})\n`);
     return;
   }
 

@@ -23,7 +23,7 @@ describe("CLI --version flag", () => {
       timeout: 10_000,
       encoding: "utf-8",
     }).trim();
-    assert.match(output, /^\d+\.\d+\.\d+$/, `Expected semver, got: ${output}`);
+    assert.match(output, /^\d+\.\d+\.\d+/, `Expected semver, got: ${output}`);
   });
 
   it("prints version with -v", () => {
@@ -31,7 +31,7 @@ describe("CLI --version flag", () => {
       timeout: 10_000,
       encoding: "utf-8",
     }).trim();
-    assert.match(output, /^\d+\.\d+\.\d+$/, `Expected semver, got: ${output}`);
+    assert.match(output, /^\d+\.\d+\.\d+/, `Expected semver, got: ${output}`);
   });
 });
 

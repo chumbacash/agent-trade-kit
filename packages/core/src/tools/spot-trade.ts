@@ -286,6 +286,11 @@ export function registerSpotTradeTools(): ToolSpec[] {
             type: "string",
             description: "e.g. BTC-USDT",
           },
+          tdMode: {
+            type: "string",
+            enum: ["cash", "cross", "isolated"],
+            description: "cash=non-margin spot (default); cross/isolated=margin mode",
+          },
           side: {
             type: "string",
             enum: ["buy", "sell"],
@@ -324,7 +329,7 @@ export function registerSpotTradeTools(): ToolSpec[] {
           "/api/v5/trade/order-algo",
           compactObject({
             instId: requireString(args, "instId"),
-            tdMode: "cash",
+            tdMode: readString(args, "tdMode") ?? "cash",
             side: requireString(args, "side"),
             ordType: requireString(args, "ordType"),
             sz: requireString(args, "sz"),
@@ -578,7 +583,7 @@ export function registerSpotTradeTools(): ToolSpec[] {
           orders: {
             type: "array",
             description:
-              "Array (max 20). place: {instId,side,ordType,sz,tdMode?,px?,clOrdId?,tpTriggerPx?,tpOrdPx?,slTriggerPx?,slOrdPx?} (tdMode defaults to cash). cancel: {instId,ordId|clOrdId}. amend: {instId,ordId|clOrdId,newSz?,newPx?}.",
+              "Array (max 20). place: {instId,side,ordType,sz,tdMode?,px?,clOrdId?,tpTriggerPx?,tpOrdPx?,slTriggerPx?,slOrdPx?} (tdMode defaults to cash for non-margin accounts; use cross for unified/margin accounts). cancel: {instId,ordId|clOrdId}. amend: {instId,ordId|clOrdId,newSz?,newPx?}.",
             items: {
               type: "object",
             },

@@ -1,4 +1,7 @@
 import { defineConfig } from "tsup";
+import { execSync } from "node:child_process";
+
+const gitHash = execSync("git rev-parse --short HEAD", { encoding: "utf-8" }).trim();
 
 export default defineConfig({
   entry: ["src/index.ts"],
@@ -10,4 +13,5 @@ export default defineConfig({
   dts: false,
   noExternal: ["@agent-tradekit/core", "smol-toml"],
   banner: { js: "#!/usr/bin/env node" },
+  define: { __GIT_HASH__: JSON.stringify(gitHash) },
 });
