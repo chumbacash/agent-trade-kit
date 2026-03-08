@@ -19,6 +19,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.3] - 2026-03-08
+
+### Added
+
+- **Git hash in `--version` output**: both CLI and MCP server now display the build commit hash alongside the version, e.g. `1.1.3 (abc1234)`, making it easy to verify which exact commit a published package was built from
+
+### Fixed
+
+- **Spot `tdMode` not configurable**: `okx spot place`, `okx spot algo place` (TP/SL), MCP `spot_place_algo_order`, and MCP `spot_batch_orders` previously hardcoded `tdMode` with no way to override it. The `--tdMode` flag is now exposed as an optional parameter (default: `cash` for non-margin accounts). Users on unified/margin accounts can pass `--tdMode cross`.
+
+---
+
 ## [1.1.2] - 2026-03-08
 
 ### Added
