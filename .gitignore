@@ -29,7 +29,6 @@ npm-debug.log*
 .env.local
 
 # Internal / not for open source
-docs/
 sonar-project.properties
 .gitlab-ci.yml
 scripts/smoke-test/report.md
