@@ -2,8 +2,11 @@ import { createRequire } from "node:module";
 import { OkxRestClient, toToolErrorPayload, checkForUpdates, createToolRunner } from "@agent-tradekit/core";
 import type { ToolRunner } from "@agent-tradekit/core";
 
+declare const __GIT_HASH__: string;
+
 const _require = createRequire(import.meta.url);
 const CLI_VERSION = (_require("../package.json") as { version: string }).version;
+const GIT_HASH: string = typeof __GIT_HASH__ !== "undefined" ? __GIT_HASH__ : "dev";
 import { loadProfileConfig } from "./config/loader.js";
 import { printHelp } from "./help.js";
 import { parseCli } from "./parser.js";
@@ -35,6 +38,7 @@ import {
   cmdAccountMaxWithdrawal,
   cmdAccountPositionsHistory,
   cmdAccountTransfer,
+  cmdAccountAudit,
 } from "./commands/account.js";
 import {
   cmdSpotOrders,
@@ -47,6 +51,7 @@ import {
   cmdSpotAlgoAmend,
   cmdSpotAlgoCancel,
   cmdSpotAlgoOrders,
+  cmdSpotBatch,
 } from "./commands/spot.js";
 import {
   cmdSwapPositions,
@@ -64,6 +69,7 @@ import {
   cmdSwapAlgoOrders,
   cmdSwapAlgoTrailPlace,
   cmdSwapAmend,
+  cmdSwapBatch,
 } from "./commands/swap.js";
 import {
   cmdFuturesOrders,
@@ -73,7 +79,20 @@ import {
   cmdFuturesCancel,
   cmdFuturesGet,
 } from "./commands/futures.js";
-import { cmdConfigShow, cmdConfigSet, cmdConfigInit } from "./commands/config.js";
+import {
+  cmdOptionOrders,
+  cmdOptionGet,
+  cmdOptionPositions,
+  cmdOptionFills,
+  cmdOptionInstruments,
+  cmdOptionGreeks,
+  cmdOptionPlace,
+  cmdOptionCancel,
+  cmdOptionAmend,
+  cmdOptionBatchCancel,
+} from "./commands/option.js";
+import { cmdConfigShow, cmdConfigSet, cmdConfigInit, cmdConfigAddProfile, cmdConfigListProfile, cmdConfigUse } from "./commands/config.js";
+import type { Lang } from "./commands/config.js";
 import {
   cmdSetupClients,
   cmdSetupClient,
@@ -102,11 +121,14 @@ export type { CliValues } from "./parser.js";
 // Command handlers
 // ---------------------------------------------------------------------------
 
-export function handleConfigCommand(action: string, rest: string[], json: boolean): Promise<void> | void {
-  if (action === "init") return cmdConfigInit();
+export function handleConfigCommand(action: string, rest: string[], json: boolean, lang?: string, force?: boolean): Promise<void> | void {
+  if (action === "init") return cmdConfigInit((lang === "zh" ? "zh" : "en") as Lang);
   if (action === "show") return cmdConfigShow(json);
   if (action === "set") return cmdConfigSet(rest[0], rest[1]);
   if (action === "setup-clients") return cmdSetupClients();
+  if (action === "add-profile") return cmdConfigAddProfile(rest, force ?? false);
+  if (action === "list-profile") return cmdConfigListProfile();
+  if (action === "use") return cmdConfigUse(rest[0]);
   process.stderr.write(`Unknown config command: ${action}\n`);
   process.exitCode = 1;
 }
@@ -215,6 +237,8 @@ function handleAccountCommand(
   v: CliValues,
   json: boolean
 ): Promise<void> | void {
+  if (action === "audit")
+    return cmdAccountAudit({ limit: v.limit, tool: v.tool, since: v.since, json });
   const limit = v.limit !== undefined ? Number(v.limit) : undefined;
   if (action === "balance") return cmdAccountBalance(run, rest[0], json);
   if (action === "asset-balance") return cmdAccountAssetBalance(run, v.ccy, json);
@@ -250,6 +274,7 @@ function handleSpotAlgoCommand(
   if (subAction === "place")
     return cmdSpotAlgoPlace(run, {
       instId: v.instId!,
+      tdMode: v.tdMode,
       side: v.side!,
       ordType: v.ordType ?? "conditional",
       sz: v.sz!,
@@ -310,6 +335,7 @@ function handleSpotCommand(
   if (action === "place")
     return cmdSpotPlace(run, {
       instId: v.instId!,
+      tdMode: v.tdMode,
       side: v.side!,
       ordType: v.ordType!,
       sz: v.sz!,
@@ -320,6 +346,8 @@ function handleSpotCommand(
     return cmdSpotCancel(run, rest[0], v.ordId!, json);
   if (action === "algo")
     return handleSpotAlgoCommand(run, rest[0], v, json);
+  if (action === "batch")
+    return cmdSpotBatch(run, { action: v.action!, orders: v.orders!, json });
 }
 
 function handleSwapAlgoCommand(
@@ -444,6 +472,58 @@ export function handleSwapCommand(
     });
   if (action === "algo")
     return handleSwapAlgoCommand(run, rest[0], v, json);
+  if (action === "batch")
+    return cmdSwapBatch(run, { action: v.action!, orders: v.orders!, json });
+}
+
+function handleOptionCommand(
+  run: ToolRunner,
+  action: string,
+  _rest: string[],
+  v: CliValues,
+  json: boolean
+): Promise<void> | void {
+  if (action === "orders") {
+    let status: "live" | "history" | "archive" = "live";
+    if (v.archive) status = "archive";
+    else if (v.history) status = "history";
+    return cmdOptionOrders(run, { instId: v.instId, uly: v.uly, status, json });
+  }
+  if (action === "get")
+    return cmdOptionGet(run, { instId: v.instId!, ordId: v.ordId, clOrdId: v.clOrdId, json });
+  if (action === "positions")
+    return cmdOptionPositions(run, { instId: v.instId, uly: v.uly, json });
+  if (action === "fills")
+    return cmdOptionFills(run, { instId: v.instId, ordId: v.ordId, archive: v.archive ?? false, json });
+  if (action === "instruments")
+    return cmdOptionInstruments(run, { uly: v.uly!, expTime: v.expTime, json });
+  if (action === "greeks")
+    return cmdOptionGreeks(run, { uly: v.uly!, expTime: v.expTime, json });
+  if (action === "place")
+    return cmdOptionPlace(run, {
+      instId: v.instId!,
+      tdMode: v.tdMode!,
+      side: v.side!,
+      ordType: v.ordType!,
+      sz: v.sz!,
+      px: v.px,
+      reduceOnly: v.reduceOnly,
+      clOrdId: v.clOrdId,
+      json,
+    });
+  if (action === "cancel")
+    return cmdOptionCancel(run, { instId: v.instId!, ordId: v.ordId, clOrdId: v.clOrdId, json });
+  if (action === "amend")
+    return cmdOptionAmend(run, {
+      instId: v.instId!,
+      ordId: v.ordId,
+      clOrdId: v.clOrdId,
+      newSz: v.newSz,
+      newPx: v.newPx,
+      json,
+    });
+  if (action === "batch-cancel")
+    return cmdOptionBatchCancel(run, { orders: v.orders!, json });
 }
 
 function handleFuturesCommand(
@@ -526,6 +606,7 @@ export function handleBotGridCommand(
       direction: v.direction,
       lever: v.lever,
       sz: v.sz,
+      basePos: v.basePos,
       json,
     });
   if (subAction === "stop")
@@ -544,14 +625,16 @@ export function handleBotDcaCommand(
   v: CliValues,
   json: boolean,
 ): Promise<void> | void {
+  const type = v.type ?? "spot";
   if (subAction === "orders")
-    return cmdDcaOrders(run, { history: v.history ?? false, json });
+    return cmdDcaOrders(run, { type, history: v.history ?? false, json });
   if (subAction === "details")
-    return cmdDcaDetails(run, { algoId: v.algoId!, json });
+    return cmdDcaDetails(run, { type, algoId: v.algoId!, json });
   if (subAction === "sub-orders")
-    return cmdDcaSubOrders(run, { algoId: v.algoId!, live: v.live ?? false, json });
+    return cmdDcaSubOrders(run, { type, algoId: v.algoId!, live: v.live ?? false, cycleId: v.cycleId, json });
   if (subAction === "create")
     return cmdDcaCreate(run, {
+      type,
       instId: v.instId!,
       initOrdAmt: v.initOrdAmt!,
       safetyOrdAmt: v.safetyOrdAmt!,
@@ -564,10 +647,12 @@ export function handleBotDcaCommand(
       reserveFunds: v.reserveFunds,
       triggerType: v.triggerType,
       direction: v.direction,
+      lever: v.lever,
+      side: v.side,
       json,
     });
   if (subAction === "stop")
-    return cmdDcaStop(run, { algoId: v.algoId!, instId: v.instId!, stopType: v.stopType!, json });
+    return cmdDcaStop(run, { type, algoId: v.algoId!, instId: v.instId!, stopType: v.stopType, json });
 }
 
 export function handleBotCommand(
@@ -591,12 +676,20 @@ async function main(): Promise<void> {
   const { values, positionals } = parseCli(process.argv.slice(2));
 
   if (values.version) {
-    process.stdout.write(`${CLI_VERSION}\n`);
+    process.stdout.write(`${CLI_VERSION} (${GIT_HASH})\n`);
     return;
   }
 
   if (values.help || positionals.length === 0) {
-    printHelp();
+    // Multi-level help: resolve depth from positionals captured before --help
+    const [module, subgroup] = positionals;
+    if (!module) {
+      printHelp();
+    } else if (!subgroup) {
+      printHelp(module);
+    } else {
+      printHelp(module, subgroup);
+    }
     return;
   }
 
@@ -604,7 +697,7 @@ async function main(): Promise<void> {
   const v = values;
   const json = v.json ?? false;
 
-  if (module === "config") return handleConfigCommand(action, rest, json);
+  if (module === "config") return handleConfigCommand(action, rest, json, v.lang, v.force);
   if (module === "setup") return handleSetupCommand(v);
 
   const config = loadProfileConfig({ profile: v.profile, demo: v.demo, userAgent: `okx-trade-cli/${CLI_VERSION}` });
@@ -616,6 +709,7 @@ async function main(): Promise<void> {
   if (module === "spot") return handleSpotCommand(run, action, rest, v, json);
   if (module === "swap") return handleSwapCommand(run, action, rest, v, json);
   if (module === "futures") return handleFuturesCommand(run, action, rest, v, json);
+  if (module === "option") return handleOptionCommand(run, action, rest, v, json);
   if (module === "bot") return handleBotCommand(run, action, rest, v, json);
 
   process.stderr.write(`Unknown command: ${module} ${action ?? ""}\n`);

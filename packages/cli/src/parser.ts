@@ -43,6 +43,7 @@ export interface CliValues {
   quoteSz?: string;
   baseSz?: string;
   direction?: string;
+  basePos?: boolean;
   stopType?: string;
   live?: boolean;
   instType?: string;
@@ -59,6 +60,7 @@ export interface CliValues {
   clOrdId?: string;
   newPx?: string;
   // dca bot
+  type?: string;
   initOrdAmt?: string;
   safetyOrdAmt?: string;
   maxSafetyOrds?: string;
@@ -69,6 +71,19 @@ export interface CliValues {
   slPct?: string;
   reserveFunds?: string;
   triggerType?: string;
+  cycleId?: string;
+  lang?: string;
+  // option
+  uly?: string;
+  expTime?: string;
+  // batch
+  action?: string;
+  orders?: string;
+  // audit
+  since?: string;
+  tool?: string;
+  // config profile
+  force?: boolean;
 }
 
 export const CLI_OPTIONS = {
@@ -123,6 +138,7 @@ export const CLI_OPTIONS = {
   quoteSz: { type: "string" },
   baseSz: { type: "string" },
   direction: { type: "string" },
+  basePos: { type: "boolean", default: true },
   stopType: { type: "string" },
   live: { type: "boolean", default: false },
   // market extras
@@ -142,6 +158,7 @@ export const CLI_OPTIONS = {
   clOrdId: { type: "string" },
   newPx: { type: "string" },
   // dca bot
+  type: { type: "string" },
   initOrdAmt: { type: "string" },
   safetyOrdAmt: { type: "string" },
   maxSafetyOrds: { type: "string" },
@@ -152,13 +169,45 @@ export const CLI_OPTIONS = {
   slPct: { type: "string" },
   reserveFunds: { type: "string" },
   triggerType: { type: "string" },
+  cycleId: { type: "string" },
+  // i18n
+  lang: { type: "string" },
+  // option
+  uly: { type: "string" },
+  expTime: { type: "string" },
+  // batch
+  action: { type: "string" },
+  orders: { type: "string" },
+  // audit
+  since: { type: "string" },
+  tool: { type: "string" },
+  // config profile
+  force: { type: "boolean", default: false },
 } as const;
 
 export function parseCli(argv: string[]): { values: CliValues; positionals: string[] } {
+  // Pre-process --no-<flag> for boolean options (parseArgs doesn't support negation natively)
+  const negated = new Set<string>();
+  const filtered = argv.filter((arg) => {
+    if (arg.startsWith("--no-")) {
+      const key = arg.slice(5);
+      if (key in CLI_OPTIONS && (CLI_OPTIONS as Record<string, { type: string }>)[key].type === "boolean") {
+        negated.add(key);
+        return false;
+      }
+    }
+    return true;
+  });
+
   const { values, positionals } = parseArgs({
-    args: argv,
+    args: filtered,
     options: CLI_OPTIONS,
     allowPositionals: true,
   });
+
+  for (const key of negated) {
+    (values as Record<string, unknown>)[key] = false;
+  }
+
   return { values: values as CliValues, positionals };
 }

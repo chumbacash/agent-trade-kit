@@ -1,5 +1,36 @@
 # Configuration
 
+## One-Line Install
+
+For a guided installation that handles Node.js checking, package installation, and MCP client detection:
+
+**macOS / Linux:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/okx/agent-tradekit/master/scripts/install.sh | bash
+```
+
+**Windows (PowerShell):**
+
+```powershell
+irm https://raw.githubusercontent.com/okx/agent-tradekit/master/scripts/install.ps1 | iex
+```
+
+The installer will:
+1. Check Node.js >= 18 (with install guidance if missing)
+2. Install `@okx_ai/okx-trade-mcp` and `@okx_ai/okx-trade-cli` globally
+3. Verify installation
+4. Detect installed MCP clients (Claude Desktop, Cursor, Windsurf)
+5. Auto-configure detected clients
+
+After installation, configure your API credentials:
+
+```bash
+okx config init
+```
+
+---
+
 ## API Credentials
 
 All credentials are stored in `~/.okx/config.toml`. The client config only needs the profile name.
@@ -95,16 +126,16 @@ Then register each as a separate MCP server in your client config:
 {
   "mcpServers": {
     "okx-demo": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "demo", "--modules", "all"]
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "demo", "--modules", "all"]
     },
     "okx-live": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "live", "--modules", "all"]
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "live", "--modules", "all"]
     },
     "okx-live-sub": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "live-sub", "--modules", "all"]
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "live-sub", "--modules", "all"]
     }
   }
 }
@@ -160,13 +191,13 @@ Config file:
 ```json
 {
   "mcpServers": {
-    "okx-LIVE-real-money": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "demo", "--modules", "all"]
+    "okx-live": {
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "live", "--modules", "all"]
     },
-    "okx-DEMO-simulated-trading": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "demo", "--modules", "all"]
+    "okx-demo": {
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "demo", "--modules", "all"]
     }
   }
 }
@@ -182,8 +213,8 @@ Config file: `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (project-level)
 {
   "mcpServers": {
     "okx-trade": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "demo", "--modules", "all"]
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "demo", "--modules", "all"]
     }
   }
 }
@@ -235,8 +266,8 @@ Config file:
 {
   "mcpServers": {
     "okx-trade-mcp": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "demo", "--modules", "all"]
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "demo", "--modules", "all"]
     }
   }
 }
@@ -249,13 +280,13 @@ Config file: `openCxxW.json`
 ```json
 {
   "mcpServers": {
-    "okx-LIVE-real-money": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "demo", "--modules", "all"]
+    "okx-live": {
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "live", "--modules", "all"]
     },
-    "okx-DEMO-simulated-trading": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "demo", "--modules", "all"]
+    "okx-demo": {
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "demo", "--modules", "all"]
     }
   }
 }
@@ -273,8 +304,8 @@ Watch prices, orderbook, candles without any credentials:
 {
   "mcpServers": {
     "okx-market": {
-      "command": "okx-trade-mcp",
-      "args": ["--modules", "market"]
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--modules", "market"]
     }
   }
 }
@@ -288,8 +319,8 @@ Has API key but prevents any order placement:
 {
   "mcpServers": {
     "okx-readonly": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "live", "--modules", "all", "--read-only"]
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "live", "--modules", "all", "--read-only"]
     }
   }
 }
@@ -303,8 +334,8 @@ Minimal setup for spot trading — skips swap, futures, and bot modules:
 {
   "mcpServers": {
     "okx-spot": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "live", "--modules", "market", "spot", "account"]
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "live", "--modules", "market", "spot", "account"]
     }
   }
 }
@@ -318,8 +349,8 @@ Safe environment for testing — uses OKX paper trading, no real funds at risk:
 {
   "mcpServers": {
     "okx-demo": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "demo", "--modules", "all"]
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "demo", "--modules", "all"]
     }
   }
 }
@@ -335,12 +366,12 @@ Register both as separate MCP servers. Your AI can switch between them:
 {
   "mcpServers": {
     "okx-live": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "demo", "--modules", "all"]
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "live", "--modules", "all"]
     },
     "okx-demo": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "demo", "--modules", "all"]
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "demo", "--modules", "all"]
     }
   }
 }
@@ -451,16 +482,16 @@ passphrase = "your-sub-passphrase"
 {
   "mcpServers": {
     "okx-demo": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "demo", "--modules", "all"]
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "demo", "--modules", "all"]
     },
     "okx-live": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "live", "--modules", "all"]
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "live", "--modules", "all"]
     },
     "okx-live-sub": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "live-sub", "--modules", "all"]
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "live-sub", "--modules", "all"]
     }
   }
 }
@@ -516,13 +547,13 @@ okx-trade-mcp setup --client claude-desktop --profile live --modules market,spot
 ```json
 {
   "mcpServers": {
-    "okx-LIVE-real-money": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "demo", "--modules", "all"]
+    "okx-live": {
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "live", "--modules", "all"]
     },
-    "okx-DEMO-simulated-trading": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "demo", "--modules", "all"]
+    "okx-demo": {
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "demo", "--modules", "all"]
     }
   }
 }
@@ -538,8 +569,8 @@ okx-trade-mcp setup --client claude-desktop --profile live --modules market,spot
 {
   "mcpServers": {
     "okx-trade": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "demo", "--modules", "all"]
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "demo", "--modules", "all"]
     }
   }
 }
@@ -591,8 +622,8 @@ claude mcp add --transport stdio okx-trade-mcp -- okx-trade-mcp --profile demo -
 {
   "mcpServers": {
     "okx-trade-mcp": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "demo", "--modules", "all"]
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "demo", "--modules", "all"]
     }
   }
 }
@@ -605,13 +636,13 @@ claude mcp add --transport stdio okx-trade-mcp -- okx-trade-mcp --profile demo -
 ```json
 {
   "mcpServers": {
-    "okx-LIVE-real-money": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "demo", "--modules", "all"]
+    "okx-live": {
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "live", "--modules", "all"]
     },
-    "okx-DEMO-simulated-trading": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "demo", "--modules", "all"]
+    "okx-demo": {
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "demo", "--modules", "all"]
     }
   }
 }
@@ -629,8 +660,8 @@ claude mcp add --transport stdio okx-trade-mcp -- okx-trade-mcp --profile demo -
 {
   "mcpServers": {
     "okx-market": {
-      "command": "okx-trade-mcp",
-      "args": ["--modules", "market"]
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--modules", "market"]
     }
   }
 }
@@ -644,8 +675,8 @@ claude mcp add --transport stdio okx-trade-mcp -- okx-trade-mcp --profile demo -
 {
   "mcpServers": {
     "okx-readonly": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "live", "--modules", "all", "--read-only"]
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "live", "--modules", "all", "--read-only"]
     }
   }
 }
@@ -659,8 +690,8 @@ claude mcp add --transport stdio okx-trade-mcp -- okx-trade-mcp --profile demo -
 {
   "mcpServers": {
     "okx-spot": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "live", "--modules", "market", "spot", "account"]
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "live", "--modules", "market", "spot", "account"]
     }
   }
 }
@@ -674,8 +705,8 @@ claude mcp add --transport stdio okx-trade-mcp -- okx-trade-mcp --profile demo -
 {
   "mcpServers": {
     "okx-demo": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "demo", "--modules", "all"]
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "demo", "--modules", "all"]
     }
   }
 }
@@ -691,12 +722,12 @@ claude mcp add --transport stdio okx-trade-mcp -- okx-trade-mcp --profile demo -
 {
   "mcpServers": {
     "okx-live": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "demo", "--modules", "all"]
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "live", "--modules", "all"]
     },
     "okx-demo": {
-      "command": "okx-trade-mcp",
-      "args": ["--profile", "demo", "--modules", "all"]
+      "command": "npx",
+      "args": ["-y", "@okx_ai/okx-trade-mcp", "--profile", "demo", "--modules", "all"]
     }
   }
 }

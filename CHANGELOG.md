@@ -19,6 +19,90 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.8] - 2026-03-09
+
+### Changed
+
+- **`grid_create_order` — `basePos` defaults to `true`**: contract grid bots now open a base position by default (long/short direction). Neutral direction ignores this parameter. Pass `basePos: false` (MCP) or `--no-basePos` (CLI) to disable. Spot grid is unaffected.
+
+---
+
+## [1.1.7] - 2026-03-09
+
+### Changed
+
+- Version bump.
+
+---
+
+## [1.1.6] - 2026-03-08
+
+### Changed
+
+- Version bump.
+
+---
+
+## [1.1.5] - 2026-03-08
+
+### Added
+
+- **Multi-level `--help` navigation**: `okx --help`, `okx <module> --help`, and `okx <module> <subgroup> --help` now print scoped help with per-command descriptions, so AI agents can discover available capabilities without reading source code.
+
+### Fixed
+
+- **`--reserveFunds` missing from `bot dca create` help**: the parameter was supported in code but absent from the help output.
+
+---
+
+## [1.1.4] - 2026-03-08
+
+### Fixed
+
+- **`--modules all` now includes `bot.dca`**: previously `all` expanded using `BOT_DEFAULT_SUB_MODULES` (bot.grid only), silently excluding the DCA module. Now correctly uses all bot sub-modules.
+- **`option` added to default modules**: the default module set is now `spot, swap, option, account, bot.grid`. MCP server help text updated to match actual defaults.
+
+---
+
+## [1.1.3] - 2026-03-08
+
+### Added
+
+- **Git hash in `--version` output**: both CLI and MCP server now display the build commit hash alongside the version, e.g. `1.1.3 (abc1234)`, making it easy to verify which exact commit a published package was built from
+
+### Fixed
+
+- **Spot `tdMode` not configurable**: `okx spot place`, `okx spot algo place` (TP/SL), MCP `spot_place_algo_order`, and MCP `spot_batch_orders` previously hardcoded `tdMode` with no way to override it. The `--tdMode` flag is now exposed as an optional parameter (default: `cash` for non-margin accounts). Users on unified/margin accounts can pass `--tdMode cross`.
+
+---
+
+## [1.1.2] - 2026-03-08
+
+### Added
+
+- **One-line install scripts**: `install.sh` (macOS/Linux) and `install.ps1` (Windows) — install MCP server + CLI and auto-configure detected MCP clients in one command
+- **Auto MCP client configuration**: install script detects and configures Claude Code, Claude Desktop, Cursor, VS Code, and Windsurf automatically
+- **`config init --lang`**: `--lang zh` flag for Chinese-language interactive wizard; defaults to English
+- **Smart default profile name**: `config init` infers a sensible default profile name from the environment
+- **CLI option module**: `okx option` commands for placing, cancelling, amending orders, querying positions, fills, instruments, and Greeks
+- **CLI batch operations**: `okx spot batch` and `okx swap batch` for bulk place/cancel/amend
+- **CLI audit log**: `okx trade history` to query the local NDJSON audit log
+- **CLI contract DCA**: `okx bot dca contract` commands with `--type` flag to distinguish spot vs. contract DCA
+
+### Fixed
+
+- **Version reporting**: MCP server now reads its version from `package.json` at runtime instead of a hardcoded string
+- **`okx setup` npx command**: setup config for standalone MCP clients (Claude Desktop, Cursor) now uses `npx` so users don't need a global install
+- **Bot write endpoints**: `sCode`/`sMsg` errors from grid and DCA write endpoints are now surfaced correctly instead of being silently swallowed
+- **Install script**: installs both `@okx_ai/okx-trade-mcp` and `@okx_ai/okx-trade-cli` (previously only installed one package)
+
+### Changed
+
+- **Bot sub-module refactor**: `bot` module now includes a `bot.default` sub-module; internal sub-module loading is unified and more robust
+- **Docs**: one-line install instructions moved from READMEs to `docs/configuration.md`
+
+---
+
 ## [1.1.1] - 2026-03-07
 
 ### Fixed

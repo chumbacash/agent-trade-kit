@@ -68,6 +68,8 @@ okx-trade-mcp setup --client claude-code
 okx-trade-mcp setup --client vscode          # writes .mcp.json in current directory
 ```
 
+> **Alternative:** [One-line install script](docs/configuration.md#one-line-install) — handles Node.js check, install, and client detection automatically.
+>
 > For live trading, multiple profiles, or other clients, see [configuration →](docs/configuration.md).
 
 ---

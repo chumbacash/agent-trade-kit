@@ -19,6 +19,90 @@
 
 ---
 
+## [1.1.8] - 2026-03-09
+
+### 变更
+
+- **`grid_create_order` — `basePos` 默认为 `true`**：合约网格机器人创建时默认开底仓（做多/做空方向）。中性方向忽略此参数。传 `basePos: false`（MCP）或 `--no-basePos`（CLI）可禁用。现货网格不受影响。
+
+---
+
+## [1.1.7] - 2026-03-09
+
+### 变更
+
+- 版本号升级。
+
+---
+
+## [1.1.6] - 2026-03-08
+
+### 变更
+
+- 版本号升级。
+
+---
+
+## [1.1.5] - 2026-03-08
+
+### 新增
+
+- **多层级 `--help` 导航**：`okx --help`、`okx <模块> --help`、`okx <模块> <子组> --help` 现在输出带有每条命令描述的范围化帮助信息，AI Agent 无需阅读源码即可发现可用功能。
+
+### 修复
+
+- **`bot dca create` 帮助文本缺少 `--reserveFunds`**：该参数在代码中已支持，但未出现在帮助输出中。
+
+---
+
+## [1.1.4] - 2026-03-08
+
+### 修复
+
+- **`--modules all` 现在包含 `bot.dca`**：此前 `all` 使用 `BOT_DEFAULT_SUB_MODULES` 展开（仅含 bot.grid），导致 DCA 模块被静默排除。现已修正为包含所有 bot 子模块。
+- **`option` 加入默认模块**：默认模块集合更新为 `spot, swap, option, account, bot.grid`，MCP 服务器帮助文本同步修正以匹配实际默认值。
+
+---
+
+## [1.1.3] - 2026-03-08
+
+### 新增
+
+- **`--version` 输出 git commit hash**：CLI 和 MCP 服务器的版本号现在附带构建时的 commit hash，例如 `1.1.3 (abc1234)`，便于确认已发布包对应的具体提交
+
+### 修复
+
+- **现货 `tdMode` 不可配置**：`okx spot place`、`okx spot algo place`（止盈止损）、MCP `spot_place_algo_order`、MCP `spot_batch_orders` 此前均硬编码 `tdMode`，用户无法覆盖。现在 `--tdMode` 作为可选参数暴露（默认值：`cash`，适用于非保证金账户）。使用统一账户/保证金账户的用户可显式传 `--tdMode cross`。
+
+---
+
+## [1.1.2] - 2026-03-08
+
+### 新增
+
+- **一键安装脚本**：`install.sh`（macOS/Linux）和 `install.ps1`（Windows）— 一条命令完成 MCP 服务器 + CLI 安装，并自动配置已检测到的 MCP 客户端
+- **自动配置 MCP 客户端**：安装脚本自动检测并配置 Claude Code、Claude Desktop、Cursor、VS Code 和 Windsurf
+- **`config init --lang`**：`--lang zh` 参数启用中文交互向导；默认使用英文
+- **智能默认配置名**：`config init` 根据运行环境自动推断合适的默认配置名
+- **CLI 期权模块**：`okx option` 命令，支持下单、撤单、改单，以及查询持仓、成交记录、合约链和希腊字母
+- **CLI 批量操作**：`okx spot batch` 和 `okx swap batch`，支持批量下单/撤单/改单
+- **CLI 审计日志**：`okx trade history` 查询本地 NDJSON 审计日志
+- **CLI 合约 DCA**：`okx bot dca contract` 命令，通过 `--type` 参数区分现货与合约 DCA
+
+### 修复
+
+- **版本上报**：MCP 服务器现在从 `package.json` 动态读取版本号，不再使用硬编码字符串
+- **`okx setup` npx 命令**：独立 MCP 客户端（Claude Desktop、Cursor）的 setup 配置现在使用 `npx`，用户无需全局安装即可使用
+- **Bot 写入端点错误**：网格和 DCA 写入端点的 `sCode`/`sMsg` 错误现在能正确抛出，不再被静默吞掉
+- **安装脚本**：同时安装 `@okx_ai/okx-trade-mcp` 和 `@okx_ai/okx-trade-cli`（之前只安装了其中一个）
+
+### 变更
+
+- **Bot 子模块重构**：`bot` 模块新增 `bot.default` 子模块；内部子模块加载逻辑统一，更加健壮
+- **文档**：一键安装说明从 README 移至 `docs/configuration.md`
+
+---
+
 ## [1.1.1] - 2026-03-07
 
 ### 修复

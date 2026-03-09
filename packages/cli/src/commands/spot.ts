@@ -30,6 +30,7 @@ export async function cmdSpotPlace(
   run: ToolRunner,
   opts: {
     instId: string;
+    tdMode?: string;
     side: string;
     ordType: string;
     sz: string;
@@ -39,7 +40,7 @@ export async function cmdSpotPlace(
 ): Promise<void> {
   const result = await run("spot_place_order", {
     instId: opts.instId,
-    tdMode: "cash",
+    tdMode: opts.tdMode ?? "cash",
     side: opts.side,
     ordType: opts.ordType,
     sz: opts.sz,
@@ -68,6 +69,7 @@ export async function cmdSpotAlgoPlace(
   run: ToolRunner,
   opts: {
     instId: string;
+    tdMode?: string;
     side: string;
     ordType: string;
     sz: string;
@@ -80,7 +82,7 @@ export async function cmdSpotAlgoPlace(
 ): Promise<void> {
   const result = await run("spot_place_algo_order", {
     instId: opts.instId,
-    tdMode: "cash",
+    tdMode: opts.tdMode ?? "cash",
     side: opts.side,
     ordType: opts.ordType,
     sz: opts.sz,
@@ -232,4 +234,42 @@ export async function cmdSpotFills(
       ts: new Date(Number(f["ts"])).toLocaleString(),
     })),
   );
+}
+
+export async function cmdSpotBatch(
+  run: ToolRunner,
+  opts: { action: string; orders: string; json: boolean },
+): Promise<void> {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(opts.orders);
+  } catch {
+    process.stderr.write("Error: --orders must be a valid JSON array\n");
+    process.exitCode = 1;
+    return;
+  }
+  if (!Array.isArray(parsed) || parsed.length === 0) {
+    process.stderr.write("Error: --orders must be a non-empty JSON array\n");
+    process.exitCode = 1;
+    return;
+  }
+
+  const toolMap: Record<string, string> = {
+    place: "spot_batch_orders",
+    amend: "spot_batch_amend",
+    cancel: "spot_batch_cancel",
+  };
+  const tool = toolMap[opts.action];
+  if (!tool) {
+    process.stderr.write(`Error: --action must be one of: place, amend, cancel\n`);
+    process.exitCode = 1;
+    return;
+  }
+
+  const result = await run(tool, tool === "spot_batch_orders" ? { action: opts.action, orders: parsed } : { orders: parsed });
+  const data = getData(result) as Record<string, unknown>[];
+  if (opts.json) return printJson(data);
+  for (const r of data ?? []) {
+    process.stdout.write(`${r["ordId"] ?? r["clOrdId"] ?? "?"}: ${r["sCode"] === "0" ? "OK" : r["sMsg"]}\n`);
+  }
 }
