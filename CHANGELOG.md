@@ -19,6 +19,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.8] - 2026-03-09
+
+### Changed
+
+- **`grid_create_order` — `basePos` defaults to `true`**: contract grid bots now open a base position by default (long/short direction). Neutral direction ignores this parameter. Pass `basePos: false` (MCP) or `--no-basePos` (CLI) to disable. Spot grid is unaffected.
+
+---
+
+## [1.1.7] - 2026-03-09
+
+### Changed
+
+- Version bump.
+
+---
+
+## [1.1.6] - 2026-03-08
+
+### Changed
+
+- Version bump.
+
+---
+
 ## [1.1.5] - 2026-03-08
 
 ### Added

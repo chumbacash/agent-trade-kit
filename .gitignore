@@ -34,3 +34,4 @@ sonar-project.properties
 .gitlab-ci.yml
 scripts/smoke-test/report.md
 _tmp_*
+scripts/smoke-test/report.md
