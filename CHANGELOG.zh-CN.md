@@ -26,6 +26,10 @@
 - **`grid_create_order` — `sz` 描述修正**：`sz` 参数描述由"Investment amount in USDT"改为"investment amount in margin currency (e.g. USDT for USDT-margined contracts)"，准确覆盖 USDT 保证金和币本位合约网格两种场景。行为不变。
 - **文档移除 `--no-basePos` CLI 示例**：`docs/cli-reference.md` 中移除了 `--no-basePos` 用例，与现有行为保持一致（`basePos` 默认 `true`，不作为独立 CLI 标志对外暴露）。
 
+### 修复
+
+- **`dca_create_order` — 合约 DCA 现已传递 `slPct` 和 `slMode`**：`slPct`（止损比例）和 `slMode`（止损价格类型）参数在 schema 中已定义，但合约 DCA handler 未将其转发至 OKX API，导致创建合约 DCA bot 时止损设置被静默忽略。现货 DCA 不受影响。注意：合约 DCA 设置 `slPct` 时，OKX API 要求同时传递 `slMode`（`"limit"` 或 `"market"`）。
+
 ---
 
 ## [1.1.8] - 2026-03-09

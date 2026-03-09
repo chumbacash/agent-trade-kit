@@ -26,6 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`grid_create_order` — `sz` description clarified**: the `sz` parameter description now says "investment amount in margin currency (e.g. USDT for USDT-margined contracts)" instead of "Investment amount in USDT", correctly covering both USDT-margined and coin-margined contract grids. Behavior is unchanged.
 - **`--no-basePos` CLI example removed from docs**: the `--no-basePos` flag example has been removed from `docs/cli-reference.md` as `basePos` defaults to `true` and is not exposed as a standalone CLI flag.
 
+### Fixed
+
+- **`dca_create_order` — contract DCA now passes `slPct` and `slMode`**: the `slPct` (stop-loss ratio) and `slMode` (stop-loss price type) parameters were accepted in the schema but not forwarded to the OKX API for contract DCA. This caused stop-loss settings to be silently ignored when creating contract DCA bots. Spot DCA was unaffected. Note: when `slPct` is set for contract DCA, `slMode` (`"limit"` or `"market"`) is required by the OKX API.
+
 ---
 
 ## [1.1.8] - 2026-03-09
