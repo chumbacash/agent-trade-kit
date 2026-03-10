@@ -1,10 +1,10 @@
 [English](ARCHITECTURE.md) | [中文](ARCHITECTURE.zh-CN.md)
 
-# OKX Agent TradeKit — Architecture
+# OKX Agent Trade Kit — Architecture
 
 ## 1. Overview
 
-OKX Agent TradeKit is an AI-powered trading toolkit for the OKX exchange. It includes an MCP server (`okx-trade-mcp`) and a CLI tool (`okx-trade-cli`), allowing AI agents (Claude Desktop, Cursor, etc.) and developers to query market data, place orders, and manage positions by calling OKX REST API v5 directly.
+OKX Agent Trade Kit is an AI-powered trading toolkit for the OKX exchange. It includes an MCP server (`okx-trade-mcp`) and a CLI tool (`okx-trade-cli`), allowing AI agents (Claude Desktop, Cursor, etc.) and developers to query market data, place orders, and manage positions by calling OKX REST API v5 directly.
 
 - **Transport**: stdio — JSON-RPC communication with the host process via standard input/output
 - **Runtime**: Node.js >= 18
