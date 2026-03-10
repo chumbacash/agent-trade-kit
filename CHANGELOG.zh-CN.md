@@ -11,6 +11,10 @@
 
 ## [Unreleased]
 
+---
+
+## [1.2.0] - 2026-03-10
+
 ### 新增
 
 - **合约 DCA — 可选参数**：`--slMode`（止损价格类型：`limit`/`market`）、`--allowReinvest`（利润再投入下一轮循环，默认 `true`）、`--triggerStrategy`（启动方式：`instant`/`price`/`rsi`）、`--triggerPx`（触发价格，`price` 策略时必填）。均为可选参数，仅适用于合约 DCA 创建。
