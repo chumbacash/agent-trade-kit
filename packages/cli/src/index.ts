@@ -625,34 +625,33 @@ export function handleBotDcaCommand(
   v: CliValues,
   json: boolean,
 ): Promise<void> | void {
-  const type = v.type ?? "spot";
   if (subAction === "orders")
-    return cmdDcaOrders(run, { type, history: v.history ?? false, json });
+    return cmdDcaOrders(run, { history: v.history ?? false, json });
   if (subAction === "details")
-    return cmdDcaDetails(run, { type, algoId: v.algoId!, json });
+    return cmdDcaDetails(run, { algoId: v.algoId!, json });
   if (subAction === "sub-orders")
-    return cmdDcaSubOrders(run, { type, algoId: v.algoId!, live: v.live ?? false, cycleId: v.cycleId, json });
+    return cmdDcaSubOrders(run, { algoId: v.algoId!, cycleId: v.cycleId, json });
   if (subAction === "create")
     return cmdDcaCreate(run, {
-      type,
       instId: v.instId!,
+      lever: v.lever!,
+      direction: v.direction!,
       initOrdAmt: v.initOrdAmt!,
-      safetyOrdAmt: v.safetyOrdAmt!,
       maxSafetyOrds: v.maxSafetyOrds!,
-      pxSteps: v.pxSteps!,
-      pxStepsMult: v.pxStepsMult!,
-      volMult: v.volMult!,
       tpPct: v.tpPct!,
+      safetyOrdAmt: v.safetyOrdAmt,
+      pxSteps: v.pxSteps,
+      pxStepsMult: v.pxStepsMult,
+      volMult: v.volMult,
       slPct: v.slPct,
-      reserveFunds: v.reserveFunds,
-      triggerType: v.triggerType,
-      direction: v.direction,
-      lever: v.lever,
-      side: v.side,
+      slMode: v.slMode,
+      allowReinvest: v.allowReinvest,
+      triggerStrategy: v.triggerStrategy,
+      triggerPx: v.triggerPx,
       json,
     });
   if (subAction === "stop")
-    return cmdDcaStop(run, { type, algoId: v.algoId!, instId: v.instId!, stopType: v.stopType, json });
+    return cmdDcaStop(run, { algoId: v.algoId!, json });
 }
 
 export function handleBotCommand(
@@ -700,7 +699,7 @@ async function main(): Promise<void> {
   if (module === "config") return handleConfigCommand(action, rest, json, v.lang, v.force);
   if (module === "setup") return handleSetupCommand(v);
 
-  const config = loadProfileConfig({ profile: v.profile, demo: v.demo, userAgent: `okx-trade-cli/${CLI_VERSION}` });
+  const config = loadProfileConfig({ profile: v.profile, demo: v.demo, userAgent: `okx-trade-cli/${CLI_VERSION}`, sourceTag: "CLI" });
   const client = new OkxRestClient(config);
   const run = createToolRunner(client, config);
 

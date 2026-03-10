@@ -59,8 +59,7 @@ export interface CliValues {
   autoCxl?: boolean;
   clOrdId?: string;
   newPx?: string;
-  // dca bot
-  type?: string;
+  // dca bot (contract only)
   initOrdAmt?: string;
   safetyOrdAmt?: string;
   maxSafetyOrds?: string;
@@ -69,8 +68,10 @@ export interface CliValues {
   volMult?: string;
   tpPct?: string;
   slPct?: string;
-  reserveFunds?: string;
-  triggerType?: string;
+  slMode?: string;
+  allowReinvest?: string;
+  triggerStrategy?: string;
+  triggerPx?: string;
   cycleId?: string;
   lang?: string;
   // option
@@ -157,8 +158,7 @@ export const CLI_OPTIONS = {
   autoCxl: { type: "boolean", default: false },
   clOrdId: { type: "string" },
   newPx: { type: "string" },
-  // dca bot
-  type: { type: "string" },
+  // dca bot (contract only)
   initOrdAmt: { type: "string" },
   safetyOrdAmt: { type: "string" },
   maxSafetyOrds: { type: "string" },
@@ -167,8 +167,10 @@ export const CLI_OPTIONS = {
   volMult: { type: "string" },
   tpPct: { type: "string" },
   slPct: { type: "string" },
-  reserveFunds: { type: "string" },
-  triggerType: { type: "string" },
+  slMode: { type: "string" },
+  allowReinvest: { type: "string" },
+  triggerStrategy: { type: "string" },
+  triggerPx: { type: "string" },
   cycleId: { type: "string" },
   // i18n
   lang: { type: "string" },
