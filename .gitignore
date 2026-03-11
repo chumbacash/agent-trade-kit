@@ -11,6 +11,7 @@ Thumbs.db
 # AI Assistant
 .cursor/
 .claude/
+CLAUDE.md
 
 # Build output
 dist/
