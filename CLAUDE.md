@@ -67,3 +67,27 @@ Follow [CONTRIBUTING.md](CONTRIBUTING.md) for branch workflow, testing, commit c
 ## GitLab / Git Operations
 
 When working with GitLab, use `$DACS` as the home path for glab config. Ensure glab CLI token is configured before attempting any GitLab operations (MR comments, issue viewing).
+
+## Release Bot（发布机器人）
+
+打完 tag 后，**必须**调用飞书（Lark）机器人发送发布通知，关键词为「发布」。
+
+- **Webhook URL**: `https://open.larksuite.com/open-apis/bot/v2/hook/b9beca3e-ec61-40fa-9aed-e8927b9de08a`
+
+消息示例（POST JSON，`msg_type: text`）：
+
+```bash
+curl -X POST 'https://open.larksuite.com/open-apis/bot/v2/hook/b9beca3e-ec61-40fa-9aed-e8927b9de08a' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "msg_type": "text",
+    "content": {
+      "text": "发布 okx-trade-mcp v<版本号>\n时间：<发布时间>\n改动：\n<CHANGELOG 中对应版本的改动摘要>"
+    }
+  }'
+```
+
+消息必须包含：
+1. **版本号**（与 tag 一致）
+2. **发布时间**（ISO 8601 或可读格式）
+3. **改动摘要**（从 CHANGELOG.md 中提取对应版本的 Added / Fixed / Changed 等条目）
