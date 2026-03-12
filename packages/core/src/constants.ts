@@ -53,7 +53,6 @@ export type EarnSubModuleId = (typeof EARN_SUB_MODULE_IDS)[number];
 
 export const MODULES = [
   "market",
-  "copytrading",
   "spot",
   "swap",
   "futures",
