@@ -13,19 +13,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.2.2] - 2026-03-11
+## [1.2.3] - 2026-03-12
 
-### Fixed
+### Breaking Changes
 
-- **Security tips timing changed to first CLI run**: The security reminder is no longer printed during `npm install` (postinstall). Instead, it is shown on the first time `okx` CLI is invoked after installation. This avoids the notice being silently suppressed by npm in CI/CD environments and ensures users actually see it when they first use the tool.
+- **`--modules all` no longer includes earn sub-modules**: Previously, `--modules all` expanded to every module including `earn.savings` and `earn.onchain`. Now `all` only includes base modules and bot sub-modules. To enable earn modules, you must opt in explicitly:
+  - `--modules all,earn` — all modules + all earn sub-modules
+  - `--modules all,earn.savings` — all modules + Simple Earn only
+  - `--modules all,earn.onchain` — all modules + On-chain Earn only
+  - `--modules earn` — earn sub-modules only
 
----
-
-## [1.2.1] - 2026-03-11
+  **Migration**: if you previously used `--modules all` and relied on earn tools being active, add `,earn` to your configuration: `--modules all,earn`.
 
 ### Added
 
-- **Post-install security notice**: `npm install` now prints a bilingual security reminder to stderr — reminding users to never share API keys in agent chat, use a dedicated sub-account, and test on demo before going live. Applies to both `@okx_ai/okx-trade-cli` and `@okx_ai/okx-trade-mcp`. The one-line install scripts (`install.sh` / `install.ps1`) also display the same notice after installation completes.
+- **HTTP/HTTPS proxy support**: Configure `proxy_url` in your TOML profile to route all OKX API requests through a proxy server. Supports authenticated proxies via URL credentials (e.g. `http://user:pass@proxy:8080`). Only HTTP/HTTPS proxies are supported; SOCKS is not. ([#53](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/53))
+- **CLI `--verbose` flag**: Add `--verbose` to any command to see detailed network request/response info on stderr — method, URL, auth status (key masked), timing, HTTP status, OKX code, and trace ID. Useful for debugging connectivity and auth issues.
+- **CLI `okx diagnose` command**: Step-by-step connectivity check that verifies environment (Node.js, OS, shell, locale, timezone, proxy), configuration (credentials, site, base URL), network (DNS → TCP → TLS → public API), and authentication. On failure, shows actionable hints. Prints a copy-paste diagnostic report block for sharing with support.
+- **CLI place commands — attached TP/SL**: `okx spot place`, `okx swap place`, and `okx futures place` now accept optional take-profit and stop-loss parameters: `--tpTriggerPx`, `--tpOrdPx`, `--tpTriggerPxType`, `--slTriggerPx`, `--slOrdPx`, `--slTriggerPxType`. These are forwarded directly to the OKX order API as attached TP/SL on the placed order.
+- **Earn module** — 7 new tools for OKX Simple Earn (savings/flexible lending): `earn_get_savings_balance`, `earn_savings_purchase`, `earn_savings_redeem`, `earn_set_lending_rate`, `earn_get_lending_history`, `earn_get_lending_rate_summary`, `earn_get_lending_rate_history`. Includes CLI commands, dual-language documentation, and full test coverage.
 
 ---
 
@@ -36,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Contract DCA — optional parameters**: `--slMode` (stop-loss price type: `limit`/`market`), `--allowReinvest` (reinvest profit into next cycle, default `true`), `--triggerStrategy` (bot start mode: `instant`/`price`/`rsi`), `--triggerPx` (trigger price for `price` strategy). All are optional and only apply to contract DCA create.
 - **Contract DCA orders — `instId` filter**: `dca_get_orders` now accepts an optional `--instId` parameter to filter contract DCA bots by instrument (e.g. `BTC-USDT-SWAP`)
 - **Contract DCA sub-orders — `cycleId` filter**: `dca_get_sub_orders` now accepts an optional `--cycleId` parameter, allowing querying orders within a specific cycle
+- **On-chain Earn module (6 tools)**: new `onchain-earn` module for OKX On-chain Earn (staking/DeFi) products — `onchain_earn_get_offers`, `onchain_earn_purchase`, `onchain_earn_redeem`, `onchain_earn_cancel`, `onchain_earn_get_active_orders`, `onchain_earn_get_order_history`. CLI: `okx earn onchain offers`, `okx earn onchain purchase`, `okx earn onchain redeem`, `okx earn onchain cancel`, `okx earn onchain orders`, `okx earn onchain history`.
 
 ### Changed
 

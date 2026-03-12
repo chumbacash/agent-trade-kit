@@ -13,19 +13,25 @@
 
 ---
 
-## [1.2.2] - 2026-03-11
+## [1.2.3] - 2026-03-12
 
-### 修复
+### 破坏性变更
 
-- **安全提示时机改为首次 CLI 运行时展示**：安全提醒不再于 `npm install`（postinstall）阶段打印，改为在安装后首次调用 `okx` CLI 时展示。此改动避免了在 CI/CD 环境中 npm 静默抑制 lifecycle 输出的问题，确保用户在实际使用工具时能看到安全提示。
+- **`--modules all` 不再包含 earn 子模块**：此前 `--modules all` 会展开为所有模块，包括 `earn.savings` 和 `earn.onchain`。现在 `all` 仅包含基础模块和 bot 子模块，earn 模块需要显式启用：
+  - `--modules all,earn` — 所有模块 + 全部 earn 子模块
+  - `--modules all,earn.savings` — 所有模块 + 仅简单赚币
+  - `--modules all,earn.onchain` — 所有模块 + 仅链上赚币
+  - `--modules earn` — 仅 earn 子模块
 
----
-
-## [1.2.1] - 2026-03-11
+  **迁移方案**：若此前使用 `--modules all` 且依赖 earn 工具，需在配置中追加 `,earn`：`--modules all,earn`。
 
 ### 新增
 
-- **安装后安全提示**：`npm install` 完成后会向 stderr 输出双语安全提醒——提示用户切勿在 Agent 对话中分享 API Key、使用专用子账户、先在模拟盘测试再接入实盘。适用于 `@okx_ai/okx-trade-cli` 和 `@okx_ai/okx-trade-mcp` 两个包。一键安装脚本（`install.sh` / `install.ps1`）也会在安装完成后展示相同提示。
+- **HTTP/HTTPS 代理支持**：在 TOML Profile 中配置 `proxy_url`，所有 OKX API 请求将通过代理服务器转发。支持带认证的代理 URL（如 `http://user:pass@proxy:8080`）。仅支持 HTTP/HTTPS 代理，不支持 SOCKS。（[#53](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/53)）
+- **CLI `--verbose` 标志**：为任意命令添加 `--verbose`，可在 stderr 查看详细的网络请求/响应信息 — 包括方法、URL、认证状态（密钥脱敏）、耗时、HTTP 状态码、OKX 错误码和 trace ID。适用于排查连接和认证问题。
+- **CLI `okx diagnose` 诊断命令**：逐步检查连通性 — 环境（Node.js、OS、shell、locale、时区、代理）、配置（凭证、站点、base URL）、网络（DNS → TCP → TLS → 公开 API）和认证。失败时给出具体建议，并在末尾输出可复制分享的诊断报告。
+- **CLI 下单命令 — 附带止盈止损**：`okx spot place`、`okx swap place`、`okx futures place` 现支持可选的止盈止损参数：`--tpTriggerPx`、`--tpOrdPx`、`--tpTriggerPxType`、`--slTriggerPx`、`--slOrdPx`、`--slTriggerPxType`。这些参数会直接作为附带 TP/SL 传递给 OKX 下单 API。
+- **Earn 模块** — 新增 7 个 OKX 简单赚币（活期/灵活借贷）工具：`earn_get_savings_balance`、`earn_savings_purchase`、`earn_savings_redeem`、`earn_set_lending_rate`、`earn_get_lending_history`、`earn_get_lending_rate_summary`、`earn_get_lending_rate_history`。包含 CLI 命令、中英文文档及完整测试覆盖。
 
 ---
 
@@ -36,6 +42,7 @@
 - **合约 DCA — 可选参数**：`--slMode`（止损价格类型：`limit`/`market`）、`--allowReinvest`（利润再投入下一轮循环，默认 `true`）、`--triggerStrategy`（启动方式：`instant`/`price`/`rsi`）、`--triggerPx`（触发价格，`price` 策略时必填）。均为可选参数，仅适用于合约 DCA 创建。
 - **合约 DCA 订单 — `instId` 过滤**：`dca_get_orders` 现支持可选的 `--instId` 参数，用于按合约筛选 DCA 机器人（如 `BTC-USDT-SWAP`）
 - **合约 DCA 子订单 — `cycleId` 过滤**：`dca_get_sub_orders` 现支持可选的 `--cycleId` 参数，用于查询指定周期内的订单
+- **链上赚币模块（6 个工具）**：新增 `onchain-earn` 模块，支持 OKX 链上赚币（质押/DeFi）产品 — `onchain_earn_get_offers`、`onchain_earn_purchase`、`onchain_earn_redeem`、`onchain_earn_cancel`、`onchain_earn_get_active_orders`、`onchain_earn_get_order_history`。CLI 命令：`okx earn onchain offers`、`okx earn onchain purchase`、`okx earn onchain redeem`、`okx earn onchain cancel`、`okx earn onchain orders`、`okx earn onchain history`。
 
 ### 变更
 

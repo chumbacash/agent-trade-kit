@@ -158,8 +158,8 @@ const HELP_TREE: HelpTree = {
         description: "Get trade fill history for spot orders",
       },
       place: {
-        usage: "okx spot place --instId <id> --side <buy|sell> --ordType <type> --sz <n> [--px <price>] [--tdMode <cash|cross|isolated>]",
-        description: "Place a new spot order",
+        usage: "okx spot place --instId <id> --side <buy|sell> --ordType <type> --sz <n> [--px <price>] [--tdMode <cash|cross|isolated>] [--tpTriggerPx <price>] [--tpOrdPx <price|-1>] [--slTriggerPx <price>] [--slOrdPx <price|-1>]",
+        description: "Place a new spot order (supports attached TP/SL)",
       },
       amend: {
         usage: "okx spot amend --instId <id> --ordId <id> [--newSz <n>] [--newPx <price>]",
@@ -219,8 +219,8 @@ const HELP_TREE: HelpTree = {
         description: "Get trade fill history for swap orders",
       },
       place: {
-        usage: "okx swap place --instId <id> --side <buy|sell> --ordType <type> --sz <n> [--posSide <side>] [--px <price>] [--tdMode <cross|isolated>]",
-        description: "Place a new perpetual swap order",
+        usage: "okx swap place --instId <id> --side <buy|sell> --ordType <type> --sz <n> [--posSide <side>] [--px <price>] [--tdMode <cross|isolated>] [--tpTriggerPx <price>] [--tpOrdPx <price|-1>] [--slTriggerPx <price>] [--slOrdPx <price|-1>]",
+        description: "Place a new perpetual swap order (supports attached TP/SL)",
       },
       cancel: {
         usage: "okx swap cancel <instId> --ordId <id>",
@@ -292,8 +292,8 @@ const HELP_TREE: HelpTree = {
         description: "Get trade fill history for futures orders",
       },
       place: {
-        usage: "okx futures place --instId <id> --side <buy|sell> --ordType <type> --sz <n>\n                 [--tdMode <cross|isolated>] [--posSide <net|long|short>] [--px <price>] [--reduceOnly]",
-        description: "Place a new futures order",
+        usage: "okx futures place --instId <id> --side <buy|sell> --ordType <type> --sz <n>\n                 [--tdMode <cross|isolated>] [--posSide <net|long|short>] [--px <price>] [--reduceOnly]\n                 [--tpTriggerPx <price>] [--tpOrdPx <price|-1>] [--slTriggerPx <price>] [--slOrdPx <price|-1>]",
+        description: "Place a new futures order (supports attached TP/SL)",
       },
       cancel: {
         usage: "okx futures cancel <instId> --ordId <id>",
@@ -348,6 +348,74 @@ const HELP_TREE: HelpTree = {
       "batch-cancel": {
         usage: "okx option batch-cancel --orders '<json>'",
         description: "Batch cancel option orders",
+      },
+    },
+  },
+
+  earn: {
+    description: "Earn products — Simple Earn (savings/lending) and On-chain Earn (staking/DeFi)",
+    subgroups: {
+      savings: {
+        description: "Simple Earn — flexible savings and lending",
+        commands: {
+          balance: {
+            usage: "okx earn savings balance [<ccy>]",
+            description: "Get savings balance (optionally filter by currency)",
+          },
+          purchase: {
+            usage: "okx earn savings purchase --ccy <ccy> --amt <n> [--rate <rate>]",
+            description: "Purchase Simple Earn (flexible savings). Rate defaults to 0.01 (1%)",
+          },
+          redeem: {
+            usage: "okx earn savings redeem --ccy <ccy> --amt <n>",
+            description: "Redeem Simple Earn (flexible savings)",
+          },
+          "set-rate": {
+            usage: "okx earn savings set-rate --ccy <ccy> --rate <rate>",
+            description: "Set lending rate for a currency",
+          },
+          "lending-history": {
+            usage: "okx earn savings lending-history [--ccy <ccy>] [--limit <n>]",
+            description: "Get lending history",
+          },
+          "rate-summary": {
+            usage: "okx earn savings rate-summary [<ccy>]",
+            description: "Get market lending rate summary (public, no auth needed)",
+          },
+          "rate-history": {
+            usage: "okx earn savings rate-history [--ccy <ccy>] [--limit <n>]",
+            description: "Get historical lending rates (public, no auth needed)",
+          },
+        },
+      },
+      onchain: {
+        description: "On-chain Earn — staking and DeFi products",
+        commands: {
+          offers: {
+            usage: "okx earn onchain offers [--productId <id>] [--protocolType <type>] [--ccy <ccy>]",
+            description: "Browse available on-chain earn products (staking, DeFi)",
+          },
+          purchase: {
+            usage: "okx earn onchain purchase --productId <id> --ccy <ccy> --amt <n> [--term <term>] [--tag <tag>]",
+            description: "Purchase an on-chain earn product (stake/deposit)",
+          },
+          redeem: {
+            usage: "okx earn onchain redeem --ordId <id> --protocolType <type> [--allowEarlyRedeem]",
+            description: "Redeem an on-chain earn position",
+          },
+          cancel: {
+            usage: "okx earn onchain cancel --ordId <id> --protocolType <type>",
+            description: "Cancel a pending on-chain earn order",
+          },
+          orders: {
+            usage: "okx earn onchain orders [--productId <id>] [--protocolType <type>] [--ccy <ccy>] [--state <state>]",
+            description: "List active on-chain earn orders",
+          },
+          history: {
+            usage: "okx earn onchain history [--productId <id>] [--protocolType <type>] [--ccy <ccy>]",
+            description: "Get on-chain earn order history",
+          },
+        },
       },
     },
   },
@@ -434,6 +502,11 @@ const HELP_TREE: HelpTree = {
     description: "Set up client integrations (Cursor, Windsurf, Claude, etc.)",
     usage: `okx setup --client <${SUPPORTED_CLIENTS.join("|")}> [--profile <name>] [--modules <list>]`,
   },
+
+  diagnose: {
+    description: "Run network diagnostics (DNS, TCP, TLS, API, auth)",
+    usage: "okx diagnose [--profile <name>] [--demo]",
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -450,6 +523,7 @@ function printGlobalHelp(): void {
     `  --profile <name>   Use a named profile from ${configFilePath()}`,
     "  --demo             Use simulated trading (demo) mode",
     "  --json             Output raw JSON",
+    "  --verbose          Show detailed network request/response info (stderr)",
     "  --version, -v      Show version",
     "  --help             Show this help",
     "",
