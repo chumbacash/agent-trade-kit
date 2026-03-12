@@ -96,6 +96,13 @@ export interface CliValues {
   state?: string;
   // diagnostics
   verbose?: boolean;
+  // copy-trade
+  uniqueCode?: string;
+  lastDays?: string;
+  copyMode?: string;
+  copyRatio?: string;
+  fixedAmt?: string;
+  copyAmt?: string;
 }
 
 export const CLI_OPTIONS = {
@@ -207,6 +214,13 @@ export const CLI_OPTIONS = {
   state: { type: "string" },
   // diagnostics
   verbose: { type: "boolean", default: false },
+  // copy-trade
+  uniqueCode: { type: "string" },
+  lastDays: { type: "string" },
+  copyMode: { type: "string" },
+  copyRatio: { type: "string" },
+  fixedAmt: { type: "string" },
+  copyAmt: { type: "string" },
 } as const;
 
 export function parseCli(argv: string[]): { values: CliValues; positionals: string[] } {

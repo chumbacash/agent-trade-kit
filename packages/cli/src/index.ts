@@ -130,6 +130,13 @@ import {
   cmdOnchainEarnActiveOrders,
   cmdOnchainEarnOrderHistory,
 } from "./commands/onchain-earn.js";
+import {
+  cmdCopyTradeTraders,
+  cmdCopyTradeMyStatus,
+  cmdCopyTradeFollow,
+  cmdCopyTradeUnfollow,
+  cmdCopyTradeTraderDetail,
+} from "./commands/copy-trade.js";
 
 // Re-export for tests and external consumers
 export { printHelp } from "./help.js";
@@ -684,6 +691,34 @@ export function handleBotDcaCommand(
     return cmdDcaStop(run, { algoId: v.algoId!, json });
 }
 
+export function handleCopyTradeCommand(
+  run: ToolRunner,
+  action: string,
+  v: CliValues,
+  json: boolean
+): Promise<void> | void {
+  const limit = v.limit !== undefined ? Number(v.limit) : undefined;
+  if (action === "traders")
+    return cmdCopyTradeTraders(run, { instType: v.instType, limit, json });
+  if (action === "status")
+    return cmdCopyTradeMyStatus(run, { instType: v.instType, json });
+  if (action === "follow")
+    return cmdCopyTradeFollow(run, {
+      uniqueCode: v.uniqueCode!,
+      copyTotalAmt: v.fixedAmt!,
+      copyMgnMode: v.mgnMode,
+      copyMode: v.copyMode,
+      copyAmt: v.copyAmt,
+      copyRatio: v.copyRatio,
+      instType: v.instType,
+      json,
+    });
+  if (action === "unfollow")
+    return cmdCopyTradeUnfollow(run, { uniqueCode: v.uniqueCode!, instType: v.instType, json });
+  if (action === "trader-detail")
+    return cmdCopyTradeTraderDetail(run, { uniqueCode: v.uniqueCode!, lastDays: v.lastDays, instType: v.instType, json });
+}
+
 export function handleBotCommand(
   run: ToolRunner,
   action: string,
@@ -808,14 +843,15 @@ async function main(): Promise<void> {
   const run = createToolRunner(client, config);
 
   const moduleHandlers: Record<string, () => Promise<void> | void> = {
-    market:  () => handleMarketCommand(run, action, rest, v, json),
-    account: () => handleAccountCommand(run, action, rest, v, json),
-    spot:    () => handleSpotCommand(run, action, rest, v, json),
-    swap:    () => handleSwapCommand(run, action, rest, v, json),
-    futures: () => handleFuturesCommand(run, action, rest, v, json),
-    option:  () => handleOptionCommand(run, action, rest, v, json),
-    bot:     () => handleBotCommand(run, action, rest, v, json),
-    earn:    () => handleEarnCommand(run, action, rest, v, json),
+    market:       () => handleMarketCommand(run, action, rest, v, json),
+    "copy-trade": () => handleCopyTradeCommand(run, action, v, json),
+    account:      () => handleAccountCommand(run, action, rest, v, json),
+    spot:         () => handleSpotCommand(run, action, rest, v, json),
+    swap:         () => handleSwapCommand(run, action, rest, v, json),
+    futures:      () => handleFuturesCommand(run, action, rest, v, json),
+    option:       () => handleOptionCommand(run, action, rest, v, json),
+    bot:          () => handleBotCommand(run, action, rest, v, json),
+    earn:         () => handleEarnCommand(run, action, rest, v, json),
   };
   const handler = moduleHandlers[module];
   if (handler) return handler();

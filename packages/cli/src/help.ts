@@ -352,6 +352,32 @@ const HELP_TREE: HelpTree = {
     },
   },
 
+  "copy-trade": {
+    description: "Copy trading — follow lead traders and manage copy positions",
+    commands: {
+      traders: {
+        usage: "okx copy-trade traders [--instType <SPOT|SWAP>] [--limit <n>]",
+        description: "List top lead traders by ranking",
+      },
+      status: {
+        usage: "okx copy-trade status [--instType <SPOT|SWAP>]",
+        description: "Get your currently followed lead traders and their cumulative P&L",
+      },
+      follow: {
+        usage: "okx copy-trade follow --uniqueCode <code> --fixedAmt <n>\n                   [--copyMode <fixed_amount|ratio_copy>] [--copyRatio <n>] [--copyAmt <n>]\n                   [--mgnMode <isolated|cross>] [--instType <SPOT|SWAP>]",
+        description: "Start following a lead trader",
+      },
+      unfollow: {
+        usage: "okx copy-trade unfollow --uniqueCode <code> [--instType <SPOT|SWAP>]",
+        description: "Stop following a lead trader",
+      },
+      "trader-detail": {
+        usage: "okx copy-trade trader-detail --uniqueCode <code> [--lastDays <1|2|3|4>] [--instType <SPOT|SWAP>]",
+        description: "Get stats, daily P&L, and currency preference of a lead trader",
+      },
+    },
+  },
+
   earn: {
     description: "Earn products — Simple Earn (savings/lending) and On-chain Earn (staking/DeFi)",
     subgroups: {
