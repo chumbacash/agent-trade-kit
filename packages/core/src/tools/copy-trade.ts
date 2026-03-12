@@ -36,7 +36,7 @@ export function registerCopyTradeTools(): ToolSpec[] {
       inputSchema: {
         type: "object",
         properties: {
-          instType: { type: "string", enum: ["SPOT", "SWAP"], description: "SWAP (default) or SPOT" },
+          instType: { type: "string", enum: ["SWAP"], description: "Only SWAP is supported. Default: SWAP." },
           sortType: { type: "string", enum: ["overview", "pnl", "aum", "win_ratio", "pnl_ratio", "current_copy_trader_pnl"], description: "Sort by: overview (default), pnl, aum, win_ratio, pnl_ratio, current_copy_trader_pnl" },
           state: { type: "string", enum: ["0", "1"], description: "0=all traders (default), 1=only traders with open slots" },
           minLeadDays: { type: "string", enum: ["1", "2", "3", "4"], description: "Min lead trading days: 1=7d, 2=30d, 3=90d, 4=180d" },
@@ -89,7 +89,7 @@ export function registerCopyTradeTools(): ToolSpec[] {
         type: "object",
         properties: {
           uniqueCode: { type: "string", description: "Lead trader unique code (16 chars)" },
-          instType: { type: "string", enum: ["SPOT", "SWAP"] },
+          instType: { type: "string", enum: ["SWAP"], description: "Only SWAP is supported." },
           lastDays: { type: "string", enum: ["1", "2", "3", "4"], description: "Time range for pnl and stats: 1=7d 2=30d 3=90d 4=365d (default: 2)" },
         },
         required: ["uniqueCode"],
@@ -131,7 +131,7 @@ export function registerCopyTradeTools(): ToolSpec[] {
       inputSchema: {
         type: "object",
         properties: {
-          instType: { type: "string", enum: ["SPOT", "SWAP"], description: "SPOT or SWAP. Returns all if omitted for subpositions." },
+          instType: { type: "string", enum: ["SWAP"], description: "Only SWAP is supported." },
           instId: { type: "string", description: "Filter sub-positions by instrument ID, e.g. BTC-USDT-SWAP" },
           after: { type: "string", description: "Sub-positions pagination: return records older than this subPosId" },
           before: { type: "string", description: "Sub-positions pagination: return records newer than this subPosId" },
@@ -177,8 +177,8 @@ export function registerCopyTradeTools(): ToolSpec[] {
         type: "object",
         properties: {
           uniqueCode: { type: "string", description: "Lead trader unique code (16 chars)" },
-          instType: { type: "string", enum: ["SPOT", "SWAP"], description: "SWAP (default)" },
-          copyMode: { type: "string", enum: ["fixed_amount", "ratio_copy"], description: "fixed_amount=自定义跟单-固定金额，每单固定 USDT（默认）; ratio_copy=自定义跟单-固定比例，按比例跟单" },
+          instType: { type: "string", enum: ["SWAP"], description: "Only SWAP is supported. Default: SWAP." },
+          copyMode: { type: "string", enum: ["fixed_amount", "ratio_copy"], description: "fixed_amount=固定金额跟单，每单固定 USDT（默认）; ratio_copy=固定比例跟单，按比例跟单" },
           copyMgnMode: { type: "string", enum: ["cross", "isolated", "copy"], description: "Margin mode: cross/isolated/copy(follow trader). Default: isolated" },
           copyInstIdType: { type: "string", enum: ["copy", "custom"], description: "copy=follow trader's instruments (default); custom=user-defined (instId required)" },
           instId: { type: "string", description: "Comma-separated instrument IDs, required when copyInstIdType=custom" },
@@ -228,7 +228,7 @@ export function registerCopyTradeTools(): ToolSpec[] {
         properties: {
           uniqueCode: { type: "string", description: "Lead trader unique code" },
           subPosCloseType: { type: "string", enum: ["market_close", "copy_close", "manual_close"], description: "market_close=close all now, copy_close=follow trader, manual_close=keep open" },
-          instType: { type: "string", enum: ["SPOT", "SWAP"] },
+          instType: { type: "string", enum: ["SWAP"], description: "Only SWAP is supported." },
         },
         required: ["uniqueCode", "subPosCloseType"],
       },

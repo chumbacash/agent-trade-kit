@@ -52,10 +52,10 @@ okx --modules copytrading copy-trade traders
 | Parameter | Description |
 |-----------|-------------|
 | `uniqueCode` | 16-character lead trader unique code |
-| `instType` | `SWAP` (default) or `SPOT` |
+| `instType` | Only `SWAP` is supported. Spot copy trading is not available. |
 | `lastDays` | Time range: `1`=7d, `2`=30d (default), `3`=90d, `4`=365d |
 | `copyTotalAmt` | Max total USDT to allocate for a trader |
-| `copyMode` | `fixed_amount` (custom copy — fixed amount per order, default) or `ratio_copy` (custom copy — fixed ratio) |
+| `copyMode` | `fixed_amount` (fixed amount per order, default) or `ratio_copy` (fixed ratio) |
 | `copyAmt` | Fixed USDT per order (required for `fixed_amount` mode) |
 | `copyRatio` | Copy ratio, e.g. `0.1` = 10% (required for `ratio_copy` mode) |
 | `subPosCloseType` | On stop: `copy_close` (default), `market_close`, `manual_close` |
@@ -66,10 +66,10 @@ okx --modules copytrading copy-trade traders
 
 ```bash
 # List traders
-okx copy-trade traders [--instType SPOT|SWAP] [--limit <n>]
+okx copy-trade traders [--limit <n>]
 
 # My copy status
-okx copy-trade status [--instType SPOT|SWAP]
+okx copy-trade status
 
 # Follow a trader
 okx copy-trade follow --uniqueCode <code> --fixedAmt <n>

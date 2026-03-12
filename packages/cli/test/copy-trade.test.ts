@@ -78,11 +78,11 @@ describe("cmdCopyTradeTraders", () => {
     assert.equal((call?.args as Record<string, unknown>)?.["instType"], "SWAP");
   });
 
-  it("forwards custom instType and limit", async () => {
+  it("forwards custom limit", async () => {
     const { runner, getCalls } = createCapturingRunner([]);
-    await captureStdout(() => cmdCopyTradeTraders(runner, { instType: "SPOT", limit: 5, json: false }));
+    await captureStdout(() => cmdCopyTradeTraders(runner, { instType: "SWAP", limit: 5, json: false }));
     const args = getCalls()[0]?.args as Record<string, unknown>;
-    assert.equal(args?.["instType"], "SPOT");
+    assert.equal(args?.["instType"], "SWAP");
     assert.equal(args?.["limit"], 5);
   });
 
@@ -167,7 +167,7 @@ describe("cmdCopyTradeFollow", () => {
         copyMgnMode: "cross",
         copyMode: "ratio_copy",
         copyRatio: "0.5",
-        instType: "SPOT",
+        instType: "SWAP",
         json: false,
       })
     );
@@ -178,7 +178,7 @@ describe("cmdCopyTradeFollow", () => {
     assert.equal(args?.["copyMgnMode"], "cross");
     assert.equal(args?.["copyMode"], "ratio_copy");
     assert.equal(args?.["copyRatio"], "0.5");
-    assert.equal(args?.["instType"], "SPOT");
+    assert.equal(args?.["instType"], "SWAP");
   });
 
   it("defaults copyMgnMode=isolated, copyInstIdType=copy, copyMode=fixed_amount, subPosCloseType=copy_close, instType=SWAP", async () => {
@@ -235,14 +235,14 @@ describe("cmdCopyTradeUnfollow", () => {
     assert.equal(args?.["subPosCloseType"], "manual_close");
   });
 
-  it("forwards custom subPosCloseType and instType", async () => {
+  it("forwards custom subPosCloseType", async () => {
     const { runner, getCalls } = createCapturingRunner([]);
     await captureStdout(() =>
-      cmdCopyTradeUnfollow(runner, { uniqueCode: "TRADER456", subPosCloseType: "market_close", instType: "SPOT", json: false })
+      cmdCopyTradeUnfollow(runner, { uniqueCode: "TRADER456", subPosCloseType: "market_close", instType: "SWAP", json: false })
     );
     const args = getCalls()[0]?.args as Record<string, unknown>;
     assert.equal(args?.["subPosCloseType"], "market_close");
-    assert.equal(args?.["instType"], "SPOT");
+    assert.equal(args?.["instType"], "SWAP");
   });
 });
 

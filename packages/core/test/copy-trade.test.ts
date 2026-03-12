@@ -85,10 +85,10 @@ describe("copytrading_public_lead_traders", () => {
     assert.equal(getLastCall()?.params["limit"], "10");
   });
 
-  it("forwards custom instType and sortType", async () => {
+  it("forwards custom sortType", async () => {
     const { client, getLastCall } = makeMockClient();
-    await tool.handler({ instType: "SPOT", sortType: "pnl" }, makeContext(client));
-    assert.equal(getLastCall()?.params["instType"], "SPOT");
+    await tool.handler({ instType: "SWAP", sortType: "pnl" }, makeContext(client));
+    assert.equal(getLastCall()?.params["instType"], "SWAP");
     assert.equal(getLastCall()?.params["sortType"], "pnl");
   });
 
@@ -191,11 +191,11 @@ describe("copytrading_my_status", () => {
     assert.equal(tradersCall?.params["instType"], "SWAP");
   });
 
-  it("forwards custom instType to both calls", async () => {
+  it("forwards instType=SWAP to both calls", async () => {
     const { client, getCalls } = makeMockClient();
-    await tool.handler({ instType: "SPOT" }, makeContext(client));
+    await tool.handler({ instType: "SWAP" }, makeContext(client));
     for (const call of getCalls()) {
-      assert.equal(call.params["instType"], "SPOT");
+      assert.equal(call.params["instType"], "SWAP");
     }
   });
 
