@@ -178,7 +178,7 @@ export function registerCopyTradeTools(): ToolSpec[] {
         properties: {
           uniqueCode: { type: "string", description: "Lead trader unique code (16 chars)" },
           instType: { type: "string", enum: ["SPOT", "SWAP"], description: "SWAP (default)" },
-          copyMode: { type: "string", enum: ["fixed_amount", "ratio_copy"], description: "fixed_amount=fixed USDT per order (default); ratio_copy=proportional" },
+          copyMode: { type: "string", enum: ["fixed_amount", "ratio_copy"], description: "fixed_amount=自定义跟单-固定金额，每单固定 USDT（默认）; ratio_copy=自定义跟单-固定比例，按比例跟单" },
           copyMgnMode: { type: "string", enum: ["cross", "isolated", "copy"], description: "Margin mode: cross/isolated/copy(follow trader). Default: isolated" },
           copyInstIdType: { type: "string", enum: ["copy", "custom"], description: "copy=follow trader's instruments (default); custom=user-defined (instId required)" },
           instId: { type: "string", description: "Comma-separated instrument IDs, required when copyInstIdType=custom" },

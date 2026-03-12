@@ -55,9 +55,9 @@ okx --modules copytrading copy-trade traders
 | `instType` | `SWAP` (default) or `SPOT` |
 | `lastDays` | Time range: `1`=7d, `2`=30d (default), `3`=90d, `4`=365d |
 | `copyTotalAmt` | Max total USDT to allocate for a trader |
-| `copyMode` | `fixed_amount` (default) or `ratio_copy` |
-| `copyAmt` | Fixed USDT per order (for `fixed_amount` mode) |
-| `copyRatio` | Copy ratio (for `ratio_copy` mode) |
+| `copyMode` | `fixed_amount` (custom copy — fixed amount per order, default) or `ratio_copy` (custom copy — fixed ratio) |
+| `copyAmt` | Fixed USDT per order (required for `fixed_amount` mode) |
+| `copyRatio` | Copy ratio, e.g. `0.1` = 10% (required for `ratio_copy` mode) |
 | `subPosCloseType` | On stop: `copy_close` (default), `market_close`, `manual_close` |
 
 ---

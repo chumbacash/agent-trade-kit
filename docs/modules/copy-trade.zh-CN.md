@@ -55,9 +55,9 @@ okx --modules copytrading copy-trade traders
 | `instType` | `SWAP`（默认）或 `SPOT` |
 | `lastDays` | 时间范围：`1`=7天，`2`=30天（默认），`3`=90天，`4`=365天 |
 | `copyTotalAmt` | 为该带单员分配的最大 USDT 总额 |
-| `copyMode` | `fixed_amount`（固定金额，默认）或 `ratio_copy`（比例跟单） |
-| `copyAmt` | 每单固定 USDT 金额（`fixed_amount` 模式） |
-| `copyRatio` | 跟单比例（`ratio_copy` 模式） |
+| `copyMode` | `fixed_amount`（自定义跟单-固定金额，默认）或 `ratio_copy`（自定义跟单-固定比例） |
+| `copyAmt` | 每单固定 USDT 金额（`fixed_amount` 模式必填） |
+| `copyRatio` | 跟单比例，如 `0.1` = 10%（`ratio_copy` 模式必填） |
 | `subPosCloseType` | 停止跟单时处理方式：`copy_close`（默认）、`market_close`、`manual_close` |
 
 ---
