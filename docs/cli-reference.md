@@ -43,32 +43,6 @@ Supported candle intervals: `1m` `3m` `5m` `15m` `30m` `1H` `2H` `4H` `6H` `12H`
 
 ---
 
-## copy-trade — Copy Trading
-
-```bash
-# Browse top lead traders
-okx copy-trade traders
-okx copy-trade traders --instType SPOT --limit 20
-
-# View your currently followed lead traders and their cumulative P&L
-okx copy-trade status
-okx copy-trade status --instType SPOT
-
-# Start following a trader (allocates real funds)
-okx copy-trade follow --uniqueCode <16-char-code> --fixedAmt 1000
-
-# Stop following a trader
-okx copy-trade unfollow --uniqueCode <16-char-code>
-
-# View a trader's stats, P&L, and currency preference
-okx copy-trade trader-detail --uniqueCode <16-char-code>
-okx copy-trade trader-detail --uniqueCode <16-char-code> --lastDays 1
-```
-
-> **Note:** `copytrading` module is not loaded by default. Enable it with `--modules copytrading` or add it to your profile.
-
----
-
 ## account
 
 ```bash
@@ -225,6 +199,31 @@ okx bot dca stop --algoId <algoId>
 
 ---
 
+## copy-trade — Copy Trading
+
+```bash
+# Browse top lead traders (SWAP only)
+okx copy-trade traders
+okx copy-trade traders --limit 20
+
+# View your currently followed lead traders and their cumulative P&L
+okx copy-trade status
+
+# Start following a trader (allocates real funds)
+okx copy-trade follow --uniqueCode <16-char-code> --fixedAmt 1000
+
+# Stop following a trader
+okx copy-trade unfollow --uniqueCode <16-char-code>
+
+# View a trader's stats, P&L, and currency preference
+okx copy-trade trader-detail --uniqueCode <16-char-code>
+okx copy-trade trader-detail --uniqueCode <16-char-code> --lastDays 1
+```
+
+> **Note:** `copytrading` module is not loaded by default. Enable it with `--modules copytrading` or add it to your profile.
+
+---
+
 ## config
 
 ```bash
@@ -296,32 +295,6 @@ okx market open-interest --instType SWAP
 ```
 
 K线周期：`1m` `3m` `5m` `15m` `30m` `1H` `2H` `4H` `6H` `12H` `1D` `1W` `1M`
-
----
-
-## copy-trade — 跟单交易
-
-```bash
-# 查看排行榜上的带单员
-okx copy-trade traders
-okx copy-trade traders --instType SPOT --limit 20
-
-# 查看我当前跟随的带单员及累计盈亏
-okx copy-trade status
-okx copy-trade status --instType SPOT
-
-# 开始跟单（会使用真实资金）
-okx copy-trade follow --uniqueCode <16位代码> --fixedAmt 1000
-
-# 停止跟单
-okx copy-trade unfollow --uniqueCode <16位代码>
-
-# 查看带单员详情（统计数据、每日盈亏、偏好币种）
-okx copy-trade trader-detail --uniqueCode <16位代码>
-okx copy-trade trader-detail --uniqueCode <16位代码> --lastDays 1
-```
-
-> **注意：** `copytrading` 模块默认不加载，使用 `--modules copytrading` 或在配置文件中启用。
 
 ---
 
@@ -478,6 +451,31 @@ okx bot dca create \
 
 okx bot dca stop --algoId <algoId>
 ```
+
+---
+
+## copy-trade — 跟单交易
+
+```bash
+# 查看排行榜上的带单员（仅 SWAP）
+okx copy-trade traders
+okx copy-trade traders --limit 20
+
+# 查看我当前跟随的带单员及累计盈亏
+okx copy-trade status
+
+# 开始跟单（会使用真实资金）
+okx copy-trade follow --uniqueCode <16位代码> --fixedAmt 1000
+
+# 停止跟单
+okx copy-trade unfollow --uniqueCode <16位代码>
+
+# 查看带单员详情（统计数据、每日盈亏、偏好币种）
+okx copy-trade trader-detail --uniqueCode <16位代码>
+okx copy-trade trader-detail --uniqueCode <16位代码> --lastDays 1
+```
+
+> **注意：** `copytrading` 模块默认不加载，使用 `--modules copytrading` 或在配置文件中启用。
 
 ---
 
