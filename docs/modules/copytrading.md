@@ -1,4 +1,4 @@
-# copy-trade module
+# copytrading module
 
 [English](#english) | [中文](#中文)
 
@@ -30,18 +30,18 @@ Add `copytrading` to your module list:
 **CLI**
 
 ```bash
-okx --modules copytrading copy-trade traders
+okx --modules copytrading copytrading traders
 ```
 
 ### MCP Tools
 
 | Tool | Description | Auth |
 |------|-------------|------|
-| `copytrading_public_lead_traders` | List top lead traders by ranking with filters | Public |
-| `copytrading_public_trader_detail` | Full trader profile: P&L, stats, currency preference | Public |
-| `copytrading_my_status` | My currently followed lead traders and their cumulative P&L | Private |
-| `copytrading_set_copy_trading` | Start copy trading a lead trader | Private ⚠️ |
-| `copytrading_stop_copy_trader` | Stop copy trading a lead trader | Private ⚠️ |
+| `copytrading_get_lead_traders` | List top lead traders by ranking with filters | Public |
+| `copytrading_get_trader_details` | Full trader profile: P&L, stats, currency preference | Public |
+| `copytrading_get_my_details` | My currently followed lead traders and their cumulative P&L | Private |
+| `copytrading_set_copytrading` | Follow a lead trader and configure copy mode, amount, TP/SL, and margin settings | Private ⚠️ |
+| `copytrading_stop_copy_trader` | Unfollow a lead trader and specify how to handle existing open positions | Private ⚠️ |
 
 ⚠️ Write operations — use with caution.
 
@@ -63,19 +63,19 @@ okx --modules copytrading copy-trade traders
 
 ```bash
 # List traders
-okx copy-trade traders [--limit <n>]
+okx copytrading traders [--limit <n>]
 
 # My copy status
-okx copy-trade status
+okx copytrading status
 
 # Follow a trader (fixed_amount mode — --copyAmt required)
-okx copy-trade follow --uniqueCode <code> --copyTotalAmt <n> --copyAmt <n>
+okx copytrading follow --uniqueCode <code> --copyTotalAmt <n> --copyAmt <n>
 
 # Unfollow
-okx copy-trade unfollow --uniqueCode <code>
+okx copytrading unfollow --uniqueCode <code>
 
 # Trader detail
-okx copy-trade trader-detail --uniqueCode <code> [--lastDays 1|2|3|4]
+okx copytrading trader-detail --uniqueCode <code> [--lastDays 1|2|3|4]
 ```
 
 ---
@@ -106,18 +106,18 @@ okx copy-trade trader-detail --uniqueCode <code> [--lastDays 1|2|3|4]
 **CLI**
 
 ```bash
-okx --modules copytrading copy-trade traders
+okx --modules copytrading copytrading traders
 ```
 
 ### MCP 工具列表
 
 | 工具 | 描述 | 认证 |
 |------|------|------|
-| `copytrading_public_lead_traders` | 按排行获取带单员列表（支持多维筛选） | 公开 |
-| `copytrading_public_trader_detail` | 带单员完整档案：盈亏、统计、偏好币种 | 公开 |
-| `copytrading_my_status` | 我当前跟随的带单员列表及各自累计盈亏 | 私有 |
-| `copytrading_set_copy_trading` | 开始跟单某位带单员 | 私有 ⚠️ |
-| `copytrading_stop_copy_trader` | 停止跟单某位带单员 | 私有 ⚠️ |
+| `copytrading_get_lead_traders` | 按排行获取带单员列表（支持多维筛选） | 公开 |
+| `copytrading_get_trader_details` | 带单员完整档案：盈亏、统计、偏好币种 | 公开 |
+| `copytrading_get_my_details` | 我当前跟随的带单员列表及各自累计盈亏 | 私有 |
+| `copytrading_set_copytrading` | 跟随带单员并配置跟单模式、金额、止盈止损及保证金设置 | 私有 ⚠️ |
+| `copytrading_stop_copy_trader` | 取消跟随带单员，并指定现有持仓的处理方式 | 私有 ⚠️ |
 
 ⚠️ 写操作 — 请谨慎使用，会使用真实资金。
 
@@ -139,17 +139,17 @@ okx --modules copytrading copy-trade traders
 
 ```bash
 # 查看带单员排行
-okx copy-trade traders [--limit <n>]
+okx copytrading traders [--limit <n>]
 
 # 查看我的跟单状态
-okx copy-trade status
+okx copytrading status
 
 # 开始跟单（固定金额模式 — --copyAmt 必填）
-okx copy-trade follow --uniqueCode <code> --copyTotalAmt <n> --copyAmt <n>
+okx copytrading follow --uniqueCode <code> --copyTotalAmt <n> --copyAmt <n>
 
 # 停止跟单
-okx copy-trade unfollow --uniqueCode <code>
+okx copytrading unfollow --uniqueCode <code>
 
 # 查看带单员详情
-okx copy-trade trader-detail --uniqueCode <code> [--lastDays 1|2|3|4]
+okx copytrading trader-detail --uniqueCode <code> [--lastDays 1|2|3|4]
 ```

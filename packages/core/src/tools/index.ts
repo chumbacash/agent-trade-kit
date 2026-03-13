@@ -5,7 +5,7 @@ import { registerAccountTools } from "./account.js";
 import { registerAlgoTradeTools } from "./algo-trade.js";
 import { registerAuditTools } from "./audit.js";
 import { registerBotTools } from "./bot/index.js";
-import { registerCopyTradeTools } from "./copy-trade.js";
+import { registerCopyTradeTools } from "./copytrading.js";
 import { registerEarnTools } from "./earn.js";
 import { registerFuturesTools } from "./futures-trade.js";
 import { registerOnchainEarnTools } from "./onchain-earn.js";

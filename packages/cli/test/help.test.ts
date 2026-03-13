@@ -53,7 +53,7 @@ describe("printHelp() — global overview", () => {
 
   it("lists all 10 modules with descriptions", () => {
     const out = captureStdout(() => printHelp());
-    for (const mod of ["market", "copy-trade", "account", "spot", "swap", "futures", "option", "bot", "config", "setup"]) {
+    for (const mod of ["market", "copytrading", "account", "spot", "swap", "futures", "option", "bot", "config", "setup"]) {
       assert.ok(out.includes(mod), `should mention module '${mod}'`);
     }
   });

@@ -9,7 +9,7 @@ export async function cmdCopyTradeTraders(
   run: ToolRunner,
   opts: { instType?: string; limit?: number; json: boolean },
 ): Promise<void> {
-  const result = await run("copytrading_public_lead_traders", {
+  const result = await run("copytrading_get_lead_traders", {
     instType: opts.instType ?? "SWAP",
     limit: opts.limit,
   });
@@ -31,7 +31,7 @@ export async function cmdCopyTradeMyStatus(
   run: ToolRunner,
   opts: { instType?: string; json: boolean },
 ): Promise<void> {
-  const result = await run("copytrading_my_status", { instType: opts.instType });
+  const result = await run("copytrading_get_my_details", { instType: opts.instType });
   const raw = result as unknown as Record<string, unknown>;
   const traders = (raw.traders ?? []) as Record<string, unknown>[];
   if (opts.json) return printJson(raw);
@@ -67,7 +67,7 @@ export async function cmdCopyTradeFollow(
     json: boolean;
   },
 ): Promise<void> {
-  const result = await run("copytrading_set_copy_trading", {
+  const result = await run("copytrading_set_copytrading", {
     uniqueCode: opts.uniqueCode,
     copyTotalAmt: opts.copyTotalAmt,
     copyMgnMode: opts.copyMgnMode ?? "isolated",
@@ -101,7 +101,7 @@ export async function cmdCopyTradeTraderDetail(
   run: ToolRunner,
   opts: { uniqueCode: string; lastDays?: string; instType?: string; json: boolean },
 ): Promise<void> {
-  const result = await run("copytrading_public_trader_detail", {
+  const result = await run("copytrading_get_trader_details", {
     uniqueCode: opts.uniqueCode,
     lastDays: opts.lastDays ?? "2",
     instType: opts.instType ?? "SWAP",

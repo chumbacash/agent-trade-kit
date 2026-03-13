@@ -199,25 +199,25 @@ okx bot dca stop --algoId <algoId>
 
 ---
 
-## copy-trade — Copy Trading
+## copytrading — Copy Trading
 
 ```bash
 # Browse top lead traders (SWAP only)
-okx copy-trade traders
-okx copy-trade traders --limit 20
+okx copytrading traders
+okx copytrading traders --limit 20
 
 # View your currently followed lead traders and their cumulative P&L
-okx copy-trade status
+okx copytrading status
 
 # Start following a trader (allocates real funds)
-okx copy-trade follow --uniqueCode <16-char-code> --copyTotalAmt 1000 --copyAmt 50
+okx copytrading follow --uniqueCode <16-char-code> --copyTotalAmt 1000 --copyAmt 50
 
 # Stop following a trader
-okx copy-trade unfollow --uniqueCode <16-char-code>
+okx copytrading unfollow --uniqueCode <16-char-code>
 
 # View a trader's stats, P&L, and currency preference
-okx copy-trade trader-detail --uniqueCode <16-char-code>
-okx copy-trade trader-detail --uniqueCode <16-char-code> --lastDays 1
+okx copytrading trader-detail --uniqueCode <16-char-code>
+okx copytrading trader-detail --uniqueCode <16-char-code> --lastDays 1
 ```
 
 > **Note:** `copytrading` module is not loaded by default. Enable it with `--modules copytrading` or add it to your profile.
@@ -454,25 +454,25 @@ okx bot dca stop --algoId <algoId>
 
 ---
 
-## copy-trade — 跟单交易
+## copytrading — 跟单交易
 
 ```bash
 # 查看排行榜上的带单员（仅 SWAP）
-okx copy-trade traders
-okx copy-trade traders --limit 20
+okx copytrading traders
+okx copytrading traders --limit 20
 
 # 查看我当前跟随的带单员及累计盈亏
-okx copy-trade status
+okx copytrading status
 
 # 开始跟单（会使用真实资金）
-okx copy-trade follow --uniqueCode <16位代码> --copyTotalAmt 1000 --copyAmt 50
+okx copytrading follow --uniqueCode <16位代码> --copyTotalAmt 1000 --copyAmt 50
 
 # 停止跟单
-okx copy-trade unfollow --uniqueCode <16位代码>
+okx copytrading unfollow --uniqueCode <16位代码>
 
 # 查看带单员详情（统计数据、每日盈亏、偏好币种）
-okx copy-trade trader-detail --uniqueCode <16位代码>
-okx copy-trade trader-detail --uniqueCode <16位代码> --lastDays 1
+okx copytrading trader-detail --uniqueCode <16位代码>
+okx copytrading trader-detail --uniqueCode <16位代码> --lastDays 1
 ```
 
 > **注意：** `copytrading` 模块默认不加载，使用 `--modules copytrading` 或在配置文件中启用。

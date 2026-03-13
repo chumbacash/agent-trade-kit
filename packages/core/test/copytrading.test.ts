@@ -1,12 +1,12 @@
 /**
- * Unit tests for copy-trade tool handlers.
+ * Unit tests for copytrading tool handlers.
  * Verifies endpoint selection, default parameter values, and required param forwarding.
  * Uses a mock client — no real API calls are made.
  */
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import type { ToolContext } from "../src/tools/types.js";
-import { registerCopyTradeTools } from "../src/tools/copy-trade.js";
+import { registerCopyTradeTools } from "../src/tools/copytrading.js";
 import { DEFAULT_SOURCE_TAG } from "../src/constants.js";
 
 // ---------------------------------------------------------------------------
@@ -58,12 +58,12 @@ function makeContext(client: unknown): ToolContext {
 }
 
 // ---------------------------------------------------------------------------
-// copytrading_public_lead_traders
+// copytrading_get_lead_traders
 // ---------------------------------------------------------------------------
 
-describe("copytrading_public_lead_traders", () => {
+describe("copytrading_get_lead_traders", () => {
   const tools = registerCopyTradeTools();
-  const tool = tools.find((t) => t.name === "copytrading_public_lead_traders")!;
+  const tool = tools.find((t) => t.name === "copytrading_get_lead_traders")!;
 
   it("calls /copytrading/public-lead-traders with publicGet", async () => {
     const { client, getLastCall } = makeMockClient();
@@ -118,12 +118,12 @@ describe("copytrading_public_lead_traders", () => {
 });
 
 // ---------------------------------------------------------------------------
-// copytrading_public_trader_detail
+// copytrading_get_trader_details
 // ---------------------------------------------------------------------------
 
-describe("copytrading_public_trader_detail", () => {
+describe("copytrading_get_trader_details", () => {
   const tools = registerCopyTradeTools();
-  const tool = tools.find((t) => t.name === "copytrading_public_trader_detail")!;
+  const tool = tools.find((t) => t.name === "copytrading_get_trader_details")!;
 
   it("calls 3 public endpoints in parallel for pnl, stats, preference", async () => {
     const { client, getCalls } = makeMockClient();
@@ -168,12 +168,12 @@ describe("copytrading_public_trader_detail", () => {
 });
 
 // ---------------------------------------------------------------------------
-// copytrading_my_status
+// copytrading_get_my_details
 // ---------------------------------------------------------------------------
 
-describe("copytrading_my_status", () => {
+describe("copytrading_get_my_details", () => {
   const tools = registerCopyTradeTools();
-  const tool = tools.find((t) => t.name === "copytrading_my_status")!;
+  const tool = tools.find((t) => t.name === "copytrading_get_my_details")!;
 
   it("calls both current-lead-traders and current-subpositions in parallel", async () => {
     const { client, getCalls } = makeMockClient();
@@ -233,12 +233,12 @@ describe("copytrading_my_status", () => {
 });
 
 // ---------------------------------------------------------------------------
-// copytrading_set_copy_trading
+// copytrading_set_copytrading
 // ---------------------------------------------------------------------------
 
-describe("copytrading_set_copy_trading", () => {
+describe("copytrading_set_copytrading", () => {
   const tools = registerCopyTradeTools();
-  const tool = tools.find((t) => t.name === "copytrading_set_copy_trading")!;
+  const tool = tools.find((t) => t.name === "copytrading_set_copytrading")!;
 
   it("calls /copytrading/first-copy-settings with privatePost", async () => {
     const { client, getLastCall } = makeMockClient();

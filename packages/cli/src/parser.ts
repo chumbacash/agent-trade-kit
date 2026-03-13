@@ -96,7 +96,7 @@ export interface CliValues {
   state?: string;
   // diagnostics
   verbose?: boolean;
-  // copy-trade
+  // copytrading
   uniqueCode?: string;
   lastDays?: string;
   copyMode?: string;
@@ -215,7 +215,7 @@ export const CLI_OPTIONS = {
   state: { type: "string" },
   // diagnostics
   verbose: { type: "boolean", default: false },
-  // copy-trade
+  // copytrading
   uniqueCode: { type: "string" },
   lastDays: { type: "string" },
   copyMode: { type: "string" },

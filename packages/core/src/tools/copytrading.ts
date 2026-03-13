@@ -28,7 +28,7 @@ function normalize(response: {
 export function registerCopyTradeTools(): ToolSpec[] {
   return [
     {
-      name: "copytrading_public_lead_traders",
+      name: "copytrading_get_lead_traders",
       module: "copytrading",
       description:
         "Get top lead traders ranking. Public endpoint, no auth required. Use for: 交易员排行, 带单员推荐, top traders.",
@@ -80,7 +80,7 @@ export function registerCopyTradeTools(): ToolSpec[] {
       },
     },
     {
-      name: "copytrading_public_trader_detail",
+      name: "copytrading_get_trader_details",
       module: "copytrading",
       description:
         "Get full profile of a specific lead trader: daily P&L, statistics (win rate, position stats, follower P&L), and preferred trading currencies. All returned together. Public endpoint, no auth required.",
@@ -123,10 +123,10 @@ export function registerCopyTradeTools(): ToolSpec[] {
       },
     },
     {
-      name: "copytrading_my_status",
+      name: "copytrading_get_my_details",
       module: "copytrading",
       description:
-        "Query the lead traders I am currently copying (cumulative P&L per trader) and all current open copy-trade sub-positions. Returns traders and subpositions together. Private. Rate limit: 5/2s (traders), 20/2s (subpositions).",
+        "Query the lead traders I am currently copying (cumulative P&L per trader) and all current open copytrading sub-positions. Returns traders and subpositions together. Private. Rate limit: 5/2s (traders), 20/2s (subpositions).",
       isWrite: false,
       inputSchema: {
         type: "object",
@@ -145,7 +145,7 @@ export function registerCopyTradeTools(): ToolSpec[] {
           context.client.privateGet(
             `${BASE}/current-lead-traders`,
             compactObject({ instType: instType ?? "SWAP" }),
-            privateRateLimit("copytrading_my_status", 5),
+            privateRateLimit("copytrading_get_my_details", 5),
           ),
           context.client.privateGet(
             `${BASE}/current-subpositions`,
@@ -156,7 +156,7 @@ export function registerCopyTradeTools(): ToolSpec[] {
               before: readString(args, "before"),
               limit: readString(args, "limit"),
             }),
-            privateRateLimit("copytrading_my_status_subpos", 20),
+            privateRateLimit("copytrading_get_my_details_subpos", 20),
           ),
         ]);
         return {
@@ -168,23 +168,25 @@ export function registerCopyTradeTools(): ToolSpec[] {
       },
     },
     {
-      name: "copytrading_set_copy_trading",
+      name: "copytrading_set_copytrading",
       module: "copytrading",
       description:
-        "Start copy trading a lead trader for the first time (/first-copy-settings). copyMode=fixed_amount or ratio_copy. [CAUTION] Allocates real funds. Private. Rate limit: 5/2s.",
+        "Start copy trading a lead trader. copyMode: fixed_amount (default), ratio_copy, smart_copy. [CAUTION] Allocates real funds. Private. Rate limit: 5/2s.",
       isWrite: true,
       inputSchema: {
         type: "object",
         properties: {
           uniqueCode: { type: "string", description: "Lead trader unique code (16 chars)" },
           instType: { type: "string", enum: ["SWAP"], description: "Only SWAP is supported. Default: SWAP." },
-          copyMode: { type: "string", enum: ["fixed_amount", "ratio_copy"], description: "fixed_amount=固定金额跟单，每单固定 USDT（默认）; ratio_copy=固定比例跟单，按比例跟单" },
+          copyMode: { type: "string", enum: ["fixed_amount", "ratio_copy", "smart_copy"], description: "fixed_amount=固定金额跟单，copyAmt必填（默认）; ratio_copy=比例跟单，copyRatio必填; smart_copy=智能跟单，initialAmount 和 replicationRequired 必填" },
           copyMgnMode: { type: "string", enum: ["cross", "isolated", "copy"], description: "Margin mode: cross/isolated/copy(follow trader). Default: isolated" },
           copyInstIdType: { type: "string", enum: ["copy", "custom"], description: "copy=follow trader's instruments (default); custom=user-defined (instId required)" },
           instId: { type: "string", description: "Comma-separated instrument IDs, required when copyInstIdType=custom" },
           copyTotalAmt: { type: "string", description: "Max total USDT to allocate for this trader" },
           copyAmt: { type: "string", description: "Fixed USDT per order. [REQUIRED when copyMode=fixed_amount, which is the default]" },
           copyRatio: { type: "string", description: "Copy ratio (e.g. 0.1 = 10%). [REQUIRED when copyMode=ratio_copy]" },
+          initialAmount: { type: "string", description: "跟单初始投入金额，单位为USDT。[copyMode=smart_copy 时必填]" },
+          replicationRequired: { type: "string", enum: ["0", "1"], description: "是否复制仓位。0：否；1：是。[copyMode=smart_copy 时必填]" },
           tpRatio: { type: "string", description: "Take-profit ratio per order, e.g. 0.1 = 10%" },
           slRatio: { type: "string", description: "Stop-loss ratio per order, e.g. 0.1 = 10%" },
           subPosCloseType: { type: "string", enum: ["copy_close", "market_close", "manual_close"], description: "How to close sub-positions when you stop copying: copy_close=follow trader (default), market_close=close all immediately, manual_close=keep open" },
@@ -206,13 +208,15 @@ export function registerCopyTradeTools(): ToolSpec[] {
             copyTotalAmt: requireString(args, "copyTotalAmt"),
             copyAmt: readString(args, "copyAmt"),
             copyRatio: readString(args, "copyRatio"),
+            initialAmount: readString(args, "initialAmount"),
+            replicationRequired: readString(args, "replicationRequired"),
             tpRatio: readString(args, "tpRatio"),
             slRatio: readString(args, "slRatio"),
             subPosCloseType: readString(args, "subPosCloseType") ?? "copy_close",
             slTotalAmt: readString(args, "slTotalAmt"),
             tag: context.config.sourceTag,
           }),
-          privateRateLimit("copytrading_set_copy_trading", 5),
+          privateRateLimit("copytrading_set_copytrading", 5),
         );
         return normalize(response);
       },

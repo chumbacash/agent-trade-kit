@@ -7,7 +7,7 @@ import {
   cmdCopyTradeFollow,
   cmdCopyTradeUnfollow,
   cmdCopyTradeTraderDetail,
-} from "../src/commands/copy-trade.js";
+} from "../src/commands/copytrading.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -86,10 +86,10 @@ describe("cmdCopyTradeTraders", () => {
     assert.equal(args?.["limit"], 5);
   });
 
-  it("calls copytrading_public_lead_traders tool", async () => {
+  it("calls copytrading_get_lead_traders tool", async () => {
     const { runner, getCalls } = createCapturingRunner([]);
     await captureStdout(() => cmdCopyTradeTraders(runner, { json: false }));
-    assert.equal(getCalls()[0]?.tool, "copytrading_public_lead_traders");
+    assert.equal(getCalls()[0]?.tool, "copytrading_get_lead_traders");
   });
 });
 
@@ -130,10 +130,10 @@ describe("cmdCopyTradeMyStatus", () => {
     assert.ok("subpositions" in parsed, "should include subpositions field");
   });
 
-  it("calls copytrading_my_status tool", async () => {
+  it("calls copytrading_get_my_details tool", async () => {
     const { runner, getCalls } = createCapturingRunner();
     await captureStdout(() => cmdCopyTradeMyStatus(runner, { json: false }));
-    assert.equal(getCalls()[0]?.tool, "copytrading_my_status");
+    assert.equal(getCalls()[0]?.tool, "copytrading_get_my_details");
   });
 });
 
@@ -158,7 +158,7 @@ describe("cmdCopyTradeFollow", () => {
     assert.doesNotThrow(() => JSON.parse(out), "should be valid JSON");
   });
 
-  it("calls copytrading_set_copy_trading with correct args", async () => {
+  it("calls copytrading_set_copytrading with correct args", async () => {
     const { runner, getCalls } = createCapturingRunner([]);
     await captureStdout(() =>
       cmdCopyTradeFollow(runner, {
@@ -172,7 +172,7 @@ describe("cmdCopyTradeFollow", () => {
       })
     );
     const args = getCalls()[0]?.args as Record<string, unknown>;
-    assert.equal(getCalls()[0]?.tool, "copytrading_set_copy_trading");
+    assert.equal(getCalls()[0]?.tool, "copytrading_set_copytrading");
     assert.equal(args?.["uniqueCode"], "TRADER123");
     assert.equal(args?.["copyTotalAmt"], "500");
     assert.equal(args?.["copyMgnMode"], "cross");
@@ -261,12 +261,12 @@ describe("cmdCopyTradeTraderDetail", () => {
     assert.doesNotThrow(() => JSON.parse(out), "should be valid JSON");
   });
 
-  it("calls copytrading_public_trader_detail with uniqueCode", async () => {
+  it("calls copytrading_get_trader_details with uniqueCode", async () => {
     const { runner, getCalls } = createCapturingRunner();
     await captureStdout(() =>
       cmdCopyTradeTraderDetail(runner, { uniqueCode: "TRADER789", json: true })
     );
-    assert.equal(getCalls()[0]?.tool, "copytrading_public_trader_detail");
+    assert.equal(getCalls()[0]?.tool, "copytrading_get_trader_details");
     const args = getCalls()[0]?.args as Record<string, unknown>;
     assert.equal(args?.["uniqueCode"], "TRADER789");
   });

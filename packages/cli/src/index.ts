@@ -136,7 +136,7 @@ import {
   cmdCopyTradeFollow,
   cmdCopyTradeUnfollow,
   cmdCopyTradeTraderDetail,
-} from "./commands/copy-trade.js";
+} from "./commands/copytrading.js";
 
 // Re-export for tests and external consumers
 export { printHelp } from "./help.js";
@@ -851,7 +851,7 @@ async function main(): Promise<void> {
     option:       () => handleOptionCommand(run, action, rest, v, json),
     bot:          () => handleBotCommand(run, action, rest, v, json),
     earn:         () => handleEarnCommand(run, action, rest, v, json),
-    "copy-trade": () => handleCopyTradeCommand(run, action, v, json),
+    "copytrading": () => handleCopyTradeCommand(run, action, v, json),
   };
   const handler = moduleHandlers[module];
   if (handler) return handler();
