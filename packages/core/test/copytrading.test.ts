@@ -332,6 +332,14 @@ describe("copytrading_set_copytrading", () => {
     );
   });
 
+  it("fixed_amount mode: throws when copyTotalAmt is missing", async () => {
+    const { client } = makeMockClient();
+    await assert.rejects(
+      () => tool.handler({ uniqueCode: "ABCD1234EFGH5678", copyMode: "fixed_amount", copyAmt: "50" }, makeContext(client)),
+      /copyTotalAmt/,
+    );
+  });
+
   it("ratio_copy mode: throws when copyTotalAmt is missing", async () => {
     const { client } = makeMockClient();
     await assert.rejects(

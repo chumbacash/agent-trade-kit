@@ -66,6 +66,9 @@ export async function cmdCopyTradeFollow(
     replicationRequired?: string;
     subPosCloseType?: string;
     instType?: string;
+    tpRatio?: string;
+    slRatio?: string;
+    slTotalAmt?: string;
     json: boolean;
   },
 ): Promise<void> {
@@ -81,6 +84,9 @@ export async function cmdCopyTradeFollow(
     replicationRequired: opts.replicationRequired,
     subPosCloseType: opts.subPosCloseType,
     instType: opts.instType,
+    tpRatio: opts.tpRatio,
+    slRatio: opts.slRatio,
+    slTotalAmt: opts.slTotalAmt,
   });
   const data = getData(result);
   if (opts.json) return printJson(data);
@@ -93,7 +99,7 @@ export async function cmdCopyTradeUnfollow(
 ): Promise<void> {
   const result = await run("copytrading_stop_copy_trader", {
     uniqueCode: opts.uniqueCode,
-    subPosCloseType: opts.subPosCloseType ?? "manual_close",
+    subPosCloseType: opts.subPosCloseType ?? "copy_close",
     instType: opts.instType,
   });
   const data = getData(result);

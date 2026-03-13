@@ -715,6 +715,9 @@ export function handleCopyTradeCommand(
       replicationRequired: v.replicationRequired,
       subPosCloseType: v.subPosCloseType,
       instType: v.instType,
+      tpRatio: v.tpRatio,
+      slRatio: v.slRatio,
+      slTotalAmt: v.slTotalAmt,
       json,
     });
   if (action === "unfollow")

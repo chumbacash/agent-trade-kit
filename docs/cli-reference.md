@@ -209,8 +209,17 @@ okx copytrading traders --limit 20
 # View your currently followed lead traders and their cumulative P&L
 okx copytrading status
 
-# Start following a trader (allocates real funds)
-okx copytrading follow --uniqueCode <16-char-code> --copyTotalAmt 1000 --copyAmt 50
+# Start following a trader — smart_copy mode (default, allocates real funds)
+okx copytrading follow --uniqueCode <16-char-code> --initialAmount 1000 --replicationRequired 1
+
+# Start following a trader — fixed_amount mode (fixed USDT per order)
+okx copytrading follow --uniqueCode <16-char-code> --copyMode fixed_amount --copyTotalAmt 5000 --copyAmt 100
+
+# Start following a trader — ratio_copy mode (copy by ratio)
+okx copytrading follow --uniqueCode <16-char-code> --copyMode ratio_copy --copyTotalAmt 5000 --copyRatio 0.1
+
+# With take-profit / stop-loss
+okx copytrading follow --uniqueCode <16-char-code> --initialAmount 1000 --replicationRequired 1 --tpRatio 0.2 --slRatio 0.1
 
 # Stop following a trader
 okx copytrading unfollow --uniqueCode <16-char-code>
@@ -464,8 +473,17 @@ okx copytrading traders --limit 20
 # 查看我当前跟随的带单员及累计盈亏
 okx copytrading status
 
-# 开始跟单（会使用真实资金）
-okx copytrading follow --uniqueCode <16位代码> --copyTotalAmt 1000 --copyAmt 50
+# 开始跟单 — 智能跟单模式（默认，会使用真实资金）
+okx copytrading follow --uniqueCode <16位代码> --initialAmount 1000 --replicationRequired 1
+
+# 开始跟单 — 固定金额模式（每单固定 USDT）
+okx copytrading follow --uniqueCode <16位代码> --copyMode fixed_amount --copyTotalAmt 5000 --copyAmt 100
+
+# 开始跟单 — 固定比例模式（按比例跟单）
+okx copytrading follow --uniqueCode <16位代码> --copyMode ratio_copy --copyTotalAmt 5000 --copyRatio 0.1
+
+# 带止盈止损
+okx copytrading follow --uniqueCode <16位代码> --initialAmount 1000 --replicationRequired 1 --tpRatio 0.2 --slRatio 0.1
 
 # 停止跟单
 okx copytrading unfollow --uniqueCode <16位代码>

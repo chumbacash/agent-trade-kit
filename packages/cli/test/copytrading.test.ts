@@ -228,6 +228,36 @@ describe("cmdCopyTradeFollow", () => {
     assert.equal(args?.["copyInstIdType"], "custom");
     assert.equal(args?.["subPosCloseType"], "market_close");
   });
+
+  it("forwards tpRatio, slRatio, slTotalAmt when provided", async () => {
+    const { runner, getCalls } = createCapturingRunner([]);
+    await captureStdout(() =>
+      cmdCopyTradeFollow(runner, {
+        uniqueCode: "TRADER123",
+        initialAmount: "1000",
+        replicationRequired: "1",
+        tpRatio: "0.2",
+        slRatio: "0.1",
+        slTotalAmt: "300",
+        json: false,
+      })
+    );
+    const args = getCalls()[0]?.args as Record<string, unknown>;
+    assert.equal(args?.["tpRatio"], "0.2");
+    assert.equal(args?.["slRatio"], "0.1");
+    assert.equal(args?.["slTotalAmt"], "300");
+  });
+
+  it("passes undefined for tpRatio/slRatio/slTotalAmt when not provided", async () => {
+    const { runner, getCalls } = createCapturingRunner([]);
+    await captureStdout(() =>
+      cmdCopyTradeFollow(runner, { uniqueCode: "TRADER123", copyTotalAmt: "1000", json: false })
+    );
+    const args = getCalls()[0]?.args as Record<string, unknown>;
+    assert.equal(args?.["tpRatio"], undefined);
+    assert.equal(args?.["slRatio"], undefined);
+    assert.equal(args?.["slTotalAmt"], undefined);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -261,13 +291,13 @@ describe("cmdCopyTradeUnfollow", () => {
     assert.equal(args?.["uniqueCode"], "STOP_TRADER");
   });
 
-  it("defaults subPosCloseType=manual_close when not provided", async () => {
+  it("defaults subPosCloseType=copy_close when not provided", async () => {
     const { runner, getCalls } = createCapturingRunner([]);
     await captureStdout(() =>
       cmdCopyTradeUnfollow(runner, { uniqueCode: "TRADER456", json: false })
     );
     const args = getCalls()[0]?.args as Record<string, unknown>;
-    assert.equal(args?.["subPosCloseType"], "manual_close");
+    assert.equal(args?.["subPosCloseType"], "copy_close");
   });
 
   it("forwards custom subPosCloseType", async () => {

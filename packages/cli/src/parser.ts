@@ -108,6 +108,9 @@ export interface CliValues {
   subPosCloseType?: string;
   initialAmount?: string;
   replicationRequired?: string;
+  tpRatio?: string;
+  slRatio?: string;
+  slTotalAmt?: string;
 }
 
 export const CLI_OPTIONS = {
@@ -231,6 +234,9 @@ export const CLI_OPTIONS = {
   subPosCloseType: { type: "string" },
   initialAmount: { type: "string" },
   replicationRequired: { type: "string" },
+  tpRatio: { type: "string" },
+  slRatio: { type: "string" },
+  slTotalAmt: { type: "string" },
 } as const;
 
 export function parseCli(argv: string[]): { values: CliValues; positionals: string[] } {
