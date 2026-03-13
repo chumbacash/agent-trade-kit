@@ -861,7 +861,7 @@ async function main(): Promise<void> {
     option:       () => handleOptionCommand(run, action, rest, v, json),
     bot:          () => handleBotCommand(run, action, rest, v, json),
     earn:         () => handleEarnCommand(run, action, rest, v, json),
-    "copytrading": () => handleCopyTradeCommand(run, action, rest, v, json),
+    copytrading:   () => handleCopyTradeCommand(run, action, rest, v, json),
   };
   const handler = moduleHandlers[module];
   if (handler) return handler();
