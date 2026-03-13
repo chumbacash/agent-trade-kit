@@ -104,6 +104,10 @@ export interface CliValues {
   copyTotalAmt?: string;
   copyAmt?: string;
   copyMgnMode?: string;
+  copyInstIdType?: string;
+  subPosCloseType?: string;
+  initialAmount?: string;
+  replicationRequired?: string;
 }
 
 export const CLI_OPTIONS = {
@@ -223,6 +227,10 @@ export const CLI_OPTIONS = {
   copyTotalAmt: { type: "string" },
   copyAmt: { type: "string" },
   copyMgnMode: { type: "string" },
+  copyInstIdType: { type: "string" },
+  subPosCloseType: { type: "string" },
+  initialAmount: { type: "string" },
+  replicationRequired: { type: "string" },
 } as const;
 
 export function parseCli(argv: string[]): { values: CliValues; positionals: string[] } {

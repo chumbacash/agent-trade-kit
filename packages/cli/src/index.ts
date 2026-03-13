@@ -705,16 +705,20 @@ export function handleCopyTradeCommand(
   if (action === "follow")
     return cmdCopyTradeFollow(run, {
       uniqueCode: v.uniqueCode!,
-      copyTotalAmt: v.copyTotalAmt!,
+      copyTotalAmt: v.copyTotalAmt,
       copyMgnMode: v.copyMgnMode,
+      copyInstIdType: v.copyInstIdType,
       copyMode: v.copyMode,
       copyAmt: v.copyAmt,
       copyRatio: v.copyRatio,
+      initialAmount: v.initialAmount,
+      replicationRequired: v.replicationRequired,
+      subPosCloseType: v.subPosCloseType,
       instType: v.instType,
       json,
     });
   if (action === "unfollow")
-    return cmdCopyTradeUnfollow(run, { uniqueCode: v.uniqueCode!, instType: v.instType, json });
+    return cmdCopyTradeUnfollow(run, { uniqueCode: v.uniqueCode!, subPosCloseType: v.subPosCloseType, instType: v.instType, json });
   if (action === "trader-detail")
     return cmdCopyTradeTraderDetail(run, { uniqueCode: v.uniqueCode!, lastDays: v.lastDays, instType: v.instType, json });
 }

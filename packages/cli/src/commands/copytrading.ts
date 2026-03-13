@@ -56,12 +56,14 @@ export async function cmdCopyTradeFollow(
   run: ToolRunner,
   opts: {
     uniqueCode: string;
-    copyTotalAmt: string;
+    copyTotalAmt?: string;
     copyMgnMode?: string;
     copyInstIdType?: string;
     copyMode?: string;
     copyAmt?: string;
     copyRatio?: string;
+    initialAmount?: string;
+    replicationRequired?: string;
     subPosCloseType?: string;
     instType?: string;
     json: boolean;
@@ -70,13 +72,15 @@ export async function cmdCopyTradeFollow(
   const result = await run("copytrading_set_copytrading", {
     uniqueCode: opts.uniqueCode,
     copyTotalAmt: opts.copyTotalAmt,
-    copyMgnMode: opts.copyMgnMode ?? "isolated",
-    copyInstIdType: opts.copyInstIdType ?? "copy",
-    copyMode: opts.copyMode ?? "fixed_amount",
+    copyMgnMode: opts.copyMgnMode,
+    copyInstIdType: opts.copyInstIdType,
+    copyMode: opts.copyMode,
     copyAmt: opts.copyAmt,
     copyRatio: opts.copyRatio,
-    subPosCloseType: opts.subPosCloseType ?? "copy_close",
-    instType: opts.instType ?? "SWAP",
+    initialAmount: opts.initialAmount,
+    replicationRequired: opts.replicationRequired,
+    subPosCloseType: opts.subPosCloseType,
+    instType: opts.instType,
   });
   const data = getData(result);
   if (opts.json) return printJson(data);

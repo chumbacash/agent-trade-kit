@@ -297,6 +297,39 @@ describe("copytrading_set_copytrading", () => {
     const p = getLastCall()?.params ?? {};
     assert.equal(p["tag"], DEFAULT_SOURCE_TAG);
   });
+
+  it("ratio_copy mode: forwards copyRatio and requires copyTotalAmt", async () => {
+    const { client, getLastCall } = makeMockClient();
+    await tool.handler({ uniqueCode: "ABCD1234EFGH5678", copyMode: "ratio_copy", copyTotalAmt: "1000", copyRatio: "0.1" }, makeContext(client));
+    const p = getLastCall()?.params ?? {};
+    assert.equal(p["copyMode"], "ratio_copy");
+    assert.equal(p["copyTotalAmt"], "1000");
+    assert.equal(p["copyRatio"], "0.1");
+  });
+
+  it("smart_copy mode: throws when replicationRequired is missing", async () => {
+    const { client } = makeMockClient();
+    await assert.rejects(
+      () => tool.handler({ uniqueCode: "ABCD1234EFGH5678", initialAmount: "500" }, makeContext(client)),
+      /replicationRequired/,
+    );
+  });
+
+  it("ratio_copy mode: throws when copyTotalAmt is missing", async () => {
+    const { client } = makeMockClient();
+    await assert.rejects(
+      () => tool.handler({ uniqueCode: "ABCD1234EFGH5678", copyMode: "ratio_copy", copyRatio: "0.1" }, makeContext(client)),
+      /copyTotalAmt/,
+    );
+  });
+
+  it("forwards copyInstIdType=custom when provided", async () => {
+    const { client, getLastCall } = makeMockClient();
+    await tool.handler({ uniqueCode: "ABCD1234EFGH5678", initialAmount: "1000", replicationRequired: "1", copyInstIdType: "custom", instId: "BTC-USDT-SWAP" }, makeContext(client));
+    const p = getLastCall()?.params ?? {};
+    assert.equal(p["copyInstIdType"], "custom");
+    assert.equal(p["instId"], "BTC-USDT-SWAP");
+  });
 });
 
 // ---------------------------------------------------------------------------

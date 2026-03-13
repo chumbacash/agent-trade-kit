@@ -181,17 +181,52 @@ describe("cmdCopyTradeFollow", () => {
     assert.equal(args?.["instType"], "SWAP");
   });
 
-  it("defaults copyMgnMode=isolated, copyInstIdType=copy, copyMode=fixed_amount, subPosCloseType=copy_close, instType=SWAP", async () => {
+  it("passes undefined for unset optional params (defaults handled by core tool)", async () => {
     const { runner, getCalls } = createCapturingRunner([]);
     await captureStdout(() =>
       cmdCopyTradeFollow(runner, { uniqueCode: "TRADER123", copyTotalAmt: "1000", json: false })
     );
     const args = getCalls()[0]?.args as Record<string, unknown>;
-    assert.equal(args?.["copyMgnMode"], "isolated");
-    assert.equal(args?.["copyInstIdType"], "copy");
-    assert.equal(args?.["copyMode"], "fixed_amount");
-    assert.equal(args?.["subPosCloseType"], "copy_close");
-    assert.equal(args?.["instType"], "SWAP");
+    // CLI no longer hardcodes defaults — core tool handles them
+    assert.equal(args?.["copyMgnMode"], undefined);
+    assert.equal(args?.["copyInstIdType"], undefined);
+    assert.equal(args?.["copyMode"], undefined);
+    assert.equal(args?.["subPosCloseType"], undefined);
+    assert.equal(args?.["instType"], undefined);
+  });
+
+  it("forwards initialAmount and replicationRequired for smart_copy mode", async () => {
+    const { runner, getCalls } = createCapturingRunner([]);
+    await captureStdout(() =>
+      cmdCopyTradeFollow(runner, {
+        uniqueCode: "TRADER123",
+        copyMode: "smart_copy",
+        initialAmount: "500",
+        replicationRequired: "1",
+        json: false,
+      })
+    );
+    const args = getCalls()[0]?.args as Record<string, unknown>;
+    assert.equal(args?.["copyMode"], "smart_copy");
+    assert.equal(args?.["initialAmount"], "500");
+    assert.equal(args?.["replicationRequired"], "1");
+    assert.equal(args?.["copyTotalAmt"], undefined);
+  });
+
+  it("forwards copyInstIdType and subPosCloseType when provided", async () => {
+    const { runner, getCalls } = createCapturingRunner([]);
+    await captureStdout(() =>
+      cmdCopyTradeFollow(runner, {
+        uniqueCode: "TRADER123",
+        copyTotalAmt: "1000",
+        copyInstIdType: "custom",
+        subPosCloseType: "market_close",
+        json: false,
+      })
+    );
+    const args = getCalls()[0]?.args as Record<string, unknown>;
+    assert.equal(args?.["copyInstIdType"], "custom");
+    assert.equal(args?.["subPosCloseType"], "market_close");
   });
 });
 

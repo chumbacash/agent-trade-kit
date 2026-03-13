@@ -488,7 +488,7 @@ const HELP_TREE: HelpTree = {
         description: "Get your currently followed lead traders and their cumulative P&L (SWAP only)",
       },
       follow: {
-        usage: "okx copytrading follow --uniqueCode <code> --copyTotalAmt <n>\n                   [--copyMode <fixed_amount|ratio_copy>] [--copyRatio <n>] [--copyAmt <n>]\n                   [--copyMgnMode <isolated|cross|copy>]",
+        usage: "okx copytrading follow --uniqueCode <code>\n                   [--copyMode <smart_copy|fixed_amount|ratio_copy>]\n                   smart_copy (default): --initialAmount <n> --replicationRequired <0|1>\n                   fixed_amount:         --copyTotalAmt <n> --copyAmt <n>\n                   ratio_copy:           --copyTotalAmt <n> --copyRatio <n>\n                   [--copyMgnMode <isolated|cross|copy>] [--copyInstIdType <copy|custom>]\n                   [--subPosCloseType <copy_close|market_close|manual_close>]",
         description: "Start following a lead trader (SWAP only)",
       },
       unfollow: {

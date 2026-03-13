@@ -200,6 +200,9 @@ export function registerCopyTradeTools(): ToolSpec[] {
         const initialAmount = copyMode === "smart_copy"
           ? requireString(args, "initialAmount")
           : readString(args, "initialAmount");
+        const replicationRequired = copyMode === "smart_copy"
+          ? requireString(args, "replicationRequired")
+          : readString(args, "replicationRequired");
         const copyTotalAmt = copyMode === "smart_copy"
           ? initialAmount
           : requireString(args, "copyTotalAmt");
@@ -216,7 +219,7 @@ export function registerCopyTradeTools(): ToolSpec[] {
             copyAmt: readString(args, "copyAmt"),
             copyRatio: readString(args, "copyRatio"),
             initialAmount,
-            replicationRequired: readString(args, "replicationRequired"),
+            replicationRequired,
             tpRatio: readString(args, "tpRatio"),
             slRatio: readString(args, "slRatio"),
             subPosCloseType: readString(args, "subPosCloseType") ?? "copy_close",
