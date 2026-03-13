@@ -492,8 +492,8 @@ const HELP_TREE: HelpTree = {
         description: "Start following a lead trader (SWAP only)",
       },
       unfollow: {
-        usage: "okx copytrading unfollow --uniqueCode <code>",
-        description: "Stop following a lead trader (SWAP only)",
+        usage: "okx copytrading unfollow --uniqueCode <code> [--subPosCloseType <copy_close|market_close|manual_close>]",
+        description: "Stop following a lead trader (SWAP only). Default subPosCloseType: copy_close",
       },
       "trader-detail": {
         usage: "okx copytrading trader-detail --uniqueCode <code> [--lastDays <1|2|3|4>]",
