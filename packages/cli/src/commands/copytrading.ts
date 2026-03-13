@@ -1,8 +1,8 @@
 import type { ToolRunner } from "@agent-tradekit/core";
 import { printJson, printTable } from "../formatter.js";
 
-function getData(result: unknown): unknown {
-  return (result as Record<string, unknown>).data;
+function asRaw(result: unknown): Record<string, unknown> {
+  return result as Record<string, unknown>;
 }
 
 export async function cmdCopyTradeTraders(
@@ -13,7 +13,8 @@ export async function cmdCopyTradeTraders(
     instType: opts.instType ?? "SWAP",
     limit: opts.limit,
   });
-  const data = getData(result) as Record<string, unknown>[];
+  const raw = asRaw(result);
+  const data = (raw["data"] ?? []) as Record<string, unknown>[];
   if (opts.json) return printJson(data);
   printTable(
     (data ?? []).map((t) => ({
@@ -88,7 +89,7 @@ export async function cmdCopyTradeFollow(
     slRatio: opts.slRatio,
     slTotalAmt: opts.slTotalAmt,
   });
-  const data = getData(result);
+  const data = asRaw(result)["data"];
   if (opts.json) return printJson(data);
   process.stdout.write(`Following trader: ${opts.uniqueCode}\n`);
 }
@@ -102,7 +103,7 @@ export async function cmdCopyTradeUnfollow(
     subPosCloseType: opts.subPosCloseType ?? "copy_close",
     instType: opts.instType,
   });
-  const data = getData(result);
+  const data = asRaw(result)["data"];
   if (opts.json) return printJson(data);
   process.stdout.write(`Stopped copying: ${opts.uniqueCode}\n`);
 }
