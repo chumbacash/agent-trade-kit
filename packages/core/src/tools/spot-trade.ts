@@ -310,7 +310,7 @@ export function registerSpotTradeTools(): ToolSpec[] {
           },
           tpOrdPx: {
             type: "string",
-            description: "TP order price; -1=market",
+            description: "TP order price. -1=market only works for margin (cross/isolated); for cash mode use a specific price",
           },
           slTriggerPx: {
             type: "string",
@@ -318,7 +318,7 @@ export function registerSpotTradeTools(): ToolSpec[] {
           },
           slOrdPx: {
             type: "string",
-            description: "SL order price; -1=market",
+            description: "SL order price. -1=market only works for margin (cross/isolated); for cash mode use a specific price",
           },
         },
         required: ["instId", "side", "ordType", "sz"],
@@ -357,9 +357,9 @@ export function registerSpotTradeTools(): ToolSpec[] {
           algoId: { type: "string", description: "Algo order ID" },
           newSz: { type: "string", description: "New order size in base currency (e.g. BTC amount)" },
           newTpTriggerPx: { type: "string", description: "New TP trigger price" },
-          newTpOrdPx: { type: "string", description: "New TP order price; -1=market" },
+          newTpOrdPx: { type: "string", description: "New TP order price. -1=market only works for margin (cross/isolated); for cash mode use a specific price" },
           newSlTriggerPx: { type: "string", description: "New SL trigger price" },
-          newSlOrdPx: { type: "string", description: "New SL order price; -1=market" },
+          newSlOrdPx: { type: "string", description: "New SL order price. -1=market only works for margin (cross/isolated); for cash mode use a specific price" },
         },
         required: ["instId", "algoId"],
       },

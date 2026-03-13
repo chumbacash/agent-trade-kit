@@ -464,7 +464,7 @@ const HELP_TREE: HelpTree = {
             description: "List cycles or orders within a cycle of a Contract DCA bot",
           },
           create: {
-            usage: "okx bot dca create --instId <id> --lever <n> --direction <long|short>\n                 --initOrdAmt <n> --maxSafetyOrds <n> --tpPct <n>\n                 [--safetyOrdAmt <n>] [--pxSteps <n>] [--pxStepsMult <n>] [--volMult <n>]\n                 [--slPct <n>] [--slMode <limit|market>]\n                 [--allowReinvest <true|false>] [--triggerStrategy <instant|price|rsi>] [--triggerPx <price>]\n                 Note: safetyOrdAmt, pxSteps, pxStepsMult, volMult are required when maxSafetyOrds > 0",
+            usage: "okx bot dca create --instId <id> --lever <n> --direction <long|short>\n                 --initOrdAmt <n> --maxSafetyOrds <n> --tpPct <n>\n                 [--safetyOrdAmt <n>] [--pxSteps <n>] [--pxStepsMult <n>] [--volMult <n>]\n                 [--slPct <n>] [--slMode <limit|market>]\n                 [--allowReinvest <true|false>] [--triggerStrategy <instant|price|rsi>] [--triggerPx <price>]\n                 Note: safetyOrdAmt, pxSteps, pxStepsMult, volMult are required when maxSafetyOrds > 0\n                 Note: slMode is required when slPct is set",
             description: "Create a new Contract DCA bot order",
           },
           stop: {
