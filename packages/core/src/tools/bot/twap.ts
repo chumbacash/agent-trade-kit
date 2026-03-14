@@ -2,25 +2,14 @@ import type { ToolSpec } from "../types.js";
 import {
   asRecord,
   compactObject,
+  normalizeResponse,
   readBoolean,
   readNumber,
   readString,
   requireString,
 } from "../helpers.js";
 import { privateRateLimit } from "../common.js";
-import { OkxApiError } from "../../utils/errors.js";
-
-function normalize(response: {
-  endpoint: string;
-  requestTime: string;
-  data: unknown;
-}): Record<string, unknown> {
-  return {
-    endpoint: response.endpoint,
-    requestTime: response.requestTime,
-    data: response.data,
-  };
-}
+import { OkxApiError, ValidationError } from "../../utils/errors.js";
 
 /** For write operations: surface any inner sCode/sMsg errors from data items. */
 function normalizeWrite(response: {
@@ -134,11 +123,16 @@ export function registerTwapTools(): ToolSpec[] {
       },
       handler: async (rawArgs, context) => {
         const args = asRecord(rawArgs);
+        const algoId = readString(args, "algoId");
+        const algoClOrdId = readString(args, "algoClOrdId");
+        if (!algoId && !algoClOrdId) {
+          throw new ValidationError("Must provide algoId or algoClOrdId");
+        }
         const response = await context.client.privatePost(
           "/api/v5/trade/cancel-algos",
           [compactObject({
-            algoId: readString(args, "algoId"),
-            algoClOrdId: readString(args, "algoClOrdId"),
+            algoId,
+            algoClOrdId,
             instId: requireString(args, "instId"),
           })],
           privateRateLimit("twap_cancel_order", 20),
@@ -201,7 +195,7 @@ export function registerTwapTools(): ToolSpec[] {
           }),
           privateRateLimit("twap_get_orders", 20),
         );
-        return normalize(response);
+        return normalizeResponse(response);
       },
     },
     {
@@ -221,15 +215,20 @@ export function registerTwapTools(): ToolSpec[] {
       },
       handler: async (rawArgs, context) => {
         const args = asRecord(rawArgs);
+        const algoId = readString(args, "algoId");
+        const algoClOrdId = readString(args, "algoClOrdId");
+        if (!algoId && !algoClOrdId) {
+          throw new ValidationError("Must provide algoId or algoClOrdId");
+        }
         const response = await context.client.privateGet(
           "/api/v5/trade/order-algo",
           compactObject({
-            algoId: readString(args, "algoId"),
-            algoClOrdId: readString(args, "algoClOrdId"),
+            algoId,
+            algoClOrdId,
           }),
           privateRateLimit("twap_get_order_details", 20),
         );
-        return normalize(response);
+        return normalizeResponse(response);
       },
     },
   ];

@@ -13,7 +13,8 @@ Strategy trading bot tools with sub-module filtering. Requires API key with **Re
 | `bot.twap` | 4 | TWAP (Time-Weighted Average Price) strategies |
 
 **Module aliases:**
-- `bot` → all bot sub-modules (`bot.grid` + `bot.dca` + `bot.twap`)
+- `bot` → default bot sub-modules only (`bot.grid`)
+- `bot.all` → all bot sub-modules (`bot.grid` + `bot.dca` + `bot.twap`)
 
 ## Grid tools (bot.grid)
 
@@ -199,7 +200,8 @@ okx bot twap cancel --instId BTC-USDT-SWAP --algoClOrdId <clientId>
 | `bot.twap` | 4 | TWAP（时间加权平均价格）策略 |
 
 **模块别名：**
-- `bot` → 所有 bot 子模块（`bot.grid` + `bot.dca` + `bot.twap`）
+- `bot` → 仅默认 bot 子模块（`bot.grid`）
+- `bot.all` → 所有 bot 子模块（`bot.grid` + `bot.dca` + `bot.twap`）
 
 ## 网格工具 (bot.grid)
 

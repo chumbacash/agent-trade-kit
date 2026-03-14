@@ -19,7 +19,7 @@ import { registerDcaTools } from "../src/tools/bot/dca.js";
 import { registerTwapTools } from "../src/tools/bot/twap.js";
 import { registerOnchainEarnTools } from "../src/tools/earn/onchain.js";
 import { assertNotDemo } from "../src/tools/common.js";
-import { ConfigError, OkxApiError } from "../src/utils/errors.js";
+import { ConfigError, OkxApiError, ValidationError } from "../src/utils/errors.js";
 import { DEFAULT_SOURCE_TAG } from "../src/constants.js";
 
 // ---------------------------------------------------------------------------
@@ -3161,6 +3161,17 @@ describe("twap_cancel_order", () => {
     assert.equal((params[0] as Record<string, unknown>).algoId, undefined);
   });
 
+  it("throws ValidationError when neither algoId nor algoClOrdId provided", async () => {
+    const { client } = makeMockClient();
+    await assert.rejects(
+      () => tool.handler({ instId: "BTC-USDT-SWAP" }, makeContext(client)),
+      (err: Error) => {
+        assert.ok(err instanceof ValidationError);
+        return true;
+      },
+    );
+  });
+
   it("throws OkxApiError when cancel returns sCode != 0", async () => {
     const { client } = makeMockClientWithData([
       { algoId: "123", sCode: "51008", sMsg: "Order does not exist" },
@@ -3259,6 +3270,17 @@ describe("twap_get_order_details", () => {
     assert.equal(getLastCall()?.endpoint, "/api/v5/trade/order-algo");
     assert.equal((getLastCall()?.params as Record<string, unknown>).algoClOrdId, "myOrder1");
     assert.equal((getLastCall()?.params as Record<string, unknown>).algoId, undefined);
+  });
+
+  it("throws ValidationError when neither algoId nor algoClOrdId provided", async () => {
+    const { client } = makeMockClient();
+    await assert.rejects(
+      () => tool.handler({}, makeContext(client)),
+      (err: Error) => {
+        assert.ok(err instanceof ValidationError);
+        return true;
+      },
+    );
   });
 });
 
