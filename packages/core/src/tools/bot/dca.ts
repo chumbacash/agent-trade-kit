@@ -54,7 +54,9 @@ export function registerDcaTools(): ToolSpec[] {
         "Required: instId, lever, direction, initOrdAmt, maxSafetyOrds, tpPct. " +
         "Conditionally required (when maxSafetyOrds > 0): safetyOrdAmt, pxSteps. " +
         "Conditionally required (when maxSafetyOrds > 1): pxStepsMult, volMult. " +
-        "Optional: slPct (requires slMode), slMode, allowReinvest, triggerStrategy, triggerPx. " +
+        "Optional: slPct (requires slMode), slMode, allowReinvest, triggerStrategy, triggerPx, " +
+        "triggerCond, thold, timePeriod, timeframe (RSI sub-params when triggerStrategy='rsi'), " +
+        "trackingMode, profitSharingRatio (copy-trading lead trader params). " +
         "[CAUTION] Executes real trades. Private endpoint. Rate limit: 20 req/2s.",
       isWrite: true,
       inputSchema: {
@@ -75,6 +77,12 @@ export function registerDcaTools(): ToolSpec[] {
           allowReinvest: { type: "string", enum: ["true", "false"], description: "Reinvest profit into the next cycle. Default 'true' (optional)" },
           triggerStrategy: { type: "string", enum: ["instant", "price", "rsi"], default: "instant", description: "How the bot starts: 'instant' (default), 'price' (wait for trigger price), or 'rsi' (RSI signal) (optional)" },
           triggerPx: { type: "string", description: "Trigger price — required when triggerStrategy='price' (optional)" },
+          triggerCond: { type: "string", enum: ["cross_up", "cross_down"], description: "RSI trigger condition: 'cross_up' (RSI crosses above threshold) or 'cross_down' (RSI crosses below threshold) — required when triggerStrategy='rsi' (optional)" },
+          thold: { type: "string", description: "RSI threshold value (e.g. '30' for oversold) — required when triggerStrategy='rsi' (optional)" },
+          timePeriod: { type: "string", description: "RSI calculation period (default '14') — applies when triggerStrategy='rsi' (optional)" },
+          timeframe: { type: "string", enum: ["3m", "5m", "15m", "30m", "1H", "4H", "1D"], description: "RSI K-line timeframe — required when triggerStrategy='rsi' (optional)" },
+          trackingMode: { type: "string", enum: ["sync", "async"], description: "Copy-trading lead trader tracking mode: 'sync' or 'async' (optional)" },
+          profitSharingRatio: { type: "string", enum: ["0", "0.1", "0.2", "0.3"], description: "Copy-trading profit sharing ratio (optional)" },
         },
         required: ["instId", "lever", "direction", "initOrdAmt", "maxSafetyOrds", "tpPct"],
       },
@@ -128,6 +136,26 @@ export function registerDcaTools(): ToolSpec[] {
         if (triggerStrategy === "price") {
           triggerParam["triggerPx"] = requireString(args, "triggerPx");
         }
+        if (triggerStrategy === "rsi") {
+          const rsiMissing: string[] = [];
+          const triggerCond = readString(args, "triggerCond");
+          const thold = readString(args, "thold");
+          const timeframe = readString(args, "timeframe");
+          if (!triggerCond) rsiMissing.push("triggerCond");
+          if (!thold) rsiMissing.push("thold");
+          if (!timeframe) rsiMissing.push("timeframe");
+          if (rsiMissing.length > 0) {
+            throw new Error(
+              `When triggerStrategy='rsi', the following parameters are required: ${rsiMissing.join(", ")}`,
+            );
+          }
+          triggerParam["triggerCond"] = triggerCond!;
+          triggerParam["thold"] = thold!;
+          triggerParam["timePeriod"] = readString(args, "timePeriod") ?? "14";
+          triggerParam["timeframe"] = timeframe!;
+        }
+
+        const triggerParams: Record<string, string>[] = [triggerParam];
 
         const response = await context.client.privatePost(
           `${BASE}/create`,
@@ -146,8 +174,10 @@ export function registerDcaTools(): ToolSpec[] {
             slPct: readString(args, "slPct"),
             slMode: readString(args, "slMode"),
             allowReinvest: readString(args, "allowReinvest"),
+            trackingMode: readString(args, "trackingMode"),
+            profitSharingRatio: readString(args, "profitSharingRatio"),
             tag: context.config.sourceTag,
-            triggerParams: [triggerParam],
+            triggerParams,
           }),
           privateRateLimit("dca_create_order", 20),
         );
@@ -277,8 +307,8 @@ export function registerDcaTools(): ToolSpec[] {
               "This is NOT a normal trade order ID.",
           },
           cycleId: { type: "string", description: "Omit to list all cycles; provide to get orders within a cycle" },
-          after: { type: "string", description: "Pagination cursor — applies to cycle-list mode only (when cycleId is omitted)" },
-          before: { type: "string", description: "Pagination cursor — applies to cycle-list mode only (when cycleId is omitted)" },
+          after: { type: "string", description: "Pagination cursor" },
+          before: { type: "string", description: "Pagination cursor" },
           limit: { type: "number", description: "Max results (default 100)" },
         },
         required: ["algoId"],
@@ -296,6 +326,8 @@ export function registerDcaTools(): ToolSpec[] {
               algoId,
               algoOrdType: "contract_dca",
               cycleId,
+              after: readString(args, "after"),
+              before: readString(args, "before"),
               limit: readNumber(args, "limit"),
             }),
             privateRateLimit("dca_get_sub_orders", 20),

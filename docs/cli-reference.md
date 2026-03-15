@@ -255,7 +255,34 @@ okx bot dca create \
   --pxSteps 0.03 --pxStepsMult 1 --volMult 1 \
   --tpPct 0.03 --slPct 0.15 --slMode market
 
+# With RSI trigger strategy
+okx bot dca create \
+  --instId BTC-USDT-SWAP --lever 3 --direction long \
+  --initOrdAmt 100 --safetyOrdAmt 50 --maxSafetyOrds 3 \
+  --pxSteps 0.03 --pxStepsMult 1 --volMult 1 --tpPct 0.03 \
+  --triggerStrategy rsi --triggerCond cross_up --thold 30 --timeframe 15m
+
 okx bot dca stop --algoId <algoId>
+
+# DCA extended commands (CLI-only)
+okx bot dca margin-add --algoId <algoId> --amt 50
+okx bot dca margin-reduce --algoId <algoId> --amt 50
+okx bot dca set-tp --algoId <algoId> --tpPrice 50000
+okx bot dca set-reinvest --algoId <algoId> --allowReinvest false
+okx bot dca manual-buy --algoId <algoId> --amt 100
+
+# Recurring Buy (Spot 定投)
+okx bot recurring orders
+okx bot recurring details --algoId <algoId>
+okx bot recurring sub-orders --algoId <algoId>
+
+okx bot recurring create --stgyName "Daily BTC" \
+  --recurringList '[{"ccy":"BTC","ratio":"1"}]' \
+  --period daily --recurringTime 08:00 --timeZone 8 \
+  --amt 100 --investmentCcy USDT --tdMode cash
+
+okx bot recurring amend --algoId <algoId> --amt 200
+okx bot recurring stop --algoId <algoId>
 ```
 
 ---
@@ -546,7 +573,34 @@ okx bot dca create \
   --pxSteps 0.03 --pxStepsMult 1 --volMult 1 \
   --tpPct 0.03 --slPct 0.15 --slMode market
 
+# 带 RSI 触发策略
+okx bot dca create \
+  --instId BTC-USDT-SWAP --lever 3 --direction long \
+  --initOrdAmt 100 --safetyOrdAmt 50 --maxSafetyOrds 3 \
+  --pxSteps 0.03 --pxStepsMult 1 --volMult 1 --tpPct 0.03 \
+  --triggerStrategy rsi --triggerCond cross_up --thold 30 --timeframe 15m
+
 okx bot dca stop --algoId <algoId>
+
+# DCA 扩展命令（仅 CLI）
+okx bot dca margin-add --algoId <algoId> --amt 50
+okx bot dca margin-reduce --algoId <algoId> --amt 50
+okx bot dca set-tp --algoId <algoId> --tpPrice 50000
+okx bot dca set-reinvest --algoId <algoId> --allowReinvest false
+okx bot dca manual-buy --algoId <algoId> --amt 100
+
+# ── 现货定投 ──────────────────────────────────────────────────────────────────
+okx bot recurring orders
+okx bot recurring details --algoId <algoId>
+okx bot recurring sub-orders --algoId <algoId>
+
+okx bot recurring create --stgyName "每日定投BTC" \
+  --recurringList '[{"ccy":"BTC","ratio":"1"}]' \
+  --period daily --recurringTime 08:00 --timeZone 8 \
+  --amt 100 --investmentCcy USDT --tdMode cash
+
+okx bot recurring amend --algoId <algoId> --amt 200
+okx bot recurring stop --algoId <algoId>
 ```
 
 ---

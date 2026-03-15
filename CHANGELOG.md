@@ -13,6 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`dca_create_order` — RSI trigger sub-parameters**: When `triggerStrategy='rsi'`, the tool now accepts `triggerCond` (cross_up/cross_down), `thold` (RSI threshold), `timePeriod` (default 14), and `timeframe` (3m/5m/15m/30m/1H/4H/1D). Validation ensures all required RSI params are present.
+- **`dca_create_order` — copy-trading params**: Added optional `trackingMode` (sync/async) and `profitSharingRatio` (0/0.1/0.2/0.3) for lead trader copy-trading scenarios.
+- **5 new DCA CLI commands** (CLI-only, no MCP tool): `margin-add`, `margin-reduce`, `set-tp`, `set-reinvest`, `manual-buy`. These cover 5 DCA management endpoints not exposed as MCP tools.
+- **Spot Recurring Buy module (`bot.recurring`)**: New sub-module for Spot Recurring Buy (定投) strategies. Includes 6 tools: `recurring_create_order`, `recurring_amend_order`, `recurring_stop_order`, `recurring_get_orders`, `recurring_get_order_details`, `recurring_get_sub_orders`. Not loaded by default — enable with `--modules bot.recurring`, `--modules bot.all`, or `--modules all`. CLI commands: `okx bot recurring create|amend|stop|orders|details|sub-orders`. Designed for easy rollback — all code is isolated in `bot/recurring.ts`.
+
+### Added
+
 - **`grid_create_order` — 6 new optional parameters**: `tpTriggerPx`, `slTriggerPx`, `algoClOrdId` (spot + contract), `tradeQuoteCcy` (spot only), `tpRatio`, `slRatio` (contract only). The tool handler now distinguishes spot vs. contract parameters — spot-only params are ignored for `contract_grid`, and vice versa.
 - **14 new grid CLI commands** (CLI-only, no MCP tool): `amend-basic-param`, `amend-order`, `close-position`, `cancel-close-order`, `instant-trigger`, `positions`, `withdraw-income`, `compute-margin-balance`, `margin-balance`, `adjust-investment`, `ai-param`, `min-investment`, `rsi-back-testing`, `max-quantity`. These cover 15 additional OKX grid trading bot OpenAPIs not previously implemented. 4 of these are public endpoints (no API key required).
 - **`OkxRestClient.publicPost()` method**: new method for public POST endpoints (used by grid `min-investment` API).

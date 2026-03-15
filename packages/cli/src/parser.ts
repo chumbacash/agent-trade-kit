@@ -91,7 +91,19 @@ export interface CliValues {
   allowReinvest?: string;
   triggerStrategy?: string;
   triggerPx?: string;
+  trackingMode?: string;
+  profitSharingRatio?: string;
+  tpPrice?: string;
   cycleId?: string;
+  // recurring buy
+  stgyName?: string;
+  recurringList?: string;
+  recurringDay?: string;
+  recurringTime?: string;
+  recurringHour?: string;
+  investmentCcy?: string;
+  period?: string;
+  timeZone?: string;
   lang?: string;
   // option
   uly?: string;
@@ -245,7 +257,19 @@ export const CLI_OPTIONS = {
   allowReinvest: { type: "string" },
   triggerStrategy: { type: "string" },
   triggerPx: { type: "string" },
+  trackingMode: { type: "string" },
+  profitSharingRatio: { type: "string" },
+  tpPrice: { type: "string" },
   cycleId: { type: "string" },
+  // recurring buy
+  stgyName: { type: "string" },
+  recurringList: { type: "string" },
+  recurringDay: { type: "string" },
+  recurringTime: { type: "string" },
+  recurringHour: { type: "string" },
+  investmentCcy: { type: "string" },
+  period: { type: "string" },
+  timeZone: { type: "string" },
   // i18n
   lang: { type: "string" },
   // option

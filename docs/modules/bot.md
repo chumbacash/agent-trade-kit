@@ -11,10 +11,11 @@ Strategy trading bot tools with sub-module filtering. Requires API key with **Re
 | `bot.grid` | 5 | Spot Grid, Contract Grid, Moon Grid strategies |
 | `bot.dca` | 5 | Contract DCA (Martingale) strategies |
 | `bot.twap` | 4 | TWAP (Time-Weighted Average Price) strategies |
+| `bot.recurring` | 6 | Spot Recurring Buy (定投) strategies |
 
 **Module aliases:**
 - `bot` → default bot sub-modules only (`bot.grid`)
-- `bot.all` → all bot sub-modules (`bot.grid` + `bot.dca` + `bot.twap`)
+- `bot.all` → all bot sub-modules (`bot.grid` + `bot.dca` + `bot.twap` + `bot.recurring`)
 
 ## Grid tools (bot.grid)
 
@@ -87,6 +88,18 @@ The following 14 commands are available only via the CLI. They call the OKX REST
 | `dca_get_order_details` | Get details of a single Contract DCA bot |
 | `dca_get_sub_orders` | List cycles / orders within a cycle of a Contract DCA bot |
 
+### DCA extended CLI commands (CLI-only)
+
+The following 5 commands are available only via the CLI. They call the OKX REST API directly and are not exposed as MCP tools.
+
+| Command | Description |
+|---------|-------------|
+| `bot dca margin-add` | Add margin to a running DCA bot |
+| `bot dca margin-reduce` | Reduce margin from a running DCA bot |
+| `bot dca set-tp` | Update take-profit price for a running DCA bot |
+| `bot dca set-reinvest` | Enable or disable reinvestment for a DCA bot |
+| `bot dca manual-buy` | Manually trigger a buy order within a DCA bot cycle |
+
 ## TWAP tools (bot.twap)
 
 | Tool | Description |
@@ -123,6 +136,26 @@ The following 14 commands are available only via the CLI. They call the OKX REST
 - For history queries: `state` and `algoId` are mutually exclusive — pass one or the other (defaults to `state=effective` if neither given)
 - TWAP orders cannot be amended — cancel and re-create instead
 
+## Recurring Buy tools (bot.recurring)
+
+> ROLLBACK NOTE: This section and the `bot.recurring` module can be entirely removed if Spot Recurring Buy is deprecated.
+
+| Tool | Description |
+|------|-------------|
+| `recurring_create_order` | Create a Spot Recurring Buy (定投) order |
+| `recurring_amend_order` | Amend a running Spot Recurring Buy order |
+| `recurring_stop_order` | Stop a running Spot Recurring Buy order |
+| `recurring_get_orders` | List active or historical Spot Recurring Buy orders |
+| `recurring_get_order_details` | Get details of a single Spot Recurring Buy order |
+| `recurring_get_sub_orders` | List sub-orders of a Spot Recurring Buy order |
+
+### Important notes
+
+- **Not loaded by default** — enable with `--modules bot.recurring`, `--modules bot.all`, or `--modules all`
+- `recurringList` parameter is a JSON array: `[{"ccy":"BTC","ratio":"0.5"},{"ccy":"ETH","ratio":"0.5"}]`. Ratios must sum to 1.
+- `period`: `hourly`, `daily`, `weekly`, `monthly`. When `hourly`, also provide `recurringHour` (`1`/`4`/`8`/`12`).
+- `recurringDay`: for `weekly` use `1`-`7` (Mon-Sun); for `monthly` use `1`-`28`.
+
 ## Example prompts
 
 **Grid:**
@@ -140,6 +173,11 @@ The following 14 commands are available only via the CLI. They call the OKX REST
 - "Place a TWAP buy order on BTC-USDT-SWAP: 100 contracts, 10 per slice, every 10 seconds, limit price 50000"
 - "Show my active TWAP orders"
 - "Cancel TWAP order algoId 12345"
+
+**Recurring Buy:**
+- "Set up a recurring buy: 100 USDT of BTC every day at 8am UTC+8"
+- "Show my active recurring buy orders"
+- "Stop recurring buy algoId 12345"
 
 ## CLI
 
@@ -213,7 +251,21 @@ okx bot dca create --instId BTC-USDT-SWAP --lever 3 --direction long \
   --pxSteps 0.03 --pxStepsMult 1 --volMult 1 \
   --tpPct 0.03 --slPct 0.15 --slMode market
 
+# With RSI trigger strategy
+okx bot dca create --instId BTC-USDT-SWAP --lever 3 --direction long \
+  --initOrdAmt 100 --safetyOrdAmt 50 --maxSafetyOrds 3 \
+  --pxSteps 0.03 --pxStepsMult 1 --volMult 1 --tpPct 0.03 \
+  --triggerStrategy rsi --triggerCond cross_up --thold 30 --timeframe 15m
+
 okx bot dca stop --algoId <id>
+
+# ── DCA extended commands (CLI-only) ─────────────────────────────────────────
+okx bot dca margin-add --algoId <id> --amt 50
+okx bot dca margin-reduce --algoId <id> --amt 50
+okx bot dca set-tp --algoId <id> --tpPrice 50000
+okx bot dca set-reinvest --algoId <id> --allowReinvest false
+okx bot dca manual-buy --algoId <id> --amt 100
+okx bot dca manual-buy --algoId <id> --amt 100 --px 45000
 
 # ── TWAP ─────────────────────────────────────────────────────────────────────
 okx bot twap orders
@@ -245,6 +297,26 @@ okx bot twap place --instId BTC-USDT-SWAP --tdMode cross --side buy \
 
 okx bot twap cancel --instId BTC-USDT-SWAP --algoId <id>
 okx bot twap cancel --instId BTC-USDT-SWAP --algoClOrdId <clientId>
+
+# ── Recurring Buy (Spot 定投) ────────────────────────────────────────────────
+okx bot recurring orders
+okx bot recurring orders --history
+okx bot recurring details --algoId <id>
+okx bot recurring sub-orders --algoId <id>
+
+okx bot recurring create --stgyName "Daily BTC" \
+  --recurringList '[{"ccy":"BTC","ratio":"1"}]' \
+  --period daily --recurringTime 08:00 --timeZone 8 \
+  --amt 100 --investmentCcy USDT --tdMode cash
+
+# Multi-coin recurring buy (50% BTC + 50% ETH)
+okx bot recurring create --stgyName "BTC+ETH Weekly" \
+  --recurringList '[{"ccy":"BTC","ratio":"0.5"},{"ccy":"ETH","ratio":"0.5"}]' \
+  --period weekly --recurringDay 1 --recurringTime 08:00 --timeZone 8 \
+  --amt 200 --investmentCcy USDT --tdMode cash
+
+okx bot recurring amend --algoId <id> --amt 200
+okx bot recurring stop --algoId <id>
 ```
 
 ---
@@ -262,10 +334,11 @@ okx bot twap cancel --instId BTC-USDT-SWAP --algoClOrdId <clientId>
 | `bot.grid` | 5 | 现货网格、合约网格、Moon Grid 策略 |
 | `bot.dca` | 5 | 合约 DCA（马丁格尔）策略 |
 | `bot.twap` | 4 | TWAP（时间加权平均价格）策略 |
+| `bot.recurring` | 6 | 现货定投策略 |
 
 **模块别名：**
 - `bot` → 仅默认 bot 子模块（`bot.grid`）
-- `bot.all` → 所有 bot 子模块（`bot.grid` + `bot.dca` + `bot.twap`）
+- `bot.all` → 所有 bot 子模块（`bot.grid` + `bot.dca` + `bot.twap` + `bot.recurring`）
 
 ## 网格工具 (bot.grid)
 
@@ -338,6 +411,38 @@ okx bot twap cancel --instId BTC-USDT-SWAP --algoClOrdId <clientId>
 | `dca_get_order_details` | 查询单个合约 DCA 机器人详情 |
 | `dca_get_sub_orders` | 列出合约 DCA 周期 / 周期内订单 |
 
+### DCA 扩展 CLI 命令（仅 CLI）
+
+以下 5 个命令仅通过 CLI 使用，直接调用 OKX REST API，不作为 MCP 工具暴露。
+
+| 命令 | 说明 |
+|------|------|
+| `bot dca margin-add` | 追加 DCA 机器人保证金 |
+| `bot dca margin-reduce` | 减少 DCA 机器人保证金 |
+| `bot dca set-tp` | 修改 DCA 机器人止盈价 |
+| `bot dca set-reinvest` | 开启或关闭 DCA 机器人利润再投入 |
+| `bot dca manual-buy` | 手动触发 DCA 机器人买入 |
+
+## 定投工具 (bot.recurring)
+
+> 回滚说明：如果现货定投功能被废弃，可删除此节及 `bot.recurring` 模块的全部代码。
+
+| 工具 | 说明 |
+|------|------|
+| `recurring_create_order` | 创建现货定投订单 |
+| `recurring_amend_order` | 修改运行中的定投订单 |
+| `recurring_stop_order` | 停止定投订单 |
+| `recurring_get_orders` | 列出运行中或历史定投订单 |
+| `recurring_get_order_details` | 查询单个定投订单详情 |
+| `recurring_get_sub_orders` | 列出定投子订单（每次买入记录） |
+
+### 注意事项
+
+- **默认不加载** — 需要 `--modules bot.recurring`、`--modules bot.all` 或 `--modules all` 来启用
+- `recurringList` 参数为 JSON 数组：`[{"ccy":"BTC","ratio":"0.5"},{"ccy":"ETH","ratio":"0.5"}]`，ratio 总和须为 1
+- `period`：`hourly`、`daily`、`weekly`、`monthly`。`hourly` 时需提供 `recurringHour`（`1`/`4`/`8`/`12`）
+- `recurringDay`：`weekly` 用 `1`-`7`（周一到周日）；`monthly` 用 `1`-`28`
+
 ## TWAP 工具 (bot.twap)
 
 | 工具 | 说明 |
@@ -391,6 +496,11 @@ okx bot twap cancel --instId BTC-USDT-SWAP --algoClOrdId <clientId>
 - "在 BTC-USDT-SWAP 下达 TWAP 买单：总量 100 张，每次 10 张，每 10 秒一次，限价 50000"
 - "显示我的 TWAP 委托"
 - "取消 TWAP 委托 algoId 12345"
+
+**定投：**
+- "创建每日 BTC 定投：100 USDT，每天早上 8 点"
+- "显示我的定投订单"
+- "停止定投 algoId 12345"
 
 ## CLI
 
@@ -464,7 +574,21 @@ okx bot dca create --instId BTC-USDT-SWAP --lever 3 --direction long \
   --pxSteps 0.03 --pxStepsMult 1 --volMult 1 \
   --tpPct 0.03 --slPct 0.15 --slMode market
 
+# 带 RSI 触发策略
+okx bot dca create --instId BTC-USDT-SWAP --lever 3 --direction long \
+  --initOrdAmt 100 --safetyOrdAmt 50 --maxSafetyOrds 3 \
+  --pxSteps 0.03 --pxStepsMult 1 --volMult 1 --tpPct 0.03 \
+  --triggerStrategy rsi --triggerCond cross_up --thold 30 --timeframe 15m
+
 okx bot dca stop --algoId <id>
+
+# ── DCA extended commands (CLI-only) ─────────────────────────────────────────
+okx bot dca margin-add --algoId <id> --amt 50
+okx bot dca margin-reduce --algoId <id> --amt 50
+okx bot dca set-tp --algoId <id> --tpPrice 50000
+okx bot dca set-reinvest --algoId <id> --allowReinvest false
+okx bot dca manual-buy --algoId <id> --amt 100
+okx bot dca manual-buy --algoId <id> --amt 100 --px 45000
 
 # ── TWAP ─────────────────────────────────────────────────────────────────────
 okx bot twap orders
@@ -492,4 +616,24 @@ okx bot twap place --instId BTC-USDT --tdMode cross --side buy \
 
 okx bot twap cancel --instId BTC-USDT-SWAP --algoId <id>
 okx bot twap cancel --instId BTC-USDT-SWAP --algoClOrdId <clientId>
+
+# ── 现货定投 ──────────────────────────────────────────────────────────────────
+okx bot recurring orders
+okx bot recurring orders --history
+okx bot recurring details --algoId <id>
+okx bot recurring sub-orders --algoId <id>
+
+okx bot recurring create --stgyName "每日定投BTC" \
+  --recurringList '[{"ccy":"BTC","ratio":"1"}]' \
+  --period daily --recurringTime 08:00 --timeZone 8 \
+  --amt 100 --investmentCcy USDT --tdMode cash
+
+# 多币种定投（50% BTC + 50% ETH）
+okx bot recurring create --stgyName "BTC+ETH 周定投" \
+  --recurringList '[{"ccy":"BTC","ratio":"0.5"},{"ccy":"ETH","ratio":"0.5"}]' \
+  --period weekly --recurringDay 1 --recurringTime 08:00 --timeZone 8 \
+  --amt 200 --investmentCcy USDT --tdMode cash
+
+okx bot recurring amend --algoId <id> --amt 200
+okx bot recurring stop --algoId <id>
 ```

@@ -13,6 +13,11 @@
 
 ### 新增
 
+- **`dca_create_order` — RSI 触发子参数**：当 `triggerStrategy='rsi'` 时，工具现支持 `triggerCond`（cross_up/cross_down）、`thold`（RSI 阈值）、`timePeriod`（默认 14）和 `timeframe`（3m/5m/15m/30m/1H/4H/1D）参数。验证逻辑确保所有必填 RSI 参数存在。
+- **`dca_create_order` — 跟单参数**：新增可选参数 `trackingMode`（sync/async）和 `profitSharingRatio`（0/0.1/0.2/0.3），用于带单交易场景。
+- **5 个新 DCA CLI 命令**（仅 CLI，无 MCP 工具）：`margin-add`、`margin-reduce`、`set-tp`、`set-reinvest`、`manual-buy`。覆盖 5 个未作为 MCP 工具暴露的 DCA 管理端点。
+- **现货定投模块（`bot.recurring`）**：新子模块，支持现货定投（Spot Recurring Buy）策略。包含 6 个工具：`recurring_create_order`、`recurring_amend_order`、`recurring_stop_order`、`recurring_get_orders`、`recurring_get_order_details`、`recurring_get_sub_orders`。默认不加载——通过 `--modules bot.recurring`、`--modules bot.all` 或 `--modules all` 启用。CLI 命令：`okx bot recurring create|amend|stop|orders|details|sub-orders`。代码设计便于回滚——所有代码隔离在 `bot/recurring.ts`。
+
 - **`grid_create_order` — 6 个新可选参数**：`tpTriggerPx`、`slTriggerPx`、`algoClOrdId`（现货 + 合约），`tradeQuoteCcy`（仅现货），`tpRatio`、`slRatio`（仅合约）。工具 handler 现在区分现货/合约参数——仅现货参数在 `contract_grid` 下被忽略，反之亦然。
 - **14 个新网格 CLI 命令**（仅 CLI，无 MCP 工具）：`amend-basic-param`、`amend-order`、`close-position`、`cancel-close-order`、`instant-trigger`、`positions`、`withdraw-income`、`compute-margin-balance`、`margin-balance`、`adjust-investment`、`ai-param`、`min-investment`、`rsi-back-testing`、`max-quantity`。覆盖此前未实现的 15 个 OKX 网格交易 OpenAPI。其中 4 个为公开接口（无需 API Key）。
 - **`OkxRestClient.publicPost()` 方法**：新增公开 POST 请求方法（用于网格 `min-investment` API）。

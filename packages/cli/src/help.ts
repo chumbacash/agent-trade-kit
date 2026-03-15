@@ -517,7 +517,7 @@ const HELP_TREE: HelpTree = {
   },
 
   bot: {
-    description: "Trading bot strategies (grid, dca, twap)",
+    description: "Trading bot strategies (grid, dca, twap, recurring)",
     subgroups: {
       grid: {
         description: "Grid trading bot — create, monitor, and stop grid orders",
@@ -616,12 +616,32 @@ const HELP_TREE: HelpTree = {
             description: "List cycles or orders within a cycle of a Contract DCA bot",
           },
           create: {
-            usage: "okx bot dca create --instId <id> --lever <n> --direction <long|short>\n                 --initOrdAmt <n> --maxSafetyOrds <n> --tpPct <n>\n                 [--safetyOrdAmt <n>] [--pxSteps <n>] [--pxStepsMult <n>] [--volMult <n>]\n                 [--slPct <n>] [--slMode <limit|market>]\n                 [--allowReinvest <true|false>] [--triggerStrategy <instant|price|rsi>] [--triggerPx <price>]\n                 Note: safetyOrdAmt, pxSteps are required when maxSafetyOrds > 0; pxStepsMult, volMult are required when maxSafetyOrds > 1\n                 Note: slMode is required when slPct is set",
+            usage: "okx bot dca create --instId <id> --lever <n> --direction <long|short>\n                 --initOrdAmt <n> --maxSafetyOrds <n> --tpPct <n>\n                 [--safetyOrdAmt <n>] [--pxSteps <n>] [--pxStepsMult <n>] [--volMult <n>]\n                 [--slPct <n>] [--slMode <limit|market>]\n                 [--allowReinvest <true|false>] [--triggerStrategy <instant|price|rsi>] [--triggerPx <price>]\n                 [--triggerCond <cross_up|cross_down>] [--thold <n>] [--timePeriod <n>] [--timeframe <3m|5m|15m|30m|1H|4H|1D>]\n                 [--trackingMode <sync|async>] [--profitSharingRatio <0|0.1|0.2|0.3>]\n                 Note: safetyOrdAmt, pxSteps required when maxSafetyOrds > 0; pxStepsMult, volMult required when maxSafetyOrds > 1\n                 Note: slMode required when slPct is set; triggerCond, thold, timeframe required when triggerStrategy=rsi",
             description: "Create a new Contract DCA bot order",
           },
           stop: {
             usage: "okx bot dca stop --algoId <id>",
             description: "Stop a running Contract DCA bot order",
+          },
+          "margin-add": {
+            usage: "okx bot dca margin-add --algoId <id> --amt <n>",
+            description: "Add margin to a running DCA bot (CLI-only)",
+          },
+          "margin-reduce": {
+            usage: "okx bot dca margin-reduce --algoId <id> --amt <n>",
+            description: "Reduce margin from a running DCA bot (CLI-only)",
+          },
+          "set-tp": {
+            usage: "okx bot dca set-tp --algoId <id> --tpPrice <price>",
+            description: "Update take-profit price for a running DCA bot (CLI-only)",
+          },
+          "set-reinvest": {
+            usage: "okx bot dca set-reinvest --algoId <id> --allowReinvest <true|false>",
+            description: "Enable or disable reinvestment for a DCA bot (CLI-only)",
+          },
+          "manual-buy": {
+            usage: "okx bot dca manual-buy --algoId <id> --amt <n> --px <price>",
+            description: "Manually trigger a buy order within a DCA bot cycle (CLI-only)",
           },
         },
       },
@@ -643,6 +663,35 @@ const HELP_TREE: HelpTree = {
           cancel: {
             usage: "okx bot twap cancel --instId <id> --algoId <id> | --algoClOrdId <id>",
             description: "Cancel a running TWAP algo order",
+          },
+        },
+      },
+      recurring: {
+        description: "Spot Recurring Buy (定投) — periodic automatic purchases",
+        commands: {
+          orders: {
+            usage: "okx bot recurring orders [--algoId <id>] [--history]",
+            description: "List active or historical recurring buy orders",
+          },
+          details: {
+            usage: "okx bot recurring details --algoId <id>",
+            description: "Get details of a specific recurring buy order",
+          },
+          "sub-orders": {
+            usage: "okx bot recurring sub-orders --algoId <id>",
+            description: "List sub-orders (individual buy executions) of a recurring buy",
+          },
+          create: {
+            usage: "okx bot recurring create --stgyName <name> --recurringList '<json>'\n                      --period <hourly|daily|weekly|monthly> --recurringDay <n> --recurringTime <HH:mm> --timeZone <n>\n                      --amt <n> --investmentCcy <ccy> --tdMode <cross|cash>\n                      [--recurringHour <1|4|8|12>] [--algoClOrdId <id>]",
+            description: "Create a new recurring buy order",
+          },
+          amend: {
+            usage: "okx bot recurring amend --algoId <id> --stgyName <name>",
+            description: "Amend strategy name of a running recurring buy order",
+          },
+          stop: {
+            usage: "okx bot recurring stop --algoId <id>",
+            description: "Stop a running recurring buy order",
           },
         },
       },

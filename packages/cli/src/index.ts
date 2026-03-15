@@ -137,6 +137,12 @@ import {
   cmdTwapCancel,
   cmdTwapOrders,
   cmdTwapDetails,
+  cmdRecurringCreate,
+  cmdRecurringAmend,
+  cmdRecurringStop,
+  cmdRecurringOrders,
+  cmdRecurringDetails,
+  cmdRecurringSubOrders,
 } from "./commands/bot.js";
 import {
   cmdGridAmendBasicParam,
@@ -154,6 +160,13 @@ import {
   cmdGridRsiBackTesting,
   cmdGridMaxQuantity,
 } from "./commands/bot-grid-ext.js";
+import {
+  cmdDcaMarginAdd,
+  cmdDcaMarginReduce,
+  cmdDcaSetTakeProfit,
+  cmdDcaSetReinvestment,
+  cmdDcaManualBuy,
+} from "./commands/bot-dca-ext.js";
 import {
   cmdOnchainEarnOffers,
   cmdOnchainEarnPurchase,
@@ -921,6 +934,7 @@ export function handleBotGridCommand(
 
 export function handleBotDcaCommand(
   run: ToolRunner,
+  client: OkxRestClient,
   subAction: string,
   v: CliValues,
   json: boolean,
@@ -948,10 +962,30 @@ export function handleBotDcaCommand(
       allowReinvest: v.allowReinvest,
       triggerStrategy: v.triggerStrategy,
       triggerPx: v.triggerPx,
+      triggerCond: v.triggerCond,
+      thold: v.thold,
+      timePeriod: v.timePeriod,
+      timeframe: v.timeframe,
+      trackingMode: v.trackingMode,
+      profitSharingRatio: v.profitSharingRatio,
       json,
     });
   if (subAction === "stop")
     return cmdDcaStop(run, { algoId: v.algoId!, json });
+
+  // --- Extended commands (via OkxRestClient directly) ---
+  if (subAction === "margin-add")
+    return cmdDcaMarginAdd(client, { algoId: v.algoId!, amt: v.amt!, json });
+  if (subAction === "margin-reduce")
+    return cmdDcaMarginReduce(client, { algoId: v.algoId!, amt: v.amt!, json });
+  if (subAction === "set-tp")
+    return cmdDcaSetTakeProfit(client, { algoId: v.algoId!, tpPrice: v.tpPrice!, json });
+  if (subAction === "set-reinvest")
+    return cmdDcaSetReinvestment(client, { algoId: v.algoId!, allowReinvest: v.allowReinvest!, json });
+  if (subAction === "manual-buy") {
+    if (!v.px) throw new Error("--px <price> is required for manual-buy");
+    return cmdDcaManualBuy(client, { algoId: v.algoId!, amt: v.amt!, px: v.px, json });
+  }
 }
 
 export function handleBotTwapCommand(
@@ -987,6 +1021,44 @@ export function handleBotTwapCommand(
     return cmdTwapCancel(run, { instId: v.instId!, algoId: v.algoId, algoClOrdId: v.algoClOrdId, json });
 }
 
+// ROLLBACK NOTE: Delete handleBotRecurringCommand to remove Recurring Buy CLI support.
+export function handleBotRecurringCommand(
+  run: ToolRunner,
+  subAction: string,
+  v: CliValues,
+  json: boolean,
+): Promise<void> | void {
+  if (subAction === "orders")
+    return cmdRecurringOrders(run, { algoId: v.algoId, history: v.history ?? false, json });
+  if (subAction === "details")
+    return cmdRecurringDetails(run, { algoId: v.algoId!, json });
+  if (subAction === "sub-orders")
+    return cmdRecurringSubOrders(run, { algoId: v.algoId!, json });
+  if (subAction === "create")
+    return cmdRecurringCreate(run, {
+      stgyName: v.stgyName!,
+      recurringList: v.recurringList!,
+      period: v.period!,
+      recurringDay: v.recurringDay,
+      recurringTime: v.recurringTime!,
+      recurringHour: v.recurringHour,
+      timeZone: v.timeZone!,
+      amt: v.amt!,
+      investmentCcy: v.investmentCcy!,
+      tdMode: v.tdMode!,
+      algoClOrdId: v.algoClOrdId,
+      json,
+    });
+  if (subAction === "amend")
+    return cmdRecurringAmend(run, {
+      algoId: v.algoId!,
+      stgyName: v.stgyName!,
+      json,
+    });
+  if (subAction === "stop")
+    return cmdRecurringStop(run, { algoId: v.algoId!, json });
+}
+
 export function handleBotCommand(
   run: ToolRunner,
   client: OkxRestClient,
@@ -996,8 +1068,9 @@ export function handleBotCommand(
   json: boolean
 ): Promise<void> | void {
   if (action === "grid") return handleBotGridCommand(run, client, v, rest, json);
-  if (action === "dca") return handleBotDcaCommand(run, rest[0], v, json);
+  if (action === "dca") return handleBotDcaCommand(run, client, rest[0], v, json);
   if (action === "twap") return handleBotTwapCommand(run, rest[0], v, json);
+  if (action === "recurring") return handleBotRecurringCommand(run, rest[0], v, json);
 }
 
 export function handleEarnCommand(
