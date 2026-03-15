@@ -2282,16 +2282,17 @@ describe("dca_create_order", () => {
     assert.equal((getLastCall()?.params as Record<string, unknown>).direction, "short");
   });
 
-  it("passes slMode when provided", async () => {
+  it("passes slMode when provided with slPct", async () => {
     const { client, getLastCall } = makeMockClient();
     await tool.handler({
       instId: "BTC-USDT-SWAP",
       lever: "3", direction: "long",
       initOrdAmt: "100", safetyOrdAmt: "50", maxSafetyOrds: "3",
       pxSteps: "0.03", pxStepsMult: "1", volMult: "1", tpPct: "0.02",
-      slMode: "limit",
+      slPct: "0.05", slMode: "limit",
     }, makeContext(client));
     assert.equal((getLastCall()?.params as Record<string, unknown>).slMode, "limit");
+    assert.equal((getLastCall()?.params as Record<string, unknown>).slPct, "0.05");
   });
 
   it("passes allowReinvest when provided", async () => {
@@ -2406,6 +2407,97 @@ describe("dca_create_order", () => {
     assert.equal(params.slMode, undefined);
   });
 
+  it("throws when slPct is set but slMode is missing", async () => {
+    const { client } = makeMockClient();
+    await assert.rejects(
+      () => tool.handler({
+        instId: "BTC-USDT-SWAP",
+        lever: "3", direction: "long",
+        initOrdAmt: "100", safetyOrdAmt: "50", maxSafetyOrds: "3",
+        pxSteps: "0.03", pxStepsMult: "1", volMult: "1", tpPct: "0.02",
+        slPct: "0.05",
+      }, makeContext(client)),
+      { message: /slMode is required when slPct is set/ },
+    );
+  });
+
+  it("throws when slMode is set but slPct is missing", async () => {
+    const { client } = makeMockClient();
+    await assert.rejects(
+      () => tool.handler({
+        instId: "BTC-USDT-SWAP",
+        lever: "3", direction: "long",
+        initOrdAmt: "100", safetyOrdAmt: "50", maxSafetyOrds: "3",
+        pxSteps: "0.03", pxStepsMult: "1", volMult: "1", tpPct: "0.02",
+        slMode: "market",
+      }, makeContext(client)),
+      { message: /slPct is required when slMode is set/ },
+    );
+  });
+
+  it("throws when maxSafetyOrds > 1 but pxStepsMult is missing", async () => {
+    const { client } = makeMockClient();
+    await assert.rejects(
+      () => tool.handler({
+        instId: "BTC-USDT-SWAP",
+        lever: "3", direction: "long",
+        initOrdAmt: "100", safetyOrdAmt: "50", maxSafetyOrds: "3",
+        pxSteps: "0.03", volMult: "1", tpPct: "0.02",
+      }, makeContext(client)),
+      { message: /pxStepsMult/ },
+    );
+  });
+
+  it("throws when maxSafetyOrds > 1 but volMult is missing", async () => {
+    const { client } = makeMockClient();
+    await assert.rejects(
+      () => tool.handler({
+        instId: "BTC-USDT-SWAP",
+        lever: "3", direction: "long",
+        initOrdAmt: "100", safetyOrdAmt: "50", maxSafetyOrds: "3",
+        pxSteps: "0.03", pxStepsMult: "1", tpPct: "0.02",
+      }, makeContext(client)),
+      { message: /volMult/ },
+    );
+  });
+
+  it("throws with all missing params when maxSafetyOrds > 1 and none provided", async () => {
+    const { client } = makeMockClient();
+    await assert.rejects(
+      () => tool.handler({
+        instId: "BTC-USDT-SWAP",
+        lever: "3", direction: "long",
+        initOrdAmt: "100", maxSafetyOrds: "2", tpPct: "0.02",
+      }, makeContext(client)),
+      { message: /safetyOrdAmt, pxSteps/ },
+    );
+  });
+
+  it("allows omitting pxStepsMult/volMult when maxSafetyOrds=1", async () => {
+    const { client, getLastCall } = makeMockClient();
+    await tool.handler({
+      instId: "BTC-USDT-SWAP",
+      lever: "3", direction: "long",
+      initOrdAmt: "100", safetyOrdAmt: "50", maxSafetyOrds: "1",
+      pxSteps: "0.03", tpPct: "0.02",
+    }, makeContext(client));
+    const params = getLastCall()?.params as Record<string, unknown>;
+    assert.equal(params.pxStepsMult, undefined);
+    assert.equal(params.volMult, undefined);
+  });
+
+  it("allows omitting safetyOrdAmt/pxSteps/pxStepsMult/volMult when maxSafetyOrds=0", async () => {
+    const { client, getLastCall } = makeMockClient();
+    await tool.handler({
+      instId: "BTC-USDT-SWAP",
+      lever: "3", direction: "long",
+      initOrdAmt: "100", maxSafetyOrds: "0", tpPct: "0.02",
+    }, makeContext(client));
+    const params = getLastCall()?.params as Record<string, unknown>;
+    assert.equal(params.pxStepsMult, undefined);
+    assert.equal(params.volMult, undefined);
+  });
+
   it("uses sourceTag from context config", async () => {
     const { client, getLastCall } = makeMockClient();
     await tool.handler({
@@ -2502,6 +2594,29 @@ describe("dca_get_sub_orders", () => {
     await tool.handler({ algoId: "123", cycleId: "c001" }, makeContext(client));
     assert.equal(getLastCall()?.endpoint, "/api/v5/tradingBot/dca/orders");
     assert.equal((getLastCall()?.params as Record<string, unknown>).cycleId, "c001");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Algo trade — swap_cancel_algo_orders
+// ---------------------------------------------------------------------------
+
+describe("swap_cancel_algo_orders", () => {
+  const tools = registerAlgoTradeTools();
+  const tool = tools.find((t) => t.name === "swap_cancel_algo_orders")!;
+
+  it("calls /trade/cancel-algos with [{instId, algoId}] array body", async () => {
+    const { client, getLastCall } = makeMockClient();
+    await tool.handler({ instId: "BTC-USDT-SWAP", algoId: "123456" }, makeContext(client));
+    assert.equal(getLastCall()?.endpoint, "/api/v5/trade/cancel-algos");
+    const body = getLastCall()?.params as unknown[];
+    assert.ok(Array.isArray(body), "body should be an array");
+    assert.equal(body.length, 1);
+    assert.deepStrictEqual(body[0], { instId: "BTC-USDT-SWAP", algoId: "123456" });
+  });
+
+  it("is a write tool", () => {
+    assert.equal(tool.isWrite, true);
   });
 });
 
