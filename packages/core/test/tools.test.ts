@@ -2077,7 +2077,7 @@ describe("dca_create_order", () => {
     );
   });
 
-  it("throws when maxSafetyOrds > 0 but pxStepsMult is missing", async () => {
+  it("throws when maxSafetyOrds > 1 but pxStepsMult is missing", async () => {
     const { client } = makeMockClient();
     await assert.rejects(
       () => tool.handler({
@@ -2090,7 +2090,7 @@ describe("dca_create_order", () => {
     );
   });
 
-  it("throws when maxSafetyOrds > 0 but volMult is missing", async () => {
+  it("throws when maxSafetyOrds > 1 but volMult is missing", async () => {
     const { client } = makeMockClient();
     await assert.rejects(
       () => tool.handler({
@@ -2103,7 +2103,7 @@ describe("dca_create_order", () => {
     );
   });
 
-  it("throws with all missing params when maxSafetyOrds > 0 and none provided", async () => {
+  it("throws with all missing params when maxSafetyOrds > 1 and none provided", async () => {
     const { client } = makeMockClient();
     await assert.rejects(
       () => tool.handler({
@@ -2111,8 +2111,21 @@ describe("dca_create_order", () => {
         lever: "3", direction: "long",
         initOrdAmt: "100", maxSafetyOrds: "2", tpPct: "0.02",
       }, makeContext(client)),
-      { message: /safetyOrdAmt, pxSteps, pxStepsMult, volMult/ },
+      { message: /safetyOrdAmt, pxSteps/ },
     );
+  });
+
+  it("allows omitting pxStepsMult/volMult when maxSafetyOrds=1", async () => {
+    const { client, getLastCall } = makeMockClient();
+    await tool.handler({
+      instId: "BTC-USDT-SWAP",
+      lever: "3", direction: "long",
+      initOrdAmt: "100", safetyOrdAmt: "50", maxSafetyOrds: "1",
+      pxSteps: "0.03", tpPct: "0.02",
+    }, makeContext(client));
+    const params = getLastCall()?.params as Record<string, unknown>;
+    assert.equal(params.pxStepsMult, undefined);
+    assert.equal(params.volMult, undefined);
   });
 
   it("allows omitting safetyOrdAmt/pxSteps/pxStepsMult/volMult when maxSafetyOrds=0", async () => {

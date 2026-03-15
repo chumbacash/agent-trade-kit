@@ -63,7 +63,8 @@ export function registerDcaTools(): ToolSpec[] {
       description:
         "Create a Contract DCA (Martingale) bot order with leverage on futures/swaps. " +
         "Required: instId, lever, direction, initOrdAmt, maxSafetyOrds, tpPct. " +
-        "Conditionally required (when maxSafetyOrds > 0): safetyOrdAmt, pxSteps, pxStepsMult, volMult. " +
+        "Conditionally required (when maxSafetyOrds > 0): safetyOrdAmt, pxSteps. " +
+        "Conditionally required (when maxSafetyOrds > 1): pxStepsMult, volMult. " +
         "Optional: slPct (requires slMode), slMode, allowReinvest, triggerStrategy, triggerPx. " +
         "[CAUTION] Executes real trades. Private endpoint. Rate limit: 20 req/2s.",
       isWrite: true,
@@ -78,8 +79,8 @@ export function registerDcaTools(): ToolSpec[] {
           tpPct: { type: "string", description: "Take-profit ratio, e.g. '0.03' = 3%" },
           safetyOrdAmt: { type: "string", description: "Safety order amount (USDT). Required when maxSafetyOrds > 0" },
           pxSteps: { type: "string", description: "Price drop % per safety order, e.g. '0.03' = 3%. Required when maxSafetyOrds > 0" },
-          pxStepsMult: { type: "string", description: "Price step multiplier, e.g. '1.2'. Required when maxSafetyOrds > 0" },
-          volMult: { type: "string", description: "Safety order size multiplier, e.g. '1.5'. Required when maxSafetyOrds > 0" },
+          pxStepsMult: { type: "string", description: "Price step multiplier, e.g. '1.2'. Required when maxSafetyOrds > 1" },
+          volMult: { type: "string", description: "Safety order size multiplier, e.g. '1.5'. Required when maxSafetyOrds > 1" },
           slPct: { type: "string", description: "Stop-loss ratio, e.g. '0.05' = 5%. Must be used together with slMode (optional)" },
           slMode: { type: "string", enum: ["limit", "market"], description: "Stop-loss price type: 'limit' or 'market'. Must be used together with slPct (optional)" },
           allowReinvest: { type: "string", enum: ["true", "false"], description: "Reinvest profit into the next cycle. Default 'true' (optional)" },
@@ -92,17 +93,25 @@ export function registerDcaTools(): ToolSpec[] {
         const args = asRecord(rawArgs);
         const instId = requireString(args, "instId");
 
-        // Validate conditionally required params when maxSafetyOrds > 0
+        // Validate conditionally required params
         const maxSafetyOrds = Number(requireString(args, "maxSafetyOrds"));
         if (maxSafetyOrds > 0) {
           const missing: string[] = [];
           if (!readString(args, "safetyOrdAmt")) missing.push("safetyOrdAmt");
           if (!readString(args, "pxSteps")) missing.push("pxSteps");
+          if (missing.length > 0) {
+            throw new Error(
+              `When maxSafetyOrds > 0, the following parameters are required: ${missing.join(", ")}`,
+            );
+          }
+        }
+        if (maxSafetyOrds > 1) {
+          const missing: string[] = [];
           if (!readString(args, "pxStepsMult")) missing.push("pxStepsMult");
           if (!readString(args, "volMult")) missing.push("volMult");
           if (missing.length > 0) {
             throw new Error(
-              `When maxSafetyOrds > 0, the following parameters are required: ${missing.join(", ")}`,
+              `When maxSafetyOrds > 1, the following parameters are required: ${missing.join(", ")}`,
             );
           }
         }

@@ -98,7 +98,7 @@ okx bot dca sub-orders --algoId <id> --cycleId <cycleId>
 okx bot dca create --instId BTC-USDT-SWAP --lever 3 --direction long \
   --initOrdAmt 100 --safetyOrdAmt 50 --maxSafetyOrds 3 \
   --pxSteps 0.03 --pxStepsMult 1 --volMult 1 --tpPct 0.03
-# Note: safetyOrdAmt, pxSteps, pxStepsMult, volMult are required when maxSafetyOrds > 0
+# Note: safetyOrdAmt, pxSteps are required when maxSafetyOrds > 0; pxStepsMult, volMult are required when maxSafetyOrds > 1
 
 # With optional params (stop-loss, trigger strategy)
 okx bot dca create --instId BTC-USDT-SWAP --lever 3 --direction long \
@@ -211,7 +211,7 @@ okx bot dca sub-orders --algoId <id> --cycleId <cycleId>
 okx bot dca create --instId BTC-USDT-SWAP --lever 3 --direction long \
   --initOrdAmt 100 --safetyOrdAmt 50 --maxSafetyOrds 3 \
   --pxSteps 0.03 --pxStepsMult 1 --volMult 1 --tpPct 0.03
-# 注意：当 maxSafetyOrds > 0 时，safetyOrdAmt、pxSteps、pxStepsMult、volMult 为必填
+# 注意：当 maxSafetyOrds > 0 时，safetyOrdAmt、pxSteps 为必填；当 maxSafetyOrds > 1 时，pxStepsMult、volMult 为必填
 
 # 带可选参数（止损、触发策略）
 okx bot dca create --instId BTC-USDT-SWAP --lever 3 --direction long \

@@ -64,7 +64,7 @@
 ### 修复
 
 - **合约 DCA `side`/`direction` 参数错误**（严重）：MCP schema 使用 `side`（`buy`/`sell`），但 API 要求 `direction`（`long`/`short`）。已移除 `side` 字段，直接使用 `direction`。此前做空仓位无法正确创建。
-- **合约 DCA `safetyOrdAmt`、`pxSteps`、`pxStepsMult`、`volMult` 条件必填**：当 `maxSafetyOrds > 0` 时这 4 个参数为业务必填（缺省返回 400），当 `maxSafetyOrds = 0` 时为可选。现在 schema 中标记为可选，描述中注明条件必填要求。
+- **合约 DCA `safetyOrdAmt`、`pxSteps`、`pxStepsMult`、`volMult` 条件必填**：`safetyOrdAmt` 和 `pxSteps` 在 `maxSafetyOrds > 0` 时必填；`pxStepsMult` 和 `volMult` 在 `maxSafetyOrds > 1` 时必填。现在 schema 中标记为可选，描述中注明条件必填要求。
 - **合约子订单发送不支持的分页参数**：合约 DCA 按周期查询订单时发送了 `after`/`before` 参数，但 API 仅支持 `limit`。已从该路径移除 `after`/`before`。
 
 ---

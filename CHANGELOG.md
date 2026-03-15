@@ -64,7 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Contract DCA `side`/`direction` mismatch** (critical): MCP schema used `side` (`buy`/`sell`) but API requires `direction` (`long`/`short`). The `side` field was removed; `direction` is now used directly. Previously, short positions could not be created correctly.
-- **Contract DCA `safetyOrdAmt`, `pxSteps`, `pxStepsMult`, `volMult` conditionally required**: These 4 parameters are business-required when `maxSafetyOrds > 0` (API returns 400 if omitted), but API-optional when `maxSafetyOrds = 0`. They are now schema-optional with descriptions noting the conditional requirement.
+- **Contract DCA `safetyOrdAmt`, `pxSteps`, `pxStepsMult`, `volMult` conditionally required**: `safetyOrdAmt` and `pxSteps` are required when `maxSafetyOrds > 0`; `pxStepsMult` and `volMult` are required when `maxSafetyOrds > 1`. They are now schema-optional with descriptions noting the conditional requirement.
 - **Contract sub-orders sent unsupported pagination**: contract DCA orders-by-cycle path sent `after`/`before` params, but the API only supports `limit`. Removed `after`/`before` from this path.
 
 ---
