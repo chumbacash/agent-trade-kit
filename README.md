@@ -3,9 +3,9 @@
 [![CI](https://github.com/okx/agent-tradekit/actions/workflows/ci.yml/badge.svg)](https://github.com/okx/agent-tradekit/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/okx/agent-tradekit/branch/master/graph/badge.svg)](https://codecov.io/gh/okx/agent-tradekit)
 [![npm: mcp](https://img.shields.io/npm/v/okx-trade-mcp?label=okx-trade-mcp)](https://www.npmjs.com/package/okx-trade-mcp)
-[![npm downloads: mcp](https://img.shields.io/npm/dm/okx-trade-mcp?label=mcp+downloads)](https://www.npmjs.com/package/okx-trade-mcp)
+[![npm downloads: mcp](https://img.shields.io/npm/dt/okx-trade-mcp?label=mcp+total+downloads)](https://www.npmjs.com/package/okx-trade-mcp)
 [![npm: cli](https://img.shields.io/npm/v/okx-trade-cli?label=okx-trade-cli)](https://www.npmjs.com/package/okx-trade-cli)
-[![npm downloads: cli](https://img.shields.io/npm/dm/okx-trade-cli?label=cli+downloads)](https://www.npmjs.com/package/okx-trade-cli)
+[![npm downloads: cli](https://img.shields.io/npm/dt/okx-trade-cli?label=cli+total+downloads)](https://www.npmjs.com/package/okx-trade-cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 [English](README.md) | [中文](README.zh-CN.md)
@@ -29,7 +29,7 @@ It runs as a **local process** with your API keys stored only on your machine. N
 
 | Feature | Description |
 |---------|-------------|
-| **95 tools across 8 modules** | Full trading lifecycle: market data → orders → algo orders → account management → earn → trading bots |
+| **108 tools across 8 modules** | Full trading lifecycle: market data → orders → algo orders → account management → earn → trading bots |
 | **Algo orders built-in** | Conditional, OCO take-profit/stop-loss, trailing stop |
 | **Safety controls** | `--read-only` flag, per-module filtering, built-in rate limiter |
 | **Zero infrastructure** | Local stdio process, no server or database required |
@@ -40,13 +40,13 @@ It runs as a **local process** with your API keys stored only on your machine. N
 
 | Module | Tools | Description | Docs |
 |--------|-------|-------------|------|
-| `market` | 12 | Ticker, orderbook, candles (+history), index ticker, index candles, price limit, funding rate, mark price, open interest | [→](docs/modules/market.md) |
+| `market` | 13 | Ticker, orderbook, candles (+history), index ticker, index candles, price limit, funding rate, mark price, open interest, stock tokens | [→](docs/modules/market.md) |
 | `spot` | 13 | Place/cancel/amend orders, batch orders, fills (+archive), order history (+archive), conditional orders, OCO | [→](docs/modules/spot.md) |
 | `swap` | 17 | Perpetual trading, batch orders, positions, leverage, conditional orders, OCO, trailing stop | [→](docs/modules/swap.md) |
-| `futures` | 6 | Delivery contract trading, positions, fills, order history | [→](docs/modules/futures.md) |
+| `futures` | 18 | Delivery contract trading, positions, fills, order history, amend/close/leverage, batch orders, algo orders (TP/SL, OCO, trailing stop) | [→](docs/modules/futures.md) |
 | `option` | 10 | Options trading: place/cancel/amend/batch-cancel, order history, positions (with Greeks), fills, option chain, IV + Greeks | [→](docs/modules/option.md) |
 | `account` | 14 | Balance, bills (+archive), positions, positions history, fee rates, config, position mode, max withdrawal, max avail size, audit log | [→](docs/modules/account.md) |
-| `earn` | 13 | Simple Earn: balance, purchase, redeem, lending rate (7). On-chain staking/DeFi (6). Sub-modules: `earn.savings`, `earn.onchain`. **Requires explicit opt-in** — not included in `all`. | [→](docs/modules/earn.md) |
+| `earn` | 21 | Simple Earn: balance, purchase, redeem, lending rate (7). On-chain staking/DeFi (6). Dual Currency Deposit/双币赢 (8). Sub-modules: `earn.savings`, `earn.onchain`, `earn.dcd`. Included in `all`. | [→](docs/modules/earn.md) |
 | `bot` | 10 | Trading bots: Grid (5) and DCA (5). Sub-modules: `bot.grid`, `bot.dca` | [→](docs/modules/bot.md) |
 
 ---
@@ -81,8 +81,7 @@ okx-trade-mcp setup --client vscode          # writes .mcp.json in current direc
 okx-trade-mcp                                        # default: spot, swap, account
 okx-trade-mcp --modules market                       # market data only (no auth needed)
 okx-trade-mcp --modules spot,account                 # spot trading + account
-okx-trade-mcp --profile live --modules all           # all modules except earn (earn requires explicit opt-in)
-okx-trade-mcp --profile live --modules all,earn      # all modules including earn
+okx-trade-mcp --profile live --modules all           # all modules including earn
 okx-trade-mcp --read-only                            # query tools only, no writes
 ```
 
