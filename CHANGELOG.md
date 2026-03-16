@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.5-beta.1] - 2026-03-16
+
+### Changed
+
+- **Earn tool descriptions improved for better AI agent guidance**:
+  - `earn_get_savings_balance`: Added guidance to use `earn_get_lending_rate_history` (not `earn_get_lending_rate_summary`) when displaying market rates alongside balance.
+  - `earn_get_lending_history`: Clarified as "market lending rate history" to avoid confusion with Simple Earn lending records.
+  - `earn_get_lending_rate_summary`: Clarified this tool is for **coin lending market rates** (借币市场利率), NOT Simple Earn. Added description of returned fields (`avgRate`, `estRate`, `preRate`).
+  - `earn_get_lending_rate_history`: Clarified this is the correct tool for Simple Earn lending rates; added context for usage with savings balance display.
+  - `onchain_earn_get_offers`: Added instruction to always display `protocol` field and `earningData[].ccy` when showing offers to users.
+- **CLI earn help text updated**: Descriptions for `lending-history`, `rate-summary`, and `rate-history` sub-commands updated to match tool description changes.
+
+---
+
 ## [1.2.4] - 2026-03-15
 
 ### Added

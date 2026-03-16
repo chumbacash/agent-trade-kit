@@ -9,6 +9,20 @@
 
 ---
 
+## [1.2.5-beta.1] - 2026-03-16
+
+### 变更
+
+- **优化 earn 模块工具描述，提升 AI agent 使用准确性**：
+  - `earn_get_savings_balance`：新增提示，展示市场均利率时应调用 `earn_get_lending_rate_history`，而非 `earn_get_lending_rate_summary`。
+  - `earn_get_lending_history`：明确定位为"市场借贷利率历史"，避免与 Simple Earn 借出记录混淆。
+  - `earn_get_lending_rate_summary`：明确该工具查询的是**借币市场利率**（非 Simple Earn），补充返回字段说明（`avgRate`、`estRate`、`preRate`）。
+  - `earn_get_lending_rate_history`：明确为查询 Simple Earn 借贷利率的正确工具，补充与余额展示联动的使用场景说明。
+  - `onchain_earn_get_offers`：新增指引，展示产品时须显示协议名称（`protocol` 字段）和收益币种（`earningData[].ccy` 字段）。
+- **CLI earn 帮助文本更新**：`lending-history`、`rate-summary`、`rate-history` 子命令描述与工具变更同步更新。
+
+---
+
 ## [1.2.4] - 2026-03-15
 
 ### 新增
