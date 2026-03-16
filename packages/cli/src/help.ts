@@ -517,7 +517,7 @@ const HELP_TREE: HelpTree = {
   },
 
   bot: {
-    description: "Trading bot strategies (grid, dca, twap, recurring)",
+    description: "Trading bot strategies (grid, dca, twap [CLI-only], recurring)",
     subgroups: {
       grid: {
         description: "Grid trading bot — create, monitor, and stop grid orders",

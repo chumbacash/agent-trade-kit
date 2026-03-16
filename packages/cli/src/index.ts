@@ -133,10 +133,6 @@ import {
   cmdDcaOrders,
   cmdDcaDetails,
   cmdDcaSubOrders,
-  cmdTwapPlace,
-  cmdTwapCancel,
-  cmdTwapOrders,
-  cmdTwapDetails,
   cmdRecurringCreate,
   cmdRecurringAmend,
   cmdRecurringStop,
@@ -167,6 +163,12 @@ import {
   cmdDcaSetReinvestment,
   cmdDcaManualBuy,
 } from "./commands/bot-dca-ext.js";
+import {
+  cmdTwapPlace,
+  cmdTwapCancel,
+  cmdTwapOrders,
+  cmdTwapDetails,
+} from "./commands/bot-twap-ext.js";
 import {
   cmdOnchainEarnOffers,
   cmdOnchainEarnPurchase,
@@ -989,17 +991,17 @@ export function handleBotDcaCommand(
 }
 
 export function handleBotTwapCommand(
-  run: ToolRunner,
+  client: OkxRestClient,
   subAction: string,
   v: CliValues,
   json: boolean,
 ): Promise<void> | void {
   if (subAction === "orders")
-    return cmdTwapOrders(run, { history: v.history ?? false, instId: v.instId, instType: v.instType, state: v.state, json });
+    return cmdTwapOrders(client, { history: v.history ?? false, instId: v.instId, instType: v.instType, state: v.state, json });
   if (subAction === "details")
-    return cmdTwapDetails(run, { algoId: v.algoId, algoClOrdId: v.algoClOrdId, json });
+    return cmdTwapDetails(client, { algoId: v.algoId, algoClOrdId: v.algoClOrdId, json });
   if (subAction === "place")
-    return cmdTwapPlace(run, {
+    return cmdTwapPlace(client, {
       instId: v.instId!,
       tdMode: v.tdMode!,
       side: v.side!,
@@ -1018,7 +1020,7 @@ export function handleBotTwapCommand(
       json,
     });
   if (subAction === "cancel")
-    return cmdTwapCancel(run, { instId: v.instId!, algoId: v.algoId, algoClOrdId: v.algoClOrdId, json });
+    return cmdTwapCancel(client, { instId: v.instId!, algoId: v.algoId, algoClOrdId: v.algoClOrdId, json });
 }
 
 // ROLLBACK NOTE: Delete handleBotRecurringCommand to remove Recurring Buy CLI support.
@@ -1070,7 +1072,7 @@ export function handleBotCommand(
 ): Promise<void> | void {
   if (action === "grid") return handleBotGridCommand(run, client, v, rest, json);
   if (action === "dca") return handleBotDcaCommand(run, client, rest[0], v, json);
-  if (action === "twap") return handleBotTwapCommand(run, rest[0], v, json);
+  if (action === "twap") return handleBotTwapCommand(client, rest[0], v, json);
   if (action === "recurring") return handleBotRecurringCommand(run, rest[0], v, json);
 }
 

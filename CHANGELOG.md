@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Core exports**: `privateRateLimit`, `publicRateLimit`, `compactObject`, `normalizeResponse` are now exported from `@agent-tradekit/core` for use by CLI direct-client commands.
 - **7 new futures core tools** for delivery contract (Phase 1 feature parity with swap): `futures_amend_order`, `futures_close_position`, `futures_set_leverage`, `futures_get_leverage`, `futures_batch_orders`, `futures_batch_amend`, `futures_batch_cancel`. These use futures-specific tool names (`futures_*`) instead of reusing swap tools, giving futures its own dedicated API surface. ([#71](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/71))
 - **5 new futures algo tools** (`registerFuturesAlgoTools`): `futures_place_algo_order`, `futures_place_move_stop_order`, `futures_amend_algo_order`, `futures_cancel_algo_orders`, `futures_get_algo_orders`. These are analogues of the swap algo tools but use `instType: "FUTURES"` and are registered under the `futures` module. ([#71](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/71))
-- **TWAP bot module (`bot.twap`)**: New sub-module for Time-Weighted Average Price strategy orders. Includes 4 tools: `twap_place_order`, `twap_cancel_order`, `twap_get_orders`, `twap_get_order_details`. Not loaded by default — enable with `--modules bot.twap`, `--modules bot.all`, or `--modules all`. CLI commands: `okx bot twap place|cancel|orders|details`.
+- **TWAP CLI commands** (CLI-only, no MCP tool): `place`, `cancel`, `orders`, `details`. These 4 commands cover TWAP (Time-Weighted Average Price) strategy orders via direct OKX REST API calls. CLI commands: `okx bot twap place|cancel|orders|details`.
 
 ### Fixed
 
