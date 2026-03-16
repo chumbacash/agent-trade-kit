@@ -59,7 +59,6 @@ export const MODULES = [
   "futures",
   "option",
   "account",
-  "copytrading",
   ...EARN_SUB_MODULE_IDS,
   ...BOT_SUB_MODULE_IDS,
 ] as const;
