@@ -11,12 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`docs/cli-reference.md` — recurring buy example naming**: Renamed `stgyName` from `"BTC+ETH DCA"` to `"BTC+ETH Recurring Buy"` in the multi-asset recurring buy example to avoid confusion with DCA (Martingale) bots.
+
 ### Added
 
 - **`dca_create_order` — RSI trigger sub-parameters**: When `triggerStrategy='rsi'`, the tool now accepts `triggerCond` (cross_up/cross_down), `thold` (RSI threshold), `timePeriod` (default 14), and `timeframe` (3m/5m/15m/30m/1H/4H/1D). Validation ensures all required RSI params are present.
 - **`dca_create_order` — copy-trading params**: Added optional `trackingMode` (sync/async) and `profitSharingRatio` (0/0.1/0.2/0.3) for lead trader copy-trading scenarios.
 - **5 new DCA CLI commands** (CLI-only, no MCP tool): `margin-add`, `margin-reduce`, `set-tp`, `set-reinvest`, `manual-buy`. These cover 5 DCA management endpoints not exposed as MCP tools.
-- **Spot Recurring Buy module (`bot.recurring`)**: New sub-module for Spot Recurring Buy (定投) strategies. Includes 6 tools: `recurring_create_order`, `recurring_amend_order`, `recurring_stop_order`, `recurring_get_orders`, `recurring_get_order_details`, `recurring_get_sub_orders`. Not loaded by default — enable with `--modules bot.recurring`, `--modules bot.all`, or `--modules all`. CLI commands: `okx bot recurring create|amend|stop|orders|details|sub-orders`. Designed for easy rollback — all code is isolated in `bot/recurring.ts`.
+- **Spot Recurring Buy CLI commands** (CLI-only, no MCP tool): `create`, `amend`, `stop`, `orders`, `details`, `sub-orders`. These 6 commands cover Spot Recurring Buy (定投) strategies via direct OKX REST API calls. CLI commands: `okx bot recurring create|amend|stop|orders|details|sub-orders`.
 
 ### Added
 
@@ -26,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Core exports**: `privateRateLimit`, `publicRateLimit`, `compactObject`, `normalizeResponse` are now exported from `@agent-tradekit/core` for use by CLI direct-client commands.
 - **7 new futures core tools** for delivery contract (Phase 1 feature parity with swap): `futures_amend_order`, `futures_close_position`, `futures_set_leverage`, `futures_get_leverage`, `futures_batch_orders`, `futures_batch_amend`, `futures_batch_cancel`. These use futures-specific tool names (`futures_*`) instead of reusing swap tools, giving futures its own dedicated API surface. ([#71](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/71))
 - **5 new futures algo tools** (`registerFuturesAlgoTools`): `futures_place_algo_order`, `futures_place_move_stop_order`, `futures_amend_algo_order`, `futures_cancel_algo_orders`, `futures_get_algo_orders`. These are analogues of the swap algo tools but use `instType: "FUTURES"` and are registered under the `futures` module. ([#71](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/71))
-- **TWAP bot module (`bot.twap`)**: New sub-module for Time-Weighted Average Price strategy orders. Includes 4 tools: `twap_place_order`, `twap_cancel_order`, `twap_get_orders`, `twap_get_order_details`. Not loaded by default — enable with `--modules bot.twap`, `--modules bot.all`, or `--modules all`. CLI commands: `okx bot twap place|cancel|orders|details`.
+- **TWAP CLI commands** (CLI-only, no MCP tool): `place`, `cancel`, `orders`, `details`. These 4 commands cover TWAP (Time-Weighted Average Price) strategy orders via direct OKX REST API calls. CLI commands: `okx bot twap place|cancel|orders|details`.
 
 ### Fixed
 

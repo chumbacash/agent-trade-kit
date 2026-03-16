@@ -10,11 +10,12 @@ Strategy trading bot tools with sub-module filtering. Requires API key with **Re
 |------------|-------|-------------|
 | `bot.grid` | 5 | Spot Grid, Contract Grid, Moon Grid strategies |
 | `bot.dca` | 5 | Contract DCA (Martingale) strategies |
-| `bot.twap` | 4 | TWAP (Time-Weighted Average Price) strategies |
 
 **Module aliases:**
 - `bot` → default bot sub-modules only (`bot.grid`)
-- `bot.all` → all bot sub-modules (`bot.grid` + `bot.dca` + `bot.twap`)
+- `bot.all` → all bot sub-modules (`bot.grid` + `bot.dca`)
+
+> **Note:** TWAP and Recurring Buy are available as **CLI-only** commands (`okx bot twap ...`, `okx bot recurring ...`). They are not exposed as MCP tools.
 
 ## Grid tools (bot.grid)
 
@@ -99,14 +100,16 @@ The following 5 commands are available only via the CLI. They call the OKX REST 
 | `bot dca set-reinvest` | Enable or disable reinvestment for a DCA bot |
 | `bot dca manual-buy` | Manually trigger a buy order within a DCA bot cycle |
 
-## TWAP tools (bot.twap)
+## TWAP CLI commands (CLI-only)
 
-| Tool | Description |
-|------|-------------|
-| `twap_place_order` | Place a TWAP algo order to split a large order over time |
-| `twap_cancel_order` | Cancel a running TWAP algo order |
-| `twap_get_orders` | List active or historical TWAP algo orders |
-| `twap_get_order_details` | Get details of a single TWAP algo order |
+The following 4 commands are available only via the CLI. They call the OKX REST API directly and are not exposed as MCP tools.
+
+| Command | Description |
+|---------|-------------|
+| `bot twap place` | Place a TWAP algo order to split a large order over time |
+| `bot twap cancel` | Cancel a running TWAP algo order |
+| `bot twap orders` | List active or historical TWAP algo orders |
+| `bot twap details` | Get details of a single TWAP algo order |
 
 ### TWAP parameters
 
@@ -130,9 +133,9 @@ The following 5 commands are available only via the CLI. They call the OKX REST 
 
 ### TWAP cancel / query notes
 
-- `twap_cancel_order` and `twap_get_order_details` accept either `algoId` or `algoClOrdId` (must pass one; `algoId` takes priority if both provided)
-- `twap_get_orders` supports `instType` filter (SPOT, SWAP, FUTURES, MARGIN)
-- For history queries: `state` and `algoId` are mutually exclusive — pass one or the other (defaults to `state=effective` if neither given)
+- `bot twap cancel` and `bot twap details` accept either `--algoId` or `--algoClOrdId` (must pass one; `algoId` takes priority if both provided)
+- `bot twap orders` supports `--instType` filter (SPOT, SWAP, FUTURES, MARGIN)
+- For history queries: `--state` and `--algoId` are mutually exclusive — pass one or the other (defaults to `state=effective` if neither given)
 - TWAP orders cannot be amended — cancel and re-create instead
 
 ## Recurring Buy CLI commands (CLI-only)
@@ -161,10 +164,10 @@ The following 6 commands are available only via the CLI. They call the OKX REST 
 - "Show my active DCA strategies"
 - "Stop DCA bot algoId 12345"
 
-**TWAP:**
-- "Place a TWAP buy order on BTC-USDT-SWAP: 100 contracts, 10 per slice, every 10 seconds, limit price 50000"
-- "Show my active TWAP orders"
-- "Cancel TWAP order algoId 12345"
+**TWAP (CLI-only):**
+- `okx bot twap place --instId BTC-USDT-SWAP --tdMode cross --side buy --sz 100 --szLimit 10 --pxLimit 50000 --timeInterval 10 --pxVar 0.005`
+- `okx bot twap orders`
+- `okx bot twap cancel --instId BTC-USDT-SWAP --algoId 12345`
 
 ## CLI
 
@@ -254,7 +257,7 @@ okx bot dca set-reinvest --algoId <id> --allowReinvest false
 okx bot dca manual-buy --algoId <id> --amt 100
 okx bot dca manual-buy --algoId <id> --amt 100 --px 45000
 
-# ── TWAP ─────────────────────────────────────────────────────────────────────
+# ── TWAP (CLI-only) ──────────────────────────────────────────────────────────
 okx bot twap orders
 okx bot twap orders --history
 okx bot twap orders --history --state canceled
@@ -315,11 +318,12 @@ okx bot recurring stop --algoId <id>
 |--------|--------|------|
 | `bot.grid` | 5 | 现货网格、合约网格、Moon Grid 策略 |
 | `bot.dca` | 5 | 合约 DCA（马丁格尔）策略 |
-| `bot.twap` | 4 | TWAP（时间加权平均价格）策略 |
 
 **模块别名：**
 - `bot` → 仅默认 bot 子模块（`bot.grid`）
-- `bot.all` → 所有 bot 子模块（`bot.grid` + `bot.dca` + `bot.twap`）
+- `bot.all` → 所有 bot 子模块（`bot.grid` + `bot.dca`）
+
+> **注意：** TWAP 和定投仅作为 **CLI 命令**（`okx bot twap ...`、`okx bot recurring ...`）提供，不作为 MCP 工具暴露。
 
 ## 网格工具 (bot.grid)
 
@@ -404,14 +408,16 @@ okx bot recurring stop --algoId <id>
 | `bot dca set-reinvest` | 开启或关闭 DCA 机器人利润再投入 |
 | `bot dca manual-buy` | 手动触发 DCA 机器人买入 |
 
-## TWAP 工具 (bot.twap)
+## TWAP CLI 命令（仅 CLI）
 
-| 工具 | 说明 |
+以下 4 个命令仅通过 CLI 使用，直接调用 OKX REST API，不作为 MCP 工具暴露。
+
+| 命令 | 说明 |
 |------|------|
-| `twap_place_order` | 下达 TWAP 算法委托，按时间分片执行大单 |
-| `twap_cancel_order` | 取消运行中的 TWAP 委托 |
-| `twap_get_orders` | 列出运行中或历史 TWAP 委托 |
-| `twap_get_order_details` | 查询单个 TWAP 委托详情 |
+| `bot twap place` | 下达 TWAP 算法委托，按时间分片执行大单 |
+| `bot twap cancel` | 取消运行中的 TWAP 委托 |
+| `bot twap orders` | 列出运行中或历史 TWAP 委托 |
+| `bot twap details` | 查询单个 TWAP 委托详情 |
 
 ### TWAP 参数
 
@@ -435,9 +441,9 @@ okx bot recurring stop --algoId <id>
 
 ### TWAP 撤单 / 查询说明
 
-- `twap_cancel_order` 和 `twap_get_order_details` 支持 `algoId` 或 `algoClOrdId`（必传其一，同时传以 `algoId` 为主）
-- `twap_get_orders` 支持 `instType` 过滤（SPOT、SWAP、FUTURES、MARGIN）
-- 历史查询：`state` 和 `algoId` 互斥——传其一即可（都不传时默认 `state=effective`）
+- `bot twap cancel` 和 `bot twap details` 支持 `--algoId` 或 `--algoClOrdId`（必传其一，同时传以 `algoId` 为主）
+- `bot twap orders` 支持 `--instType` 过滤（SPOT、SWAP、FUTURES、MARGIN）
+- 历史查询：`--state` 和 `--algoId` 互斥——传其一即可（都不传时默认 `state=effective`）
 - TWAP 委托不支持修改——需撤销后重新下单
 
 ## 定投 CLI 命令（仅 CLI）
@@ -466,10 +472,10 @@ okx bot recurring stop --algoId <id>
 - "显示我的 DCA 策略"
 - "停止 DCA 机器人 algoId 12345"
 
-**TWAP：**
-- "在 BTC-USDT-SWAP 下达 TWAP 买单：总量 100 张，每次 10 张，每 10 秒一次，限价 50000"
-- "显示我的 TWAP 委托"
-- "取消 TWAP 委托 algoId 12345"
+**TWAP（仅 CLI）：**
+- `okx bot twap place --instId BTC-USDT-SWAP --tdMode cross --side buy --sz 100 --szLimit 10 --pxLimit 50000 --timeInterval 10 --pxVar 0.005`
+- `okx bot twap orders`
+- `okx bot twap cancel --instId BTC-USDT-SWAP --algoId 12345`
 
 ## CLI
 
@@ -559,7 +565,7 @@ okx bot dca set-reinvest --algoId <id> --allowReinvest false
 okx bot dca manual-buy --algoId <id> --amt 100
 okx bot dca manual-buy --algoId <id> --amt 100 --px 45000
 
-# ── TWAP ─────────────────────────────────────────────────────────────────────
+# ── TWAP（仅 CLI）─────────────────────────────────────────────────────────────
 okx bot twap orders
 okx bot twap orders --history
 okx bot twap orders --history --state canceled

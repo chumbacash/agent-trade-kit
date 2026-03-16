@@ -124,9 +124,7 @@ export interface CliValues {
   szLimit?: string;
   pxLimit?: string;
   timeInterval?: string;
-  algoClOrdId?: string;
   tgtCcy?: string;
-  tradeQuoteCcy?: string;
   isTradeBorrowMode?: boolean;
   // onchain-earn
   productId?: string;
@@ -291,9 +289,7 @@ export const CLI_OPTIONS = {
   szLimit: { type: "string" },
   pxLimit: { type: "string" },
   timeInterval: { type: "string" },
-  algoClOrdId: { type: "string" },
   tgtCcy: { type: "string" },
-  tradeQuoteCcy: { type: "string" },
   isTradeBorrowMode: { type: "boolean", default: false },
   // onchain-earn
   productId: { type: "string" },
