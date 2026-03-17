@@ -364,7 +364,7 @@ function handleSpotAlgoCommand(
     });
 }
 
-function handleSpotCommand(
+export function handleSpotCommand(
   run: ToolRunner,
   action: string,
   rest: string[],
@@ -405,7 +405,7 @@ function handleSpotCommand(
       json,
     });
   if (action === "cancel")
-    return cmdSpotCancel(run, rest[0], v.ordId!, json);
+    return cmdSpotCancel(run, v.instId!, v.ordId!, json);
   if (action === "algo")
     return handleSpotAlgoCommand(run, rest[0], v, json);
   if (action === "batch")
@@ -521,7 +521,7 @@ export function handleSwapCommand(
       json,
     });
   if (action === "cancel")
-    return cmdSwapCancel(run, rest[0], v.ordId!, json);
+    return cmdSwapCancel(run, v.instId!, v.ordId!, json);
   if (action === "amend")
     return cmdSwapAmend(run, {
       instId: v.instId!,
@@ -703,19 +703,21 @@ function handleFuturesAlgoCommand(
     });
 }
 
-function handleFuturesCommand(
+function resolveFuturesOrdersStatus(v: CliValues): "archive" | "history" | "open" {
+  if (v.archive) return "archive";
+  if (v.history) return "history";
+  return "open";
+}
+
+export function handleFuturesCommand(
   run: ToolRunner,
   action: string,
   rest: string[],
   v: CliValues,
   json: boolean
 ): Promise<void> | void {
-  if (action === "orders") {
-    let status: "archive" | "history" | "open" = "open";
-    if (v.archive) status = "archive";
-    else if (v.history) status = "history";
-    return cmdFuturesOrders(run, { instId: v.instId, status, json });
-  }
+  if (action === "orders")
+    return cmdFuturesOrders(run, { instId: v.instId, status: resolveFuturesOrdersStatus(v), json });
   if (action === "positions") return cmdFuturesPositions(run, v.instId, json);
   if (action === "fills")
     return cmdFuturesFills(run, {
@@ -741,7 +743,7 @@ function handleFuturesCommand(
       json,
     });
   if (action === "cancel")
-    return cmdFuturesCancel(run, rest[0] ?? v.instId!, v.ordId!, json);
+    return cmdFuturesCancel(run, v.instId!, v.ordId!, json);
   if (action === "get")
     return cmdFuturesGet(run, { instId: rest[0] ?? v.instId!, ordId: v.ordId, json });
   if (action === "amend")
