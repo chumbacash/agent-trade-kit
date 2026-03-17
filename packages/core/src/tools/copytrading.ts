@@ -177,8 +177,9 @@ export function registerCopyTradeTools(): ToolSpec[] {
         const instType = readString(args, "instType") ?? INST_TYPE_SWAP;
         const copyInstIdType = readString(args, "copyInstIdType") ?? COPY_INST_ID_TYPE_COPY;
         // smart_copy: mgnMode is determined by instType (SWAP→copy, SPOT→isolated)
+        const smartMgnMode = instType === INST_TYPE_SPOT ? COPY_MGN_MODE_ISOLATED : COPY_MGN_MODE_COPY;
         const copyMgnMode = copyMode === COPY_MODE_SMART
-          ? (instType === INST_TYPE_SPOT ? COPY_MGN_MODE_ISOLATED : COPY_MGN_MODE_COPY)
+          ? smartMgnMode
           : (readString(args, "copyMgnMode") ?? COPY_MGN_MODE_COPY);
         const initialAmount = copyMode === COPY_MODE_SMART
           ? requireString(args, "initialAmount")
