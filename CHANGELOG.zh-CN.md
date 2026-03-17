@@ -9,6 +9,22 @@
 
 ---
 
+## [1.2.5-beta.4] - 2026-03-17
+
+### 移除
+
+- **`feat/add-more-bots-phase-1` 已回滚**：移除该分支引入的所有改动：
+  - `dca_create_order` RSI 触发子参数（`triggerCond`、`thold`、`timePeriod`、`timeframe`）及跟单参数（`trackingMode`、`profitSharingRatio`）
+  - 5 个 DCA CLI 命令：`margin-add`、`margin-reduce`、`set-tp`、`set-reinvest`、`manual-buy`
+  - 现货定投 CLI 命令：`okx bot recurring create|amend|stop|orders|details|sub-orders`
+  - `grid_create_order` 6 个新可选参数（`tpTriggerPx`、`slTriggerPx`、`algoClOrdId`、`tradeQuoteCcy`、`tpRatio`、`slRatio`）
+  - 14 个新网格 CLI 命令（`amend-basic-param`、`amend-order`、`close-position`、`cancel-close-order`、`instant-trigger`、`positions`、`withdraw-income`、`compute-margin-balance`、`margin-balance`、`adjust-investment`、`ai-param`、`min-investment`、`rsi-back-testing`、`max-quantity`）
+  - `OkxRestClient.publicPost()` 方法
+  - Core 导出：`privateRateLimit`、`publicRateLimit`、`compactObject`、`normalizeResponse`
+  - TWAP CLI 命令：`okx bot twap place|cancel|orders|details`
+
+---
+
 ## [1.2.5-beta.3] - 2026-03-17
 
 ### 移除

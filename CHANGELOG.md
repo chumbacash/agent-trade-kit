@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.5-beta.4] - 2026-03-17
+
+### Removed
+
+- **`feat/add-more-bots-phase-1` reverted**: Removed all changes introduced by this branch:
+  - `dca_create_order` RSI trigger sub-parameters (`triggerCond`, `thold`, `timePeriod`, `timeframe`) and copy-trading params (`trackingMode`, `profitSharingRatio`)
+  - 5 DCA CLI commands: `margin-add`, `margin-reduce`, `set-tp`, `set-reinvest`, `manual-buy`
+  - Spot Recurring Buy CLI commands: `okx bot recurring create|amend|stop|orders|details|sub-orders`
+  - `grid_create_order` 6 new optional parameters (`tpTriggerPx`, `slTriggerPx`, `algoClOrdId`, `tradeQuoteCcy`, `tpRatio`, `slRatio`)
+  - 14 new grid CLI commands (`amend-basic-param`, `amend-order`, `close-position`, `cancel-close-order`, `instant-trigger`, `positions`, `withdraw-income`, `compute-margin-balance`, `margin-balance`, `adjust-investment`, `ai-param`, `min-investment`, `rsi-back-testing`, `max-quantity`)
+  - `OkxRestClient.publicPost()` method
+  - Core exports: `privateRateLimit`, `publicRateLimit`, `compactObject`, `normalizeResponse`
+  - TWAP CLI commands: `okx bot twap place|cancel|orders|details`
+
+---
+
 ## [1.2.5-beta.3] - 2026-03-17
 
 ### Removed
