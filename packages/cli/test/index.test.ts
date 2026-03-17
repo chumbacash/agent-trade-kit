@@ -15,7 +15,9 @@ import {
   handleBotGridCommand,
   handleBotDcaCommand,
   handleBotCommand,
+  handleSpotCommand,
   handleSwapCommand,
+  handleFuturesCommand,
   handleEarnCommand,
 } from "../src/index.js";
 
@@ -883,5 +885,54 @@ describe("cmdDcdQuoteAndBuy output", () => {
       cmdDcdQuoteAndBuy(emptyRunner, { productId: "p", notionalSz: "1", notionalCcy: "BTC", json: false })
     );
     assert.ok(out.includes("No quote returned"));
+  });
+});
+
+// ---------------------------------------------------------------------------
+// spot/swap cancel — instId must come from --instId flag, not positional args
+// ---------------------------------------------------------------------------
+
+describe("spot cancel passes --instId to tool", () => {
+  it("uses v.instId, not rest[0]", async () => {
+    let capturedArgs: Record<string, unknown> = {};
+    const spy: ToolRunner = async (tool, args) => {
+      capturedArgs = args as Record<string, unknown>;
+      return { code: "0", msg: "", data: [{ ordId: "123", sCode: "0", sMsg: "" }] };
+    };
+    await captureStdout(() =>
+      handleSpotCommand(spy, "cancel", [], { instId: "ETH-USDT", ordId: "123" } as never, false)
+    );
+    assert.equal(capturedArgs["instId"], "ETH-USDT", "instId should come from --instId flag");
+    assert.equal(capturedArgs["ordId"], "123");
+  });
+});
+
+describe("swap cancel passes --instId to tool", () => {
+  it("uses v.instId, not rest[0]", async () => {
+    let capturedArgs: Record<string, unknown> = {};
+    const spy: ToolRunner = async (tool, args) => {
+      capturedArgs = args as Record<string, unknown>;
+      return { code: "0", msg: "", data: [{ ordId: "456", sCode: "0", sMsg: "" }] };
+    };
+    await captureStdout(() =>
+      handleSwapCommand(spy, "cancel", [], { instId: "BTC-USDT-SWAP", ordId: "456" } as never, false)
+    );
+    assert.equal(capturedArgs["instId"], "BTC-USDT-SWAP", "instId should come from --instId flag");
+    assert.equal(capturedArgs["ordId"], "456");
+  });
+});
+
+describe("futures cancel passes --instId to tool", () => {
+  it("uses v.instId, not rest[0]", async () => {
+    let capturedArgs: Record<string, unknown> = {};
+    const spy: ToolRunner = async (tool, args) => {
+      capturedArgs = args as Record<string, unknown>;
+      return { code: "0", msg: "", data: [{ ordId: "789", sCode: "0", sMsg: "" }] };
+    };
+    await captureStdout(() =>
+      handleFuturesCommand(spy, "cancel", [], { instId: "BTC-USD-250328", ordId: "789" } as never, false)
+    );
+    assert.equal(capturedArgs["instId"], "BTC-USD-250328", "instId should come from --instId flag");
+    assert.equal(capturedArgs["ordId"], "789");
   });
 });
