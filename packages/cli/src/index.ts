@@ -309,7 +309,7 @@ function handleAccountCommand(
   return handleAccountWriteCommand(run, action, v, json);
 }
 
-function handleSpotAlgoCommand(
+export function handleSpotAlgoCommand(
   run: ToolRunner,
   subAction: string,
   v: CliValues,
@@ -412,7 +412,7 @@ export function handleSpotCommand(
     return cmdSpotBatch(run, { action: v.action!, orders: v.orders!, json });
 }
 
-function handleSwapAlgoCommand(
+export function handleSwapAlgoCommand(
   run: ToolRunner,
   subAction: string,
   v: CliValues,
@@ -545,7 +545,7 @@ export function handleSwapCommand(
     return cmdSwapBatch(run, { action: v.action!, orders: v.orders!, json });
 }
 
-function handleOptionAlgoCommand(
+export function handleOptionAlgoCommand(
   run: ToolRunner,
   subAction: string,
   v: CliValues,
@@ -588,7 +588,7 @@ function handleOptionAlgoCommand(
     });
 }
 
-function handleOptionCommand(
+export function handleOptionCommand(
   run: ToolRunner,
   action: string,
   rest: string[],
@@ -644,7 +644,7 @@ function handleOptionCommand(
     return handleOptionAlgoCommand(run, rest[0], v, json);
 }
 
-function handleFuturesAlgoCommand(
+export function handleFuturesAlgoCommand(
   run: ToolRunner,
   subAction: string,
   v: CliValues,
