@@ -301,30 +301,30 @@ describe("cmdDcaSubOrders", () => {
 // ---------------------------------------------------------------------------
 
 describe("cmdRecurringCreate", () => {
-  it("calls recurring_create_order with all params", async () => {
-    const { runner, getLastCall } = makeMockRunner();
+  it("calls /recurring/order-algo with all params", async () => {
+    const { client, getLastCall } = makeMockClient();
     await captureStdout(() =>
-      cmdRecurringCreate(runner, {
+      cmdRecurringCreate(client, {
         stgyName: "My DCA", recurringList: '[{"ccy":"BTC","ratio":"1"}]',
         period: "daily", recurringDay: "1", recurringTime: "08:00",
         timeZone: "8", amt: "100", investmentCcy: "USDT", tdMode: "cross",
         json: true,
       }),
     );
-    const p = getLastCall()!.params;
-    assert.equal(getLastCall()!.tool, "recurring_create_order");
-    assert.equal(p.stgyName, "My DCA");
-    assert.equal(p.recurringList, '[{"ccy":"BTC","ratio":"1"}]');
-    assert.equal(p.period, "daily");
-    assert.equal(p.recurringDay, "1");
-    assert.equal(p.amt, "100");
-    assert.equal(p.tdMode, "cross");
+    assert.equal(getLastCall()!.path, "/api/v5/tradingBot/recurring/order-algo");
+    assert.equal(getLastCall()!.method, "POST");
+    const body = getLastCall()!.body as Record<string, unknown>;
+    assert.equal(body.stgyName, "My DCA");
+    assert.equal(body.period, "daily");
+    assert.equal(body.recurringDay, "1");
+    assert.equal(body.amt, "100");
+    assert.equal(body.tdMode, "cross");
   });
 
   it("passes optional algoClOrdId", async () => {
-    const { runner, getLastCall } = makeMockRunner();
+    const { client, getLastCall } = makeMockClient();
     await captureStdout(() =>
-      cmdRecurringCreate(runner, {
+      cmdRecurringCreate(client, {
         stgyName: "My DCA", recurringList: '[{"ccy":"BTC","ratio":"1"}]',
         period: "daily", recurringDay: "1", recurringTime: "08:00",
         timeZone: "8", amt: "100", investmentCcy: "USDT", tdMode: "cross",
@@ -332,13 +332,14 @@ describe("cmdRecurringCreate", () => {
         json: true,
       }),
     );
-    assert.equal(getLastCall()!.params.algoClOrdId, "custom-id");
+    const body = getLastCall()!.body as Record<string, unknown>;
+    assert.equal(body.algoClOrdId, "custom-id");
   });
 
-  it("passes tradeQuoteCcy to recurring_create_order tool", async () => {
-    const { runner, getLastCall } = makeMockRunner();
+  it("passes tradeQuoteCcy", async () => {
+    const { client, getLastCall } = makeMockClient();
     await captureStdout(() =>
-      cmdRecurringCreate(runner, {
+      cmdRecurringCreate(client, {
         stgyName: "My DCA", recurringList: '[{"ccy":"BTC","ratio":"1"}]',
         period: "daily", recurringTime: "9",
         timeZone: "8", amt: "100", investmentCcy: "USDT", tdMode: "cash",
@@ -346,71 +347,104 @@ describe("cmdRecurringCreate", () => {
         json: true,
       }),
     );
-    assert.equal(getLastCall()!.params.tradeQuoteCcy, "USDT");
+    const body = getLastCall()!.body as Record<string, unknown>;
+    assert.equal(body.tradeQuoteCcy, "USDT");
+  });
+
+  it("throws on invalid recurringList JSON", async () => {
+    const { client } = makeMockClient();
+    await assert.rejects(
+      () => cmdRecurringCreate(client, {
+        stgyName: "X", recurringList: "not-json",
+        period: "daily", recurringTime: "9",
+        timeZone: "8", amt: "100", investmentCcy: "USDT", tdMode: "cash",
+        json: true,
+      }),
+      /valid JSON array/,
+    );
+  });
+
+  it("throws when period=hourly without recurringHour", async () => {
+    const { client } = makeMockClient();
+    await assert.rejects(
+      () => cmdRecurringCreate(client, {
+        stgyName: "X", recurringList: '[{"ccy":"BTC","ratio":"1"}]',
+        period: "hourly", recurringTime: "9",
+        timeZone: "8", amt: "100", investmentCcy: "USDT", tdMode: "cash",
+        json: true,
+      }),
+      /recurringHour is required/,
+    );
   });
 });
 
 describe("cmdRecurringAmend", () => {
-  it("calls recurring_amend_order with algoId and stgyName only", async () => {
-    const { runner, getLastCall } = makeMockRunner();
+  it("calls /recurring/amend-order-algo with algoId and stgyName", async () => {
+    const { client, getLastCall } = makeMockClient();
     await captureStdout(() =>
-      cmdRecurringAmend(runner, { algoId: "456", stgyName: "New Name", json: true }),
+      cmdRecurringAmend(client, { algoId: "456", stgyName: "New Name", json: true }),
     );
-    assert.equal(getLastCall()!.tool, "recurring_amend_order");
-    assert.deepEqual(getLastCall()!.params, { algoId: "456", stgyName: "New Name" });
+    assert.equal(getLastCall()!.path, "/api/v5/tradingBot/recurring/amend-order-algo");
+    const body = getLastCall()!.body as Record<string, unknown>;
+    assert.equal(body.algoId, "456");
+    assert.equal(body.stgyName, "New Name");
   });
 });
 
 describe("cmdRecurringStop", () => {
-  it("calls recurring_stop_order with algoId", async () => {
-    const { runner, getLastCall } = makeMockRunner();
-    await captureStdout(() => cmdRecurringStop(runner, { algoId: "789", json: true }));
-    assert.equal(getLastCall()!.tool, "recurring_stop_order");
-    assert.equal(getLastCall()!.params.algoId, "789");
+  it("calls /recurring/stop-order-algo with algoId array", async () => {
+    const { client, getLastCall } = makeMockClient();
+    await captureStdout(() => cmdRecurringStop(client, { algoId: "789", json: true }));
+    assert.equal(getLastCall()!.path, "/api/v5/tradingBot/recurring/stop-order-algo");
+    assert.equal(getLastCall()!.method, "POST");
+    const body = getLastCall()!.body as Record<string, unknown>[];
+    assert.ok(Array.isArray(body));
+    assert.equal((body[0] as Record<string, unknown>).algoId, "789");
   });
 });
 
 describe("cmdRecurringOrders", () => {
-  it("calls recurring_get_orders with status=active by default", async () => {
-    const { runner, getLastCall } = makeMockRunner([]);
-    await captureStdout(() => cmdRecurringOrders(runner, { history: false, json: true }));
-    assert.equal(getLastCall()!.tool, "recurring_get_orders");
-    assert.equal(getLastCall()!.params.status, "active");
+  it("calls /recurring/orders-algo-pending by default", async () => {
+    const { client, getLastCall } = makeMockClient([]);
+    await captureStdout(() => cmdRecurringOrders(client, { history: false, json: true }));
+    assert.equal(getLastCall()!.path, "/api/v5/tradingBot/recurring/orders-algo-pending");
   });
 
-  it("calls recurring_get_orders with status=history", async () => {
-    const { runner, getLastCall } = makeMockRunner([]);
-    await captureStdout(() => cmdRecurringOrders(runner, { history: true, json: true }));
-    assert.equal(getLastCall()!.params.status, "history");
+  it("calls /recurring/orders-algo-history when history=true", async () => {
+    const { client, getLastCall } = makeMockClient([]);
+    await captureStdout(() => cmdRecurringOrders(client, { history: true, json: true }));
+    assert.equal(getLastCall()!.path, "/api/v5/tradingBot/recurring/orders-algo-history");
   });
 });
 
 describe("cmdRecurringDetails", () => {
-  it("calls recurring_get_order_details with algoId", async () => {
-    const { runner, getLastCall } = makeMockRunner([{ algoId: "123", state: "running", cTime: "1700000000000" }]);
-    await captureStdout(() => cmdRecurringDetails(runner, { algoId: "123", json: true }));
-    assert.equal(getLastCall()!.tool, "recurring_get_order_details");
-    assert.equal(getLastCall()!.params.algoId, "123");
+  it("calls /recurring/orders-algo-details with algoId", async () => {
+    const { client, getLastCall } = makeMockClient([{ algoId: "123", state: "running", cTime: "1700000000000" }]);
+    await captureStdout(() => cmdRecurringDetails(client, { algoId: "123", json: true }));
+    assert.equal(getLastCall()!.path, "/api/v5/tradingBot/recurring/orders-algo-details");
+    const body = getLastCall()!.body as Record<string, unknown>;
+    assert.equal(body.algoId, "123");
   });
 
   it("displays 'not found' when no data", async () => {
-    const { runner } = makeMockRunner([]);
-    const out = await captureStdout(() => cmdRecurringDetails(runner, { algoId: "999", json: false }));
+    const { client } = makeMockClient([]);
+    const out = await captureStdout(() => cmdRecurringDetails(client, { algoId: "999", json: false }));
     assert.ok(out.includes("not found"));
   });
 });
 
 describe("cmdRecurringSubOrders", () => {
-  it("calls recurring_get_sub_orders with algoId", async () => {
-    const { runner, getLastCall } = makeMockRunner([]);
-    await captureStdout(() => cmdRecurringSubOrders(runner, { algoId: "123", json: true }));
-    assert.equal(getLastCall()!.tool, "recurring_get_sub_orders");
-    assert.equal(getLastCall()!.params.algoId, "123");
+  it("calls /recurring/sub-orders with algoId", async () => {
+    const { client, getLastCall } = makeMockClient([]);
+    await captureStdout(() => cmdRecurringSubOrders(client, { algoId: "123", json: true }));
+    assert.equal(getLastCall()!.path, "/api/v5/tradingBot/recurring/sub-orders");
+    const body = getLastCall()!.body as Record<string, unknown>;
+    assert.equal(body.algoId, "123");
   });
 
   it("displays 'No sub-orders' when empty", async () => {
-    const { runner } = makeMockRunner([]);
-    const out = await captureStdout(() => cmdRecurringSubOrders(runner, { algoId: "123", json: false }));
+    const { client } = makeMockClient([]);
+    const out = await captureStdout(() => cmdRecurringSubOrders(client, { algoId: "123", json: false }));
     assert.ok(out.includes("No sub-orders"));
   });
 });
