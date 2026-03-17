@@ -13,15 +13,15 @@
 
 ### 移除
 
-- **`feat/add-more-bots-phase-1` 已回滚**：移除该分支引入的所有改动：
+- **`feat/add-more-bots-phase-1` 已回滚**：移除该分支引入的所有改动，包含回滚带来的 bug 修复：
   - `dca_create_order` RSI 触发子参数（`triggerCond`、`thold`、`timePeriod`、`timeframe`）及跟单参数（`trackingMode`、`profitSharingRatio`）
   - 5 个 DCA CLI 命令：`margin-add`、`margin-reduce`、`set-tp`、`set-reinvest`、`manual-buy`
   - 现货定投 CLI 命令：`okx bot recurring create|amend|stop|orders|details|sub-orders`
   - `grid_create_order` 6 个新可选参数（`tpTriggerPx`、`slTriggerPx`、`algoClOrdId`、`tradeQuoteCcy`、`tpRatio`、`slRatio`）
   - 14 个新网格 CLI 命令（`amend-basic-param`、`amend-order`、`close-position`、`cancel-close-order`、`instant-trigger`、`positions`、`withdraw-income`、`compute-margin-balance`、`margin-balance`、`adjust-investment`、`ai-param`、`min-investment`、`rsi-back-testing`、`max-quantity`）
-  - `OkxRestClient.publicPost()` 方法
-  - Core 导出：`privateRateLimit`、`publicRateLimit`、`compactObject`、`normalizeResponse`
   - TWAP CLI 命令：`okx bot twap place|cancel|orders|details`
+  - *（回滚副作用）* **`swap_cancel_algo_orders` 输入格式恢复**：该分支曾将入参从 `{ orders: [{ algoId, instId }] }` 数组格式错误改为扁平 `{ instId, algoId }`；回滚后恢复正确格式。
+  - *（回滚副作用）* **`dca_create_order` `pxStepsMult`/`volMult` 阈值描述修正**：该分支曾将必填条件错误描述为 `maxSafetyOrds > 1`；回滚后恢复正确的 `> 0`。
 
 ---
 
