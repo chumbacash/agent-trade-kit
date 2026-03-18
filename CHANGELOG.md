@@ -9,6 +9,85 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.5] - 2026-03-18
+
+### Added
+
+- **`dcd_subscribe` tool** (`earn.dcd`): atomic DCD subscription that requests a quote and executes it in a single step, eliminating quote-expiry race conditions for MCP users. Accepts optional `minAnnualizedYield` (in percent) — if the actual quote yield falls below this threshold, the order is rejected before execution. Returns the trade result with a quote snapshot (`annualizedYield`, `absYield`). Not supported in demo mode.
+- **`dcd_redeem` tool** (`earn.dcd`): two-step early redemption designed for user confirmation before executing. First call (no `quoteId`): requests a redemption quote showing the early-exit cost. Second call (with `quoteId`): executes the redemption. If the quote has expired between the two calls, a fresh quote is automatically requested and executed atomically; response includes `autoRefreshedQuote: true`. Not supported in demo mode for the execute step.
+- **CLI `okx diagnose --mcp`**: New MCP server troubleshooting mode. Checks package versions, Node.js compatibility, MCP entry-point existence and executability, Claude Desktop `mcpServers` configuration, recent MCP log tail, module-load smoke test (`--version`), and a live stdio JSON-RPC handshake (5 s timeout). Zero external dependencies — uses Node.js built-ins only.
+- **`--output <file>` for `okx diagnose`**: Both the default and `--mcp` modes now accept `--output <path>` to save the diagnostic report to a file for sharing.
+- **`allToolSpecs()` exported from `@agent-tradekit/core`**: The function is now part of the public API, exposed for future external consumers that need to enumerate all registered tool specs.
+
+### Removed
+
+- **Low-level DCD split tools removed**: `dcd_request_quote`, `dcd_execute_quote`, `dcd_request_redeem_quote`, and `dcd_execute_redeem` have been removed. Use `dcd_subscribe` for subscribe flows and `dcd_redeem` for early redemption flows.
+
+### Fixed
+
+- **CLI `cancel` commands now support `--clOrdId`**: `okx spot/swap/futures cancel` previously required `--ordId` as a positional argument. Now accepts either `--ordId` or `--clOrdId` (client order ID); throws a clear error if neither is provided. Affects `spot_cancel_order`, `swap_cancel_order`, `futures_cancel_order`.
+- **CLI `spot/swap/futures cancel` was ignoring `--instId` flag**: `cmdSpotCancel`, `cmdSwapCancel`, and `cmdFuturesCancel` used the positional argument (`rest[0]`) as `instId` instead of the `--instId` flag value, causing the cancel to silently use the wrong instrument ID. Fixed to correctly pass `v.instId`.
+
+### Changed
+
+- **Tool descriptions optimized across all modules**: Removed "Private endpoint", "Public endpoint", and "Rate limit" labels from all tool description strings to reduce MCP schema token overhead. Shortened descriptions for earn, grid, DCA, swap/futures/option modules. `[CAUTION]` markers preserved.
+- **TWAP bot moved to CLI-only**: `bot.twap` MCP tools removed; TWAP functionality remains available via `okx bot twap` CLI commands.
+- **`sanitize()` utility**: Masks UUIDs, long hex strings (≥32 chars), and Bearer tokens in diagnostic output before sharing.
+- **`diagnose-utils.ts`** (internal): Shared `Report`, `ok`, `fail`, `section`, and `sanitize` helpers extracted from `diagnose.ts` to enable reuse by `diagnose-mcp.ts`.
+- **File-level comments added** to all tools modules (internal documentation).
+
+---
+
+## [1.2.5-beta.5] - 2026-03-17
+
+### Fixed
+
+- **CLI `cancel` commands now support `--clOrdId`**: `okx spot/swap/futures cancel` previously required `--ordId` as a positional argument. Now accepts either `--ordId` or `--clOrdId` (client order ID); throws a clear error if neither is provided. Affects `spot_cancel_order`, `swap_cancel_order`, `futures_cancel_order`.
+
+---
+
+## [1.2.5-beta.4] - 2026-03-17
+
+### Removed
+
+- **`feat/add-more-bots-phase-1` reverted**: Removed all changes introduced by this branch, including bug fixes that are a side effect of the revert:
+  - `dca_create_order` RSI trigger sub-parameters (`triggerCond`, `thold`, `timePeriod`, `timeframe`) and copy-trading params (`trackingMode`, `profitSharingRatio`)
+  - 5 DCA CLI commands: `margin-add`, `margin-reduce`, `set-tp`, `set-reinvest`, `manual-buy`
+  - Spot Recurring Buy CLI commands: `okx bot recurring create|amend|stop|orders|details|sub-orders`
+  - `grid_create_order` 6 new optional parameters (`tpTriggerPx`, `slTriggerPx`, `algoClOrdId`, `tradeQuoteCcy`, `tpRatio`, `slRatio`)
+  - 14 new grid CLI commands (`amend-basic-param`, `amend-order`, `close-position`, `cancel-close-order`, `instant-trigger`, `positions`, `withdraw-income`, `compute-margin-balance`, `margin-balance`, `adjust-investment`, `ai-param`, `min-investment`, `rsi-back-testing`, `max-quantity`)
+  - TWAP CLI commands: `okx bot twap place|cancel|orders|details`
+  - *(side effect)* **`swap_cancel_algo_orders` input format restored**: the branch had broken the input schema from `{ orders: [{ algoId, instId }] }` to flat `{ instId, algoId }`; revert restores correct format.
+  - *(side effect)* **`dca_create_order` `pxStepsMult`/`volMult` threshold corrected**: the branch had misdocumented the required threshold as `maxSafetyOrds > 1`; revert restores correct `> 0`.
+
+---
+
+## [1.2.5-beta.3] - 2026-03-17
+
+### Removed
+
+- **`copytrading` module reverted**: Removed the 5 CLI copy-trading commands (`traders`, `trader-detail`, `status`, `follow`, `unfollow`), the `copytrading` MCP tool, related documentation (`docs/cli-reference.md` copytrading section), and README copy-trading entries introduced in v1.2.5-beta.2.
+
+---
+
+## [1.2.5-beta.2] - 2026-03-17
+
+### Added
+
+- **`dcd_subscribe` tool** (`earn.dcd`): atomic DCD subscription that requests a quote and executes it in a single step, eliminating quote-expiry race conditions for MCP users. Accepts optional `minAnnualizedYield` (in percent) — if the actual quote yield falls below this threshold, the order is rejected before execution. Returns the trade result with a quote snapshot (`annualizedYield`, `absYield`). Not supported in demo mode.
+- **`dcd_redeem` tool** (`earn.dcd`): two-step early redemption designed for user confirmation before executing. First call (no `quoteId`): requests a redemption quote showing the early-exit cost. Second call (with `quoteId`): executes the redemption. If the quote has expired between the two calls, a fresh quote is automatically requested and executed atomically; response includes `autoRefreshedQuote: true`. Not supported in demo mode for the execute step.
+- **Removed low-level split DCD tools**: `dcd_request_quote`, `dcd_execute_quote`, `dcd_request_redeem_quote`, and `dcd_execute_redeem` have been removed. Use `dcd_subscribe` for subscribe flows and `dcd_redeem` for early redemption flows.
+
+### Changed
+
+- **CLI `okx diagnose --mcp`**: New MCP server troubleshooting mode. Checks package versions, Node.js compatibility, MCP entry-point existence and executability, Claude Desktop `mcpServers` configuration, recent MCP log tail, module-load smoke test (`--version`), and a live stdio JSON-RPC handshake (5 s timeout). Zero external dependencies — uses Node.js built-ins only.
+- **`--output <file>` for `okx diagnose`**: Both the default and `--mcp` modes now accept `--output <path>` to save the diagnostic report to a file for sharing.
+- **`diagnose-utils.ts`** (internal): Shared `Report`, `ok`, `fail`, `section`, and `sanitize` helpers extracted from `diagnose.ts` to enable reuse by `diagnose-mcp.ts`.
+- **`sanitize()` utility**: Masks UUIDs, long hex strings (≥32 chars), and Bearer tokens in diagnostic output before sharing.
+- **`allToolSpecs()` exported from `@agent-tradekit/core`**: The function is now part of the public API, exposed for future external consumers that need to enumerate all registered tool specs (e.g. third-party MCP clients, testing utilities). It was already used internally by `buildTools()` and `createToolRunner()`; this change makes the export public-facing for anticipated downstream use, not for use within `diagnose-mcp.ts`.
+
+---
+
 ## [1.2.4] - 2026-03-15
 
 ### Added
