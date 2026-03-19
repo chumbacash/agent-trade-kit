@@ -241,8 +241,8 @@ tokens ≈ 80(基础) + 15 × 参数数量 + description字符数 / 4
 
 ```
 总预算: 25,000 tokens
-当前占用: ~21,600 tokens
-剩余: ~3,400 tokens
+当前占用: ~18,500 tokens (v1.2.5+)
+剩余: ~6,500 tokens
 ```
 
 如果新模块预计超出剩余额度，必须在方案中说明如何腾出空间。
@@ -275,7 +275,8 @@ Reviewer 审核 MCP 相关 MR 时，必须逐条检查以下项目。
 - [ ] 每个模块 tool 数量 ≤ 8（超出需说明理由）
 
 ### Token 预算
-- [ ] 新增 tool 的 token 影响已评估
+- [ ] Review comment 中报告变化前后的 tool 数量和 token 数量
+- [ ] 运行统计命令：`node -e "const{allToolSpecs}=require('./packages/core/dist/index.js');const t=allToolSpecs();let c=0;t.forEach(x=>c+=JSON.stringify({name:x.name,description:x.description,inputSchema:x.inputSchema}).length);console.log(t.length+' tools, ~'+Math.round(c/4)+' tokens')"`
 - [ ] 总量未超出 25,000 tokens 上限
 
 ### 对等性
