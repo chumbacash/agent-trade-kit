@@ -10,6 +10,9 @@ Follow [CONTRIBUTING.md](CONTRIBUTING.md) for branch workflow, testing, commit c
 - 制定方案（plan）时，**必须考虑模块的颗粒度**
 - 功能拆分要合理，避免单个文件/模块承担过多职责
 - 新增功能应放在合适的模块中，而非全部堆在一个文件里
+- **新增 MCP 模块/工具必须遵循 [MCP Design Guideline](docs/mcp-design-guideline.md)**
+- **新模块必须在 [Module Registry](docs/module-registry.md) 中注册且 approved 才能合入**
+- MCP tool 设计规范、token 预算、命名规则、reviewer checklist 见 guideline
 
 ## Multi-Site Support (MANDATORY)
 - 方案设计时**必须考虑多站点（multiple site）支持**
