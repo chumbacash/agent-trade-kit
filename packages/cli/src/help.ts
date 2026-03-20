@@ -1,5 +1,7 @@
+import { EOL } from "node:os";
 import { SUPPORTED_CLIENTS } from "./commands/client-setup.js";
 import { configFilePath } from "@agent-tradekit/core";
+import { output, outputLine, errorLine } from "./formatter.js";
 
 // ---------------------------------------------------------------------------
 // Help tree data structures
@@ -616,14 +618,14 @@ function printGlobalHelp(): void {
   }
 
   lines.push("", 'Run "okx <module> --help" for module details.', "");
-  process.stdout.write(lines.join("\n"));
+  output(lines.join(EOL));
 }
 
 /** Render module-level help (one path argument, e.g. "spot"). */
 function printModuleHelp(moduleName: string): void {
   const group = HELP_TREE[moduleName];
   if (!group) {
-    process.stderr.write(`Unknown module: ${moduleName}\n`);
+    errorLine(`Unknown module: ${moduleName}`);
     process.exitCode = 1;
     return;
   }
@@ -675,20 +677,20 @@ function printModuleHelp(moduleName: string): void {
   }
 
   lines.push("");
-  process.stdout.write(lines.join("\n"));
+  output(lines.join(EOL));
 }
 
 /** Render subgroup-level help (two path arguments, e.g. "bot", "grid"). */
 function printSubgroupHelp(moduleName: string, subgroupName: string): void {
   const group = HELP_TREE[moduleName];
   if (!group) {
-    process.stderr.write(`Unknown module: ${moduleName}\n`);
+    errorLine(`Unknown module: ${moduleName}`);
     process.exitCode = 1;
     return;
   }
   const subgroup = group.subgroups?.[subgroupName];
   if (!subgroup) {
-    process.stderr.write(`Unknown subgroup: ${moduleName} ${subgroupName}\n`);
+    errorLine(`Unknown subgroup: ${moduleName} ${subgroupName}`);
     process.exitCode = 1;
     return;
   }
@@ -707,7 +709,7 @@ function printSubgroupHelp(moduleName: string, subgroupName: string): void {
   }
 
   lines.push("");
-  process.stdout.write(lines.join("\n"));
+  output(lines.join(EOL));
 }
 
 /** Append a formatted command list to the lines array. */

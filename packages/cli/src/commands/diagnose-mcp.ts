@@ -11,6 +11,7 @@ import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { getConfigPath } from "@agent-tradekit/core";
 import { Report, ok, fail, section, sanitize, readCliVersion, writeReportIfRequested } from "./diagnose-utils.js";
+import { outputLine } from "../formatter.js";
 
 const _require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -238,7 +239,7 @@ export function checkMcpLogs(report: Report): void {
       report.add("mcp_log", logPath);
       if (lines.length > 0) {
         ok("last lines", `(${lines.length} shown)`);
-        for (const line of lines) process.stdout.write(`    ${sanitize(line)}\n`);
+        for (const line of lines) outputLine(`    ${sanitize(line)}`);
       } else {
         ok("last lines", "(empty log)");
       }
@@ -417,8 +418,9 @@ export interface DiagnoseMcpOptions {
 }
 
 export async function cmdDiagnoseMcp(options: DiagnoseMcpOptions = {}): Promise<void> {
-  process.stdout.write("\n  OKX MCP Server Diagnostics\n");
-  process.stdout.write("  \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n");
+  outputLine("");
+  outputLine("  OKX MCP Server Diagnostics");
+  outputLine("  \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500");
 
   const report = new Report();
   report.add("ts", new Date().toISOString());
@@ -446,11 +448,11 @@ export async function cmdDiagnoseMcp(options: DiagnoseMcpOptions = {}): Promise<
   const allPassed = nodePassed && entryPassed && cfgPassed && moduleLoadPassed && handshakePassed;
 
   // --- Result ---
-  process.stdout.write("\n");
+  outputLine("");
   if (allPassed) {
-    process.stdout.write("  Result: All checks passed \u2713\n");
+    outputLine("  Result: All checks passed \u2713");
   } else {
-    process.stdout.write("  Result: Some checks failed \u2717\n");
+    outputLine("  Result: Some checks failed \u2717");
     process.exitCode = 1;
   }
 

@@ -5,6 +5,7 @@ import tls from "node:tls";
 import type { OkxConfig } from "@agent-tradekit/core";
 import { OkxRestClient, readFullConfig, configFilePath } from "@agent-tradekit/core";
 import { Report, ok, fail, section, readCliVersion, writeReportIfRequested } from "./diagnose-utils.js";
+import { output, outputLine } from "../formatter.js";
 import { cmdDiagnoseMcp } from "./diagnose-mcp.js";
 
 const CLI_VERSION = readCliVersion();
@@ -368,11 +369,11 @@ async function runCliChecks(config: OkxConfig | undefined, profile: string, outp
   const allPassed = configFilePassed && envPassed && cfgPassed && netPassed && authPassed;
 
   // --- Result ---
-  process.stdout.write("\n");
+  outputLine("");
   if (allPassed) {
-    process.stdout.write("  Result: All checks passed \u2713\n");
+    outputLine("  Result: All checks passed \u2713");
   } else {
-    process.stdout.write("  Result: Some checks failed \u2717\n");
+    outputLine("  Result: Some checks failed \u2717");
     process.exitCode = 1;
   }
 

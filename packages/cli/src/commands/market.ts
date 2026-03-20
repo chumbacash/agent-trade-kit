@@ -1,6 +1,6 @@
 import type { ToolRunner } from "@agent-tradekit/core";
+import { outputLine, printJson, printKv, printTable } from "../formatter.js";
 import { resolveIndicatorCode } from "@agent-tradekit/core";
-import { printJson, printKv, printTable } from "../formatter.js";
 
 function getData(result: unknown): unknown {
   return (result as Record<string, unknown>).data;
@@ -44,7 +44,7 @@ export async function cmdMarketFundingRate(
     );
   } else {
     const r = items?.[0];
-    if (!r) { process.stdout.write("No data\n"); return; }
+    if (!r) { outputLine("No data"); return; }
     printKv({
       instId: r["instId"],
       fundingRate: r["fundingRate"],
@@ -134,7 +134,7 @@ export async function cmdMarketPriceLimit(
   const items = getData(result) as Record<string, unknown>[];
   if (json) return printJson(items);
   const r = items?.[0];
-  if (!r) { process.stdout.write("No data\n"); return; }
+  if (!r) { outputLine("No data"); return; }
   printKv({
     instId: r["instId"],
     buyLmt: r["buyLmt"],
@@ -168,7 +168,7 @@ export async function cmdMarketTicker(
   const result = await run("market_get_ticker", { instId });
   const items = getData(result) as Record<string, unknown>[];
   if (json) return printJson(items);
-  if (!items?.length) { process.stdout.write("No data\n"); return; }
+  if (!items?.length) { outputLine("No data"); return; }
   const t = items[0];
   printKv({
     instId: t["instId"],
@@ -210,13 +210,14 @@ export async function cmdMarketOrderbook(
   const data = getData(result);
   if (json) return printJson(data);
   const book = (data as Record<string, unknown>[])[0];
-  if (!book) { process.stdout.write("No data\n"); return; }
+  if (!book) { outputLine("No data"); return; }
   const asks = (book["asks"] as string[][]).slice(0, 5);
   const bids = (book["bids"] as string[][]).slice(0, 5);
-  process.stdout.write("Asks (price / size):\n");
-  for (const [p, s] of asks.reverse()) process.stdout.write(`  ${p.padStart(16)}  ${s}\n`);
-  process.stdout.write("Bids (price / size):\n");
-  for (const [p, s] of bids) process.stdout.write(`  ${p.padStart(16)}  ${s}\n`);
+  outputLine("Asks (price / size):");
+  asks.reverse();
+  for (const [p, s] of asks) outputLine(`  ${p.padStart(16)}  ${s}`);
+  outputLine("Bids (price / size):");
+  for (const [p, s] of bids) outputLine(`  ${p.padStart(16)}  ${s}`);
 }
 
 export async function cmdMarketCandles(

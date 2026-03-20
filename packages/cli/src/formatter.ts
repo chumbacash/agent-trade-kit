@@ -1,3 +1,96 @@
+import { EOL } from "node:os";
+
+// ---------------------------------------------------------------------------
+// Output interface — defines the contract for any IO sink.
+// The default implementation writes to process.stdout/stderr.
+// Swap it out in tests or to redirect to a file.
+// ---------------------------------------------------------------------------
+
+export interface CliOutput {
+  out(message: string): void;
+  err(message: string): void;
+}
+
+const stdioOutput: CliOutput = {
+  out: (message) => process.stdout.write(message),
+  err: (message) => process.stderr.write(message),
+};
+
+let activeOutput: CliOutput = stdioOutput;
+
+export function setOutput(impl: CliOutput): void {
+  activeOutput = impl;
+}
+
+export function resetOutput(): void {
+  activeOutput = stdioOutput;
+}
+
+// Emit a raw string to stdout. Use this when the message already
+// contains newlines (e.g. multi-line blocks, pre-formatted output).
+export function output(message: string): void {
+  activeOutput.out(message);
+}
+
+// Emit a raw string to stderr. Use this when the message already
+// contains newlines (e.g. multi-line blocks, pre-formatted output).
+export function errorOutput(message: string): void {
+  activeOutput.err(message);
+}
+
+// Emit a single line to stdout. Automatically appends the platform newline
+// (os.EOL) so callers never hard-code "\n".
+export function outputLine(message: string): void {
+  activeOutput.out(message + EOL);
+}
+
+// Emit a single line to stderr. Automatically appends the platform newline
+// (os.EOL) so callers never hard-code "\n".
+export function errorLine(message: string): void {
+  activeOutput.err(message + EOL);
+}
+
+// ---------------------------------------------------------------------------
+// Structured output helpers (always write to stdout)
+// ---------------------------------------------------------------------------
+
+export function printJson(data: unknown): void {
+  activeOutput.out(JSON.stringify(data, null, 2) + EOL);
+}
+
+export function printTable(rows: Record<string, unknown>[]): void {
+  if (rows.length === 0) {
+    activeOutput.out("(no data)" + EOL);
+    return;
+  }
+  const keys = Object.keys(rows[0]);
+  const widths = keys.map((k) =>
+    Math.max(k.length, ...rows.map((r) => String(r[k] ?? "").length)),
+  );
+  const header = keys.map((k, i) => k.padEnd(widths[i])).join("  ");
+  const divider = widths.map((w) => "-".repeat(w)).join("  ");
+  activeOutput.out(header + EOL + divider + EOL);
+  for (const row of rows) {
+    activeOutput.out(keys.map((k, i) => String(row[k] ?? "").padEnd(widths[i])).join("  ") + EOL);
+  }
+}
+
+export function printKv(obj: Record<string, unknown>, indent = 0): void {
+  const pad = " ".repeat(indent);
+  for (const [k, v] of Object.entries(obj)) {
+    if (v !== null && typeof v === "object" && !Array.isArray(v)) {
+      activeOutput.out(`${pad}${k}:${EOL}`);
+      printKv(v as Record<string, unknown>, indent + 2);
+    } else {
+      activeOutput.out(`${pad}${k.padEnd(20 - indent)}  ${v}${EOL}`);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Exit-code helper
+// ---------------------------------------------------------------------------
+
 // OKX write endpoints return HTTP 200 with top-level code="0" even when an
 // individual order is rejected (e.g. insufficient balance). The real per-item
 // result is in each element's `sCode` field ("0" = success, anything else =
@@ -16,41 +109,6 @@ export function markFailedIfSCodeError(data: unknown): void {
         process.exitCode = 1;
         return;
       }
-    }
-  }
-}
-
-export function printJson(data: unknown): void {
-  process.stdout.write(JSON.stringify(data, null, 2) + "\n");
-}
-
-export function printTable(rows: Record<string, unknown>[]): void {
-  if (rows.length === 0) {
-    process.stdout.write("(no data)\n");
-    return;
-  }
-  const keys = Object.keys(rows[0]);
-  const widths = keys.map((k) =>
-    Math.max(k.length, ...rows.map((r) => String(r[k] ?? "").length)),
-  );
-  const header = keys.map((k, i) => k.padEnd(widths[i])).join("  ");
-  const divider = widths.map((w) => "-".repeat(w)).join("  ");
-  process.stdout.write(header + "\n" + divider + "\n");
-  for (const row of rows) {
-    process.stdout.write(
-      keys.map((k, i) => String(row[k] ?? "").padEnd(widths[i])).join("  ") + "\n",
-    );
-  }
-}
-
-export function printKv(obj: Record<string, unknown>, indent = 0): void {
-  const pad = " ".repeat(indent);
-  for (const [k, v] of Object.entries(obj)) {
-    if (v !== null && typeof v === "object" && !Array.isArray(v)) {
-      process.stdout.write(`${pad}${k}:\n`);
-      printKv(v as Record<string, unknown>, indent + 2);
-    } else {
-      process.stdout.write(`${pad}${k.padEnd(20 - indent)}  ${v}\n`);
     }
   }
 }
