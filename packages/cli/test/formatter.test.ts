@@ -66,7 +66,6 @@ describe("setOutput / resetOutput", () => {
   let out: string[] = [];
 
   afterEach(() => resetOutput());
-import {markFailedIfSCodeError} from "../src/formatter.js";
 
   it("captures output after setOutput", () => {
     setOutput({ out: (m) => out.push(m), err: () => {} });
