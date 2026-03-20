@@ -2,7 +2,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
 import type { ToolRunner } from "@agent-tradekit/core";
-import { printJson, printKv, printTable } from "../formatter.js";
+import {outputLine, printJson, printKv, printTable} from "../formatter.js";
 
 function getData(result: unknown): unknown {
   return (result as Record<string, unknown>).data;
@@ -57,7 +57,7 @@ export async function cmdAccountPositions(
   const positions = getData(result) as Record<string, unknown>[];
   if (opts.json) return printJson(positions);
   const open = (positions ?? []).filter((p) => Number(p["pos"]) !== 0);
-  if (!open.length) { process.stdout.write("No open positions\n"); return; }
+  if (!open.length) { outputLine("No open positions"); return; }
   printTable(
     open.map((p) => ({
       instId: p["instId"],
@@ -100,7 +100,7 @@ export async function cmdAccountFees(
   const data = getData(result) as Record<string, unknown>[];
   if (opts.json) return printJson(data);
   const fee = data?.[0];
-  if (!fee) { process.stdout.write("No data\n"); return; }
+  if (!fee) { outputLine("No data"); return; }
   printKv({
     level: fee["level"],
     maker: fee["maker"],
@@ -119,7 +119,7 @@ export async function cmdAccountConfig(
   const data = getData(result) as Record<string, unknown>[];
   if (json) return printJson(data);
   const cfg = data?.[0];
-  if (!cfg) { process.stdout.write("No data\n"); return; }
+  if (!cfg) { outputLine("No data"); return; }
   printKv({
     uid: cfg["uid"],
     acctLv: cfg["acctLv"],
@@ -140,7 +140,7 @@ export async function cmdAccountSetPositionMode(
   const data = getData(result) as Record<string, unknown>[];
   if (json) return printJson(data);
   const r = data?.[0];
-  process.stdout.write(`Position mode set: ${r?.["posMode"]}\n`);
+  outputLine(`Position mode set: ${r?.["posMode"]}`);
 }
 
 export async function cmdAccountMaxSize(
@@ -151,7 +151,7 @@ export async function cmdAccountMaxSize(
   const data = getData(result) as Record<string, unknown>[];
   if (opts.json) return printJson(data);
   const r = data?.[0];
-  if (!r) { process.stdout.write("No data\n"); return; }
+  if (!r) { outputLine("No data"); return; }
   printKv({ instId: r["instId"], maxBuy: r["maxBuy"], maxSell: r["maxSell"] });
 }
 
@@ -163,7 +163,7 @@ export async function cmdAccountMaxAvailSize(
   const data = getData(result) as Record<string, unknown>[];
   if (opts.json) return printJson(data);
   const r = data?.[0];
-  if (!r) { process.stdout.write("No data\n"); return; }
+  if (!r) { outputLine("No data"); return; }
   printKv({ instId: r["instId"], availBuy: r["availBuy"], availSell: r["availSell"] });
 }
 
@@ -226,7 +226,7 @@ export async function cmdAccountTransfer(
   const data = getData(result) as Record<string, unknown>[];
   if (opts.json) return printJson(data);
   const r = data?.[0];
-  process.stdout.write(`Transfer: ${r?.["transId"]} (${r?.["ccy"]} ${r?.["amt"]})\n`);
+  outputLine(`Transfer: ${r?.["transId"]} (${r?.["ccy"]} ${r?.["amt"]})`);
 }
 
 interface LogEntry {
@@ -276,7 +276,7 @@ export function cmdAccountAudit(
   entries = entries.slice(0, limit);
 
   if (opts.json) return printJson(entries);
-  if (!entries.length) { process.stdout.write("No audit log entries\n"); return; }
+  if (!entries.length) { outputLine("No audit log entries"); return; }
   printTable(
     entries.map((e) => ({
       timestamp: e.timestamp,
