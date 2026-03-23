@@ -1,5 +1,5 @@
 import { createRequire } from "node:module";
-import { OkxRestClient, toToolErrorPayload, checkForUpdates, createToolRunner } from "@agent-tradekit/core";
+import { OkxRestClient, toToolErrorPayload, checkForUpdates, createToolRunner, allToolSpecs } from "@agent-tradekit/core";
 import type { ToolRunner } from "@agent-tradekit/core";
 
 declare const __GIT_HASH__: string;
@@ -26,6 +26,7 @@ import {
   cmdMarketPriceLimit,
   cmdMarketOpenInterest,
   cmdMarketStockTokens,
+  cmdMarketIndicator,
 } from "./commands/market.js";
 import {
   cmdAccountBalance,
@@ -154,6 +155,7 @@ import {
   cmdDcdOrders,
   cmdDcdQuoteAndBuy,
 } from "./commands/dcd.js";
+import { markFailedIfSCodeError, output, outputLine, errorOutput, errorLine, setOutput } from "./formatter.js";
 
 // Re-export for tests and external consumers
 export { printHelp } from "./help.js";
@@ -171,7 +173,7 @@ export function handleConfigCommand(action: string, rest: string[], json: boolea
   if (action === "add-profile") return cmdConfigAddProfile(rest, force ?? false);
   if (action === "list-profile") return cmdConfigListProfile();
   if (action === "use") return cmdConfigUse(rest[0]);
-  process.stderr.write(`Unknown config command: ${action}\n`);
+  errorLine(`Unknown config command: ${action}`);
   process.exitCode = 1;
 }
 
@@ -181,9 +183,8 @@ export function handleSetupCommand(v: CliValues): void {
     return;
   }
   if (!SUPPORTED_CLIENTS.includes(v.client as ClientId)) {
-    process.stderr.write(
-      `Unknown client: "${v.client}"\nSupported: ${SUPPORTED_CLIENTS.join(", ")}\n`
-    );
+    errorLine(`Unknown client: "${v.client}"`);
+    errorLine(`Supported: ${SUPPORTED_CLIENTS.join(", ")}`);
     process.exitCode = 1;
     return;
   }
@@ -214,6 +215,18 @@ export function handleMarketPublicCommand(
     return cmdMarketOpenInterest(run, { instType: v.instType!, instId: v.instId, json });
   if (action === "stock-tokens")
     return cmdMarketStockTokens(run, { instType: v.instType, instId: v.instId, json });
+  if (action === "indicator") {
+    const limit = v.limit !== undefined ? Number(v.limit) : undefined;
+    const backtestTime = v["backtest-time"] !== undefined ? Number(v["backtest-time"]) : undefined;
+    return cmdMarketIndicator(run, rest[0], rest[1], {
+      bar: v.bar,
+      params: v.params,
+      list: v.list,
+      limit,
+      backtestTime,
+      json,
+    });
+  }
 }
 
 export function handleMarketDataCommand(
@@ -397,6 +410,7 @@ export function handleSpotCommand(
       side: v.side!,
       ordType: v.ordType!,
       sz: v.sz!,
+      tgtCcy: v.tgtCcy,
       px: v.px,
       tpTriggerPx: v.tpTriggerPx,
       tpOrdPx: v.tpOrdPx,
@@ -526,6 +540,7 @@ export function handleSwapCommand(
       posSide: v.posSide,
       px: v.px,
       tdMode: v.tdMode ?? "cross",
+      tgtCcy: v.tgtCcy,
       tpTriggerPx: v.tpTriggerPx,
       tpOrdPx: v.tpOrdPx,
       slTriggerPx: v.slTriggerPx,
@@ -760,6 +775,7 @@ export function handleFuturesCommand(
       ordType: v.ordType!,
       sz: v.sz!,
       tdMode: v.tdMode ?? "cross",
+      tgtCcy: v.tgtCcy,
       posSide: v.posSide,
       px: v.px,
       reduceOnly: v.reduceOnly,
@@ -914,7 +930,8 @@ export function handleEarnCommand(
   if (submodule === "savings") return handleEarnSavingsCommand(run, action, innerRest, v, json);
   if (submodule === "onchain") return handleEarnOnchainCommand(run, action, v, json);
   if (submodule === "dcd") return handleEarnDcdCommand(run, action, v, json);
-  process.stderr.write(`Unknown earn sub-module: ${submodule}\nValid: savings, onchain, dcd\n`);
+  errorLine(`Unknown earn sub-module: ${submodule}`);
+  errorLine("Valid: savings, onchain, dcd");
   process.exitCode = 1;
 }
 
@@ -933,7 +950,7 @@ function handleEarnSavingsCommand(
   if (action === "lending-history") return cmdEarnLendingHistory(run, { ccy: v.ccy, limit, json });
   if (action === "rate-summary") return cmdEarnLendingRateSummary(run, rest[0] ?? v.ccy, json);
   if (action === "rate-history") return cmdEarnLendingRateHistory(run, { ccy: v.ccy, limit, json });
-  process.stderr.write(`Unknown earn savings command: ${action}\n`);
+  errorLine(`Unknown earn savings command: ${action}`);
   process.exitCode = 1;
 }
 
@@ -949,7 +966,7 @@ function handleEarnOnchainCommand(
   if (action === "cancel") return cmdOnchainEarnCancel(run, v).then((r) => outputResult(r, json));
   if (action === "orders") return cmdOnchainEarnActiveOrders(run, v).then((r) => outputResult(r, json));
   if (action === "history") return cmdOnchainEarnOrderHistory(run, v).then((r) => outputResult(r, json));
-  process.stderr.write(`Unknown earn onchain command: ${action}\n`);
+  errorLine(`Unknown earn onchain command: ${action}`);
   process.exitCode = 1;
 }
 
@@ -1011,15 +1028,16 @@ function handleEarnDcdCommand(
       limit,
       json,
     });
-  process.stderr.write(`Unknown earn dcd command: ${action}\nValid: pairs, products, quote-and-buy, redeem-execute, order, orders\n`);
+  errorLine(`Unknown earn dcd command: ${action}`);
+  errorLine("Valid: pairs, products, quote-and-buy, redeem-execute, order, orders");
   process.exitCode = 1;
 }
 
 function outputResult(result: { endpoint: string; requestTime: string; data: unknown }, json: boolean): void {
   if (json) {
-    process.stdout.write(JSON.stringify(result, null, 2) + "\n");
+    outputLine(JSON.stringify(result, null, 2));
   } else {
-    process.stdout.write(JSON.stringify(result.data, null, 2) + "\n");
+    outputLine(JSON.stringify(result.data, null, 2));
   }
 }
 
@@ -1041,18 +1059,21 @@ function printVerboseConfigSummary(config: import("@agent-tradekit/core").OkxCon
   } else if (config.hasAuth) {
     authLabel = "\u2713";
   }
-  process.stderr.write(
-    `[verbose] config: profile=${profile ?? "default"} site=${config.site} base=${config.baseUrl} auth=${authLabel} demo=${config.demo ? "on" : "off"} modules=${config.modules.join(",")}\n`,
-  );
+  errorLine(`[verbose] config: profile=${profile ?? "default"} site=${config.site} base=${config.baseUrl} auth=${authLabel} demo=${config.demo ? "on" : "off"} modules=${config.modules.join(",")}`);
 }
 
 async function main(): Promise<void> {
+  setOutput({
+    out: (m) => process.stdout.write(m),
+    err: (m) => process.stderr.write(m),
+  });
+
   checkForUpdates("@okx_ai/okx-trade-cli", CLI_VERSION);
 
   const { values, positionals } = parseCli(process.argv.slice(2));
 
   if (values.version) {
-    process.stdout.write(`${CLI_VERSION} (${GIT_HASH})\n`);
+    outputLine(`${CLI_VERSION} (${GIT_HASH})`);
     return;
   }
 
@@ -1068,14 +1089,29 @@ async function main(): Promise<void> {
   if (module === "config") return handleConfigCommand(action, rest, json, v.lang, v.force);
   if (module === "setup") return handleSetupCommand(v);
 
+  // diagnose runs before loadConfig — it must handle config parse errors itself
+  if (module === "diagnose") {
+    let config: ReturnType<typeof loadProfileConfig> | undefined;
+    try {
+      config = loadProfileConfig({ profile: v.profile, demo: v.demo, verbose: v.verbose, userAgent: `okx-trade-cli/${CLI_VERSION}`, sourceTag: "CLI" });
+    } catch {
+      // Config parse failed — diagnose will detect and report it
+    }
+    return cmdDiagnose(config, v.profile ?? "default", { mcp: v.mcp, cli: v.cli, all: v.all, output: v.output });
+  }
+
   const config = loadProfileConfig({ profile: v.profile, demo: v.demo, verbose: v.verbose, userAgent: `okx-trade-cli/${CLI_VERSION}`, sourceTag: "CLI" });
 
-  if (config.verbose) printVerboseConfigSummary(config, v.profile);
-
-  if (module === "diagnose") return cmdDiagnose(config, v.profile ?? "default", { mcp: v.mcp, cli: v.cli, all: v.all, output: v.output });
-
   const client = new OkxRestClient(config);
-  const run = createToolRunner(client, config);
+  const baseRunner = createToolRunner(client, config);
+  const writeToolNames = new Set(allToolSpecs().filter((t) => t.isWrite).map((t) => t.name));
+  const run: ToolRunner = async (toolName, args) => {
+    const result = await baseRunner(toolName, args);
+    if (writeToolNames.has(toolName)) {
+      markFailedIfSCodeError(result.data);
+    }
+    return result;
+  };
 
   const moduleHandlers: Record<string, () => Promise<void> | void> = {
     market:  () => handleMarketCommand(run, action, rest, v, json),
@@ -1089,15 +1125,15 @@ async function main(): Promise<void> {
   };
   const handler = moduleHandlers[module];
   if (handler) return handler();
-  process.stderr.write(`Unknown command: ${module} ${action ?? ""}\n`);
+  errorLine(`Unknown command: ${module} ${action ?? ""}`);
   process.exitCode = 1;
 }
 
 main().catch((error: unknown) => {
   const payload = toToolErrorPayload(error);
-  process.stderr.write(`Error: ${payload.message}\n`);
-  if (payload.traceId) process.stderr.write(`TraceId: ${payload.traceId}\n`);
-  if (payload.suggestion) process.stderr.write(`Hint: ${payload.suggestion}\n`);
-  process.stderr.write(`Version: @okx_ai/okx-trade-cli@${CLI_VERSION}\n`);
+  errorLine(`Error: ${payload.message}`);
+  if (payload.traceId) errorLine(`TraceId: ${payload.traceId}`);
+  if (payload.suggestion) errorLine(`Hint: ${payload.suggestion}`);
+  errorLine(`Version: @okx_ai/okx-trade-cli@${CLI_VERSION}`);
   process.exitCode = 1;
 });
