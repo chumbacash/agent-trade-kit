@@ -1,6 +1,7 @@
-import { BOT_DEFAULT_SUB_MODULES, BOT_SUB_MODULE_IDS, DEFAULT_MODULES, DEFAULT_SOURCE_TAG, MODULES, OKX_API_BASE_URL, OKX_SITES, SITE_IDS, type BotSubModuleId, type ModuleId, type SiteId } from "./constants.js";
+import { BOT_DEFAULT_SUB_MODULES, BOT_SUB_MODULE_IDS, EARN_SUB_MODULE_IDS, DEFAULT_MODULES, DEFAULT_SOURCE_TAG, MODULES, OKX_SITES, SITE_IDS, type ModuleId, type SiteId } from "./constants.js";
 import { ConfigError } from "./utils/errors.js";
 import { readTomlProfile } from "./config/toml.js";
+import type { OkxProfile } from "./config/toml.js";
 
 export interface CliOptions {
   modules?: string;
@@ -10,6 +11,7 @@ export interface CliOptions {
   site?: string;
   userAgent?: string;
   sourceTag?: string;
+  verbose?: boolean;
 }
 
 export interface OkxConfig {
@@ -25,12 +27,22 @@ export interface OkxConfig {
   site: SiteId;
   userAgent?: string;
   sourceTag: string;
+  proxyUrl?: string;
+  verbose: boolean;
 }
 
-/** Base (non-bot) modules — used when expanding "all". */
-const BASE_MODULES = MODULES.filter(
-  (m) => !BOT_SUB_MODULE_IDS.includes(m as BotSubModuleId),
-);
+/**
+ * Expand a single module shorthand into its concrete sub-module IDs.
+ * Returns the expanded IDs, or null if the input is not a shorthand.
+ */
+function expandShorthand(moduleId: string): ModuleId[] | null {
+  // "all" expands to every known module (base + bot sub-modules + earn sub-modules)
+  if (moduleId === "all") return [...MODULES];
+  if (moduleId === "earn" || moduleId === "earn.all") return [...EARN_SUB_MODULE_IDS];
+  if (moduleId === "bot") return [...BOT_DEFAULT_SUB_MODULES];
+  if (moduleId === "bot.all") return [...BOT_SUB_MODULE_IDS];
+  return null;
+}
 
 function parseModuleList(rawModules?: string): ModuleId[] {
   if (!rawModules || rawModules.trim().length === 0) {
@@ -38,42 +50,66 @@ function parseModuleList(rawModules?: string): ModuleId[] {
   }
 
   const trimmed = rawModules.trim().toLowerCase();
-  if (trimmed === "all") {
-    // "all" → every module including all bot sub-modules
-    return [...BASE_MODULES, ...BOT_SUB_MODULE_IDS] as ModuleId[];
-  }
-
-  const requested = trimmed
-    .split(",")
-    .map((item) => item.trim())
-    .filter((item) => item.length > 0);
-
+  const requested = trimmed.split(",").map((s) => s.trim()).filter(Boolean);
   if (requested.length === 0) {
     return [...DEFAULT_MODULES];
   }
 
   const deduped = new Set<ModuleId>();
   for (const moduleId of requested) {
-    // "bot" shorthand → expand to default bot sub-modules
-    if (moduleId === "bot") {
-      for (const sub of BOT_DEFAULT_SUB_MODULES) deduped.add(sub);
-      continue;
-    }
-    // "bot.all" → expand to all bot sub-modules
-    if (moduleId === "bot.all") {
-      for (const sub of BOT_SUB_MODULE_IDS) deduped.add(sub);
+    const expanded = expandShorthand(moduleId);
+    if (expanded) {
+      expanded.forEach((sub) => deduped.add(sub));
       continue;
     }
     if (!MODULES.includes(moduleId as ModuleId)) {
       throw new ConfigError(
         `Unknown module "${moduleId}".`,
-        `Use one of: ${MODULES.join(", ")}, "bot", "bot.all", or "all".`,
+        `Use one of: ${MODULES.join(", ")}, "earn", "earn.all", "bot", "bot.all", or "all".`,
       );
     }
     deduped.add(moduleId as ModuleId);
   }
 
   return Array.from(deduped);
+}
+
+function loadCredentials(toml: OkxProfile): { apiKey?: string; secretKey?: string; passphrase?: string; hasAuth: boolean } {
+  const apiKey = process.env.OKX_API_KEY?.trim() ?? toml.api_key;
+  const secretKey = process.env.OKX_SECRET_KEY?.trim() ?? toml.secret_key;
+  const passphrase = process.env.OKX_PASSPHRASE?.trim() ?? toml.passphrase;
+  const hasAuth = Boolean(apiKey && secretKey && passphrase);
+  const partialAuth = Boolean(apiKey) || Boolean(secretKey) || Boolean(passphrase);
+  if (partialAuth && !hasAuth) {
+    throw new ConfigError(
+      "Partial API credentials detected.",
+      "Set OKX_API_KEY, OKX_SECRET_KEY and OKX_PASSPHRASE together (env vars or config.toml profile).",
+    );
+  }
+  return { apiKey, secretKey, passphrase, hasAuth };
+}
+
+function resolveSite(cliSite?: string, tomlSite?: string): SiteId {
+  const rawSite = cliSite?.trim() ?? process.env.OKX_SITE?.trim() ?? tomlSite ?? "global";
+  if (!SITE_IDS.includes(rawSite as SiteId)) {
+    throw new ConfigError(
+      `Unknown site "${rawSite}".`,
+      `Use one of: ${SITE_IDS.join(", ")}.`,
+    );
+  }
+  return rawSite as SiteId;
+}
+
+function resolveBaseUrl(site: SiteId, tomlBaseUrl?: string): string {
+  const rawBaseUrl =
+    process.env.OKX_API_BASE_URL?.trim() ?? tomlBaseUrl ?? OKX_SITES[site].apiBaseUrl;
+  if (!rawBaseUrl.startsWith("http://") && !rawBaseUrl.startsWith("https://")) {
+    throw new ConfigError(
+      `Invalid base URL "${rawBaseUrl}".`,
+      "OKX_API_BASE_URL must start with http:// or https://",
+    );
+  }
+  return rawBaseUrl.replace(/\/+$/, "");
 }
 
 /**
@@ -93,52 +129,18 @@ function parseModuleList(rawModules?: string): ModuleId[] {
  *   3. site's apiBaseUrl (auto-derived from site)
  */
 export function loadConfig(cli: CliOptions): OkxConfig {
-  // Read toml profile as fallback
   const toml = readTomlProfile(cli.profile);
+  const creds = loadCredentials(toml);
 
-  const apiKey = process.env.OKX_API_KEY?.trim() ?? toml.api_key;
-  const secretKey = process.env.OKX_SECRET_KEY?.trim() ?? toml.secret_key;
-  const passphrase = process.env.OKX_PASSPHRASE?.trim() ?? toml.passphrase;
-
-  const hasAuth = Boolean(apiKey && secretKey && passphrase);
-  const partialAuth = Boolean(apiKey) || Boolean(secretKey) || Boolean(passphrase);
-
-  if (partialAuth && !hasAuth) {
-    throw new ConfigError(
-      "Partial API credentials detected.",
-      "Set OKX_API_KEY, OKX_SECRET_KEY and OKX_PASSPHRASE together (env vars or config.toml profile).",
-    );
-  }
-
-  // demo flag: cli arg > env var > toml profile
   const demo =
     cli.demo ||
     process.env.OKX_DEMO === "1" ||
     process.env.OKX_DEMO === "true" ||
     (toml.demo ?? false);
 
-  // site: cli arg > env var > toml profile > default "global"
-  const rawSite = cli.site?.trim() ?? process.env.OKX_SITE?.trim() ?? toml.site ?? "global";
-  if (!SITE_IDS.includes(rawSite as SiteId)) {
-    throw new ConfigError(
-      `Unknown site "${rawSite}".`,
-      `Use one of: ${SITE_IDS.join(", ")}.`,
-    );
-  }
-  const site = rawSite as SiteId;
+  const site = resolveSite(cli.site, toml.site);
+  const baseUrl = resolveBaseUrl(site, toml.base_url);
 
-  // base url: env var > toml profile > site's apiBaseUrl
-  const rawBaseUrl =
-    process.env.OKX_API_BASE_URL?.trim() ?? toml.base_url ?? OKX_SITES[site].apiBaseUrl;
-  if (!rawBaseUrl.startsWith("http://") && !rawBaseUrl.startsWith("https://")) {
-    throw new ConfigError(
-      `Invalid base URL "${rawBaseUrl}".`,
-      "OKX_API_BASE_URL must start with http:// or https://",
-    );
-  }
-  const baseUrl = rawBaseUrl.replace(/\/+$/, "");
-
-  // timeout: env var > toml profile > default
   const rawTimeout = process.env.OKX_TIMEOUT_MS
     ? Number(process.env.OKX_TIMEOUT_MS)
     : (toml.timeout_ms ?? 15_000);
@@ -149,11 +151,17 @@ export function loadConfig(cli: CliOptions): OkxConfig {
     );
   }
 
+  // proxy: toml profile only (no env vars — keep it explicit)
+  const rawProxyUrl = toml.proxy_url?.trim();
+  if (rawProxyUrl && !rawProxyUrl.startsWith("http://") && !rawProxyUrl.startsWith("https://")) {
+    throw new ConfigError(
+      `Invalid proxy URL "${rawProxyUrl}".`,
+      "proxy_url must start with http:// or https://. SOCKS proxies are not supported.",
+    );
+  }
+
   return {
-    apiKey,
-    secretKey,
-    passphrase,
-    hasAuth,
+    ...creds,
     baseUrl,
     timeoutMs: Math.floor(rawTimeout),
     modules: parseModuleList(cli.modules),
@@ -162,5 +170,7 @@ export function loadConfig(cli: CliOptions): OkxConfig {
     site,
     userAgent: cli.userAgent,
     sourceTag: cli.sourceTag ?? DEFAULT_SOURCE_TAG,
+    proxyUrl: rawProxyUrl || undefined,
+    verbose: cli.verbose ?? false,
   };
 }

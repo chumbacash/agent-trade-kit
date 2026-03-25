@@ -20,6 +20,28 @@ npm install -g @okx_ai/okx-trade-cli
 okx account balance --json | jq '.[] | {ccy: .ccy, eq: .eq}'
 ```
 
+## Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | Any failure — network error, authentication error, argument validation error, or OKX business rejection (e.g. insufficient balance, invalid instrument) |
+
+Exit code 1 indicates failure.
+
+> **Partial batch failure:** if _any_ item in a batch request has `sCode != "0"`, the command exits with code 1. Agents and scripts should inspect the JSON output to identify which individual items failed.
+
+```bash
+# Safe to use in scripts — exit code 1 if order was rejected for any reason
+okx spot place --instId BTC-USDT --side buy --ordType market --sz 100 --json
+if [ $? -ne 0 ]; then
+  echo "Order failed"
+fi
+
+# Batch: exit code 1 even if only some orders fail — check each item's sCode
+okx spot batch place orders.json --json | jq '.[] | select(.sCode != "0")'
+```
+
 ---
 
 ## market — Market Data (no API key required)
@@ -71,6 +93,9 @@ okx spot get --instId BTC-USDT --ordId 123456
 okx spot fills --instId BTC-USDT
 okx spot place --instId BTC-USDT --side buy --ordType market --sz 100
 okx spot place --instId BTC-USDT --side sell --ordType limit --sz 0.001 --px 70000
+# With attached TP/SL
+okx spot place --instId BTC-USDT --side buy --ordType limit --sz 0.001 --px 60000 \
+  --tpTriggerPx 65000 --tpOrdPx 64900 --slTriggerPx 58000 --slOrdPx 57900
 okx spot amend --instId BTC-USDT --ordId 123456 --newPx 68000
 okx spot cancel BTC-USDT --ordId 123456
 ```
@@ -85,6 +110,9 @@ okx swap orders --history
 okx swap get --instId BTC-USDT-SWAP --ordId 123456
 okx swap fills --instId BTC-USDT-SWAP
 okx swap place --instId BTC-USDT-SWAP --side buy --ordType market --sz 1 --posSide long --tdMode cross
+# With attached TP/SL
+okx swap place --instId BTC-USDT-SWAP --side buy --ordType market --sz 1 --posSide long --tdMode cross \
+  --tpTriggerPx 100000 --tpOrdPx 99900 --slTriggerPx 85000 --slOrdPx 84900
 okx swap cancel BTC-USDT-SWAP --ordId 123456
 okx swap close --instId BTC-USDT-SWAP --mgnMode cross
 okx swap leverage --instId BTC-USDT-SWAP --lever 10 --mgnMode cross
@@ -101,6 +129,9 @@ okx futures orders --history
 okx futures positions
 okx futures fills
 okx futures place --instId BTC-USDT-250328 --side buy --ordType market --sz 1 --tdMode cross
+# With attached TP/SL
+okx futures place --instId BTC-USDT-250328 --side buy --ordType market --sz 1 --tdMode cross \
+  --tpTriggerPx 100000 --tpOrdPx 99900 --slTriggerPx 85000 --slOrdPx 84900
 okx futures cancel BTC-USDT-250328 --ordId 123456
 okx futures get --instId BTC-USDT-250328 --ordId 123456
 ```
@@ -166,7 +197,7 @@ okx bot grid orders --algoOrdType moon_grid
 okx bot grid details --algoOrdType moon_grid --algoId <algoId>
 
 # ── Contract DCA ──────────────────────────────────────────────────────────────
-okx bot dca orders
+okx bot dca orders [--algoId <algoId>] [--instId <instId>]
 okx bot dca orders --history
 okx bot dca details --algoId <algoId>
 okx bot dca sub-orders --algoId <algoId>
@@ -241,6 +272,28 @@ npm install -g @okx_ai/okx-trade-cli
 okx account balance --json | jq '.[] | {ccy: .ccy, eq: .eq}'
 ```
 
+## 退出码
+
+| 退出码 | 含义 |
+|--------|------|
+| `0` | 成功 |
+| `1` | 任何失败——网络错误、鉴权错误、参数校验错误，或 OKX 业务拒绝（如余额不足、合约不存在） |
+
+退出码 1 表示失败。
+
+> **批量部分失败：** 只要批量请求中_任意一笔_的 `sCode != "0"`，命令即以退出码 1 退出。Agent 和脚本应检查 JSON 输出，以确定哪些具体条目失败。
+
+```bash
+# 脚本中可安全使用——任何原因导致的下单失败都会返回退出码 1
+okx spot place --instId BTC-USDT --side buy --ordType market --sz 100 --json
+if [ $? -ne 0 ]; then
+  echo "下单失败"
+fi
+
+# 批量：即使只有部分订单失败也会返回退出码 1——逐条检查 sCode
+okx spot batch place orders.json --json | jq '.[] | select(.sCode != "0")'
+```
+
 ---
 
 ## market — 行情数据（无需 API Key）
@@ -292,6 +345,9 @@ okx spot get --instId BTC-USDT --ordId 123456
 okx spot fills --instId BTC-USDT
 okx spot place --instId BTC-USDT --side buy --ordType market --sz 100
 okx spot place --instId BTC-USDT --side sell --ordType limit --sz 0.001 --px 70000
+# 附带止盈止损
+okx spot place --instId BTC-USDT --side buy --ordType limit --sz 0.001 --px 60000 \
+  --tpTriggerPx 65000 --tpOrdPx 64900 --slTriggerPx 58000 --slOrdPx 57900
 okx spot amend --instId BTC-USDT --ordId 123456 --newPx 68000
 okx spot cancel BTC-USDT --ordId 123456
 ```
@@ -306,6 +362,9 @@ okx swap orders --history
 okx swap get --instId BTC-USDT-SWAP --ordId 123456
 okx swap fills --instId BTC-USDT-SWAP
 okx swap place --instId BTC-USDT-SWAP --side buy --ordType market --sz 1 --posSide long --tdMode cross
+# 附带止盈止损
+okx swap place --instId BTC-USDT-SWAP --side buy --ordType market --sz 1 --posSide long --tdMode cross \
+  --tpTriggerPx 100000 --tpOrdPx 99900 --slTriggerPx 85000 --slOrdPx 84900
 okx swap cancel BTC-USDT-SWAP --ordId 123456
 okx swap close --instId BTC-USDT-SWAP --mgnMode cross
 okx swap leverage --instId BTC-USDT-SWAP --lever 10 --mgnMode cross
@@ -322,6 +381,9 @@ okx futures orders --history
 okx futures positions
 okx futures fills
 okx futures place --instId BTC-USDT-250328 --side buy --ordType market --sz 1 --tdMode cross
+# 附带止盈止损
+okx futures place --instId BTC-USDT-250328 --side buy --ordType market --sz 1 --tdMode cross \
+  --tpTriggerPx 100000 --tpOrdPx 99900 --slTriggerPx 85000 --slOrdPx 84900
 okx futures cancel BTC-USDT-250328 --ordId 123456
 okx futures get --instId BTC-USDT-250328 --ordId 123456
 ```
@@ -387,7 +449,7 @@ okx bot grid orders --algoOrdType moon_grid
 okx bot grid details --algoOrdType moon_grid --algoId <algoId>
 
 # ── 合约 DCA ──────────────────────────────────────────────────────────────────
-okx bot dca orders
+okx bot dca orders [--algoId <algoId>] [--instId <instId>]
 okx bot dca orders --history
 okx bot dca details --algoId <algoId>
 okx bot dca sub-orders --algoId <algoId>

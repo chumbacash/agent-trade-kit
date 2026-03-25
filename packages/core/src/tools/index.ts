@@ -2,26 +2,41 @@ import type { OkxConfig } from "../config.js";
 import type { OkxRestClient } from "../client/rest-client.js";
 import { MODULES, type ModuleId } from "../constants.js";
 import { registerAccountTools } from "./account.js";
-import { registerAlgoTradeTools } from "./algo-trade.js";
+import { registerAlgoTradeTools, registerFuturesAlgoTools } from "./algo-trade.js";
 import { registerAuditTools } from "./audit.js";
 import { registerBotTools } from "./bot/index.js";
+import { registerAllEarnTools } from "./earn/index.js";
 import { registerFuturesTools } from "./futures-trade.js";
+import { registerIndicatorTools } from "./indicator.js";
 import { registerMarketTools } from "./market.js";
+import { registerOptionAlgoTools } from "./option-algo-trade.js";
 import { registerOptionTools } from "./option-trade.js";
 import { registerSpotTradeTools } from "./spot-trade.js";
 import { registerSwapTradeTools } from "./swap-trade.js";
 import type { ToolSpec, ToolArgs } from "./types.js";
 
-function allToolSpecs(): ToolSpec[] {
+/**
+ * Return specs for every registered tool across all modules.
+ *
+ * Exported for external consumers (e.g. diagnostic / introspection tooling)
+ * that need to enumerate tool names, schemas, or module membership without
+ * instantiating a full client.  Not all callers use every spec — consumers
+ * should filter as needed.
+ */
+export function allToolSpecs(): ToolSpec[] {
   return [
     ...registerMarketTools(),
+    ...registerIndicatorTools(),
     ...registerSpotTradeTools(),
     ...registerSwapTradeTools(),
     ...registerFuturesTools(),
+    ...registerFuturesAlgoTools(),
     ...registerOptionTools(),
+    ...registerOptionAlgoTools(),
     ...registerAlgoTradeTools(),
     ...registerAccountTools(),
     ...registerBotTools(),
+    ...registerAllEarnTools(),
     ...registerAuditTools(),
   ];
 }

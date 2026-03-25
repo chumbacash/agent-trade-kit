@@ -9,7 +9,311 @@
 
 ---
 
-## [Unreleased]
+## [1.2.6] - 2026-03-23
+
+### 新增
+
+- **`market_get_indicator` 工具**（`market`）：通过 OKX AIGC 指标接口查询任意交易对的技术指标值。支持 70+ 指标，覆盖 10 大分类——均线（MA/EMA/WMA/HMA 等）、趋势（MACD/SuperTrend/SAR/ADX 等）、一目均衡表、动量振荡器（RSI/KDJ/StochRSI 等）、波动率（BB/ATR/Keltner 等）、成交量（OBV/VWAP/MFI 等）、统计（LR/Slope/Sigma 等）、价格辅助（TP/MP）、K 线形态（15 种）、BTC 周期指标（BTCRAINBOW/AHR999）。无需 API 凭证。支持可选参数 `params`、`returnList`、`limit`、`backtestTime`。CLI 用法：`okx market indicator <名称> <instId> [--bar <周期>] [--params <p1,p2>] [--list] [--limit N] [--backtest-time <ms>]`。
+- **`OkxRestClient.publicPost()` 方法**：新增免鉴权 POST 方法，与 `publicGet` 对称，供 `market_get_indicator` 内部使用。
+- **下单接口新增 `tgtCcy` 参数**：`spot_place_order`、`swap_place_order`、`futures_place_order` 新增 `tgtCcy` 参数。设为 `quote_ccy` 时可用 USDT 金额指定下单量，而非合约数/基础货币数量。
+
+### 修复
+
+- **CLI 业务失败时退出码为 1**：OKX 写入接口在订单被拒绝时仍返回 HTTP 200（如 `sCode="51008"`）。现在当响应中任意条目的 `sCode` 非零时，CLI 设置 `process.exitCode = 1`，脚本和 LLM 可通过退出码直接判断失败。
+- **`config.toml` passphrase 含特殊字符时给出友好提示**：passphrase 含 `#`、`\`、`"`、`'` 时，错误信息现在包含 TOML 引号转义指引，替代原来的模糊解析报错。
+- **余额不足错误提示优化**：错误码 `51008`（余额不足）、`51119`（保证金不足）、`51127`（可用保证金不足）的建议中，现在明确提示通过 `account_get_asset_balance` 检查资金账户，并通过 `account_transfer(from=18, to=6)` 转账后重试。
+
+### 变更
+
+- **CLI 输出层抽象重构**（内部）：统一 `process.stdout`/`stderr` 写入，对用户无感知行为变化。
+
+---
+
+## [1.2.5] - 2026-03-18
+
+### 新增
+
+- **`dcd_subscribe` 工具**（`earn.dcd`）：原子化 DCD 申购，内部一步完成询价+下单，彻底消灭 MCP 用户的报价过期竞争问题。支持可选参数 `minAnnualizedYield`（百分比），若实际报价年化低于该阈值则拒绝下单并返回错误。返回结果包含 trade 信息及 quote 快照（`annualizedYield`、`absYield`）。不支持模拟交易模式。
+- **`dcd_redeem` 工具**（`earn.dcd`）：两阶段提前赎回设计，确保用户在执行前确认损失。第一次调用（不传 `quoteId`）：仅询价，返回赎回损失详情供用户确认。第二次调用（传入 `quoteId`）：执行赎回。若两次调用之间报价已过期，自动重新询价并原子执行，response 中包含 `autoRefreshedQuote: true`。执行步骤不支持模拟交易模式。
+- **CLI `okx diagnose --mcp`**：新增 MCP 服务器专项诊断模式。检查项包括：包版本、Node.js 兼容性、MCP 入口文件存在性和可执行性、Claude Desktop `mcpServers` 配置、最近的 MCP 日志片段、模块加载冒烟测试（`--version`），以及 stdio JSON-RPC 握手（5 秒超时）。零外部依赖，仅使用 Node.js 内置模块。
+- **`okx diagnose --output <file>`**：默认模式与 `--mcp` 模式均支持 `--output <路径>` 将诊断报告保存为文件，便于分享排查。
+- **`allToolSpecs()` 从 `@agent-tradekit/core` 导出**：该函数现已纳入公开 API，为未来的外部消费者（如第三方 MCP 客户端、测试工具）提供枚举所有已注册工具规格的能力。
+
+### 移除
+
+- **低阶 DCD 拆分工具已删除**：`dcd_request_quote`、`dcd_execute_quote`、`dcd_request_redeem_quote`、`dcd_execute_redeem` 已删除。申购流程请使用 `dcd_subscribe`，提前赎回流程请使用 `dcd_redeem`。
+
+### 修复
+
+- **CLI `cancel` 命令支持 `--clOrdId`**：`okx spot/swap/futures cancel` 此前仅支持 `--ordId` 位置参数。现支持 `--ordId` 或 `--clOrdId`（客户自定义订单 ID）二选一；若两者均未提供则抛出明确错误。涉及 `spot_cancel_order`、`swap_cancel_order`、`futures_cancel_order`。
+- **CLI `spot/swap/futures cancel` 忽略 `--instId` 参数**：`cmdSpotCancel`、`cmdSwapCancel`、`cmdFuturesCancel` 错误地使用位置参数（`rest[0]`）作为 `instId`，导致 `--instId` 标志被静默忽略、以错误的合约 ID 执行撤单。已修复为正确读取 `v.instId`。
+
+### 变更
+
+- **工具描述全面优化**：从所有工具的 description 中移除 "Private endpoint"、"Public endpoint" 和 "Rate limit" 等标签，减少 MCP schema 的 token 开销。针对 earn、grid、DCA、swap/futures/option 等模块的描述进行了精简。`[CAUTION]` 标记保持不变。
+- **TWAP bot 迁移为仅 CLI**：移除 `bot.twap` MCP 工具，TWAP 功能仍可通过 `okx bot twap` CLI 命令使用。
+- **`sanitize()` 工具函数**：在诊断输出分享前自动屏蔽 UUID、长十六进制字符串（≥32 位）及 Bearer Token。
+- **`diagnose-utils.ts`**（内部模块）：从 `diagnose.ts` 中提取 `Report`、`ok`、`fail`、`section`、`sanitize` 等共享工具函数，供 `diagnose-mcp.ts` 复用。
+- **所有工具模块新增文件级注释**（内部文档）。
+
+---
+
+## [1.2.5-beta.5] - 2026-03-17
+
+### 修复
+
+- **CLI `cancel` 命令支持 `--clOrdId`**：`okx spot/swap/futures cancel` 此前仅支持 `--ordId` 位置参数。现支持 `--ordId` 或 `--clOrdId`（客户自定义订单 ID）二选一；若两者均未提供则抛出明确错误。涉及 `spot_cancel_order`、`swap_cancel_order`、`futures_cancel_order`。
+
+---
+
+## [1.2.5-beta.4] - 2026-03-17
+
+### 移除
+
+- **`feat/add-more-bots-phase-1` 已回滚**：移除该分支引入的所有改动，包含回滚带来的 bug 修复：
+  - `dca_create_order` RSI 触发子参数（`triggerCond`、`thold`、`timePeriod`、`timeframe`）及跟单参数（`trackingMode`、`profitSharingRatio`）
+  - 5 个 DCA CLI 命令：`margin-add`、`margin-reduce`、`set-tp`、`set-reinvest`、`manual-buy`
+  - 现货定投 CLI 命令：`okx bot recurring create|amend|stop|orders|details|sub-orders`
+  - `grid_create_order` 6 个新可选参数（`tpTriggerPx`、`slTriggerPx`、`algoClOrdId`、`tradeQuoteCcy`、`tpRatio`、`slRatio`）
+  - 14 个新网格 CLI 命令（`amend-basic-param`、`amend-order`、`close-position`、`cancel-close-order`、`instant-trigger`、`positions`、`withdraw-income`、`compute-margin-balance`、`margin-balance`、`adjust-investment`、`ai-param`、`min-investment`、`rsi-back-testing`、`max-quantity`）
+  - TWAP CLI 命令：`okx bot twap place|cancel|orders|details`
+  - *（回滚副作用）* **`swap_cancel_algo_orders` 输入格式恢复**：该分支曾将入参从 `{ orders: [{ algoId, instId }] }` 数组格式错误改为扁平 `{ instId, algoId }`；回滚后恢复正确格式。
+  - *（回滚副作用）* **`dca_create_order` `pxStepsMult`/`volMult` 阈值描述修正**：该分支曾将必填条件错误描述为 `maxSafetyOrds > 1`；回滚后恢复正确的 `> 0`。
+
+---
+
+## [1.2.5-beta.3] - 2026-03-17
+
+### 移除
+
+- **`copytrading` 模块已回滚**：移除 v1.2.5-beta.2 中引入的 5 个跟单 CLI 命令（`traders`、`trader-detail`、`status`、`follow`、`unfollow`）、`copytrading` MCP 工具、相关文档（`docs/cli-reference.md` 跟单章节）及 README 跟单说明。
+
+---
+
+## [1.2.5-beta.2] - 2026-03-17
+
+### 新增
+
+- **`dcd_subscribe` 工具**（`earn.dcd`）：原子化 DCD 申购，内部一步完成询价+下单，彻底消灭 MCP 用户的报价过期竞争问题。支持可选参数 `minAnnualizedYield`（百分比），若实际报价年化低于该阈值则拒绝下单并返回错误。返回结果包含 trade 信息及 quote 快照（`annualizedYield`、`absYield`）。不支持模拟交易模式。
+- **`dcd_redeem` 工具**（`earn.dcd`）：两阶段提前赎回设计，确保用户在执行前确认损失。第一次调用（不传 `quoteId`）：仅询价，返回赎回损失详情供用户确认。第二次调用（传入 `quoteId`）：执行赎回。若两次调用之间报价已过期，自动重新询价并原子执行，response 中包含 `autoRefreshedQuote: true`。执行步骤不支持模拟交易模式。
+- **移除低阶 DCD 拆分工具**：`dcd_request_quote`、`dcd_execute_quote`、`dcd_request_redeem_quote`、`dcd_execute_redeem` 已删除。申购流程请使用 `dcd_subscribe`，提前赎回流程请使用 `dcd_redeem`。
+
+### 变更
+
+- **CLI `okx diagnose --mcp`**：新增 MCP 服务器专项诊断模式。检查项包括：包版本、Node.js 兼容性、MCP 入口文件存在性和可执行性、Claude Desktop `mcpServers` 配置、最近的 MCP 日志片段、模块加载冒烟测试（`--version`），以及 stdio JSON-RPC 握手（5 秒超时）。零外部依赖，仅使用 Node.js 内置模块。
+- **`okx diagnose --output <file>`**：默认模式与 `--mcp` 模式均支持 `--output <路径>` 将诊断报告保存为文件，便于分享排查。
+- **`diagnose-utils.ts`**（内部模块）：从 `diagnose.ts` 中提取 `Report`、`ok`、`fail`、`section`、`sanitize` 等共享工具函数，供 `diagnose-mcp.ts` 复用。
+- **`sanitize()` 工具函数**：在诊断输出分享前自动屏蔽 UUID、长十六进制字符串（≥32 位）及 Bearer Token。
+- **`allToolSpecs()` 从 `@agent-tradekit/core` 导出**：该函数现已纳入公开 API，为未来的外部消费者（如第三方 MCP 客户端、测试工具）提供枚举所有已注册工具规格的能力。此前该函数已被 `buildTools()` 和 `createToolRunner()` 内部调用，本次变更是面向预期的下游使用场景而预先公开暴露，并非供 `diagnose-mcp.ts` 内部调用。
+
+---
+
+## [1.2.4] - 2026-03-15
+
+### 新增
+
+- **`market_get_stock_tokens` 工具**：新增专用工具，用于查询股票代币合约列表（如 `AAPL-USDT-SWAP`、`TSLA-USDT-SWAP`）。通过 `GET /api/v5/public/instruments` 获取全量合约后，在客户端按 `instCategory=3` 过滤。支持 `instType`（默认 `SWAP`）及可选 `instId` 参数。([#65](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/65))
+- **CLI `okx market stock-tokens`**：新增 CLI 子命令，映射到 `market_get_stock_tokens`。用法：`okx market stock-tokens [--instType <SPOT|SWAP>] [--instId <id>] [--json]`。([#65](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/65))
+- **现货移动止损支持**（`spot_place_algo_order` 传入 `ordType='move_order_stop'`）：除支持 conditional/oco 外，现已支持移动止损。传入 `callbackRatio`（如 `'0.01'` 表示 1%）或 `callbackSpread`，可选传入 `activePx`。([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+- **`swap_place_algo_order` 新增移动止损支持**（`ordType='move_order_stop'`）：新增 `callbackRatio`、`callbackSpread`、`activePx` 参数，可替代已废弃的 `swap_place_move_stop_order` 工具。([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+- **`spot_get_algo_orders` 现已包含移动止损订单**：未指定 `ordType` 过滤时，查询现并行获取 `conditional`、`oco` 和 `move_order_stop` 三种类型。([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+- **CLI `okx spot algo trail`**：新增现货移动止损下单命令。用法：`okx spot algo trail --instId BTC-USDT --side sell --sz 0.001 --callbackRatio 0.01 [--activePx <price>] [--tdMode cash]`。([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+- **CLI `okx futures algo trail`**：新增期货移动止损下单命令。用法：`okx futures algo trail --instId BTC-USD-250328 --side sell --sz 1 --callbackRatio 0.01 [--activePx <price>] [--posSide <net|long|short>] [--tdMode <cross|isolated>] [--reduceOnly]`。([#68](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/68))
+- **4 个新期权算法核心工具**（`registerOptionAlgoTools`）：`option_place_algo_order`、`option_amend_algo_order`、`option_cancel_algo_orders`、`option_get_algo_orders`。支持对期权持仓挂条件单（TP/SL），修改或取消已有算法单，以及查询待成交/历史期权算法订单。([#72](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/72))
+- **`option_place_order` 新增附加 TP/SL 支持**（`attachAlgoOrds`）：下单时可同步传入 `--tpTriggerPx`/`--tpOrdPx` 和/或 `--slTriggerPx`/`--slOrdPx`，一步完成期权下单与止盈止损设置。([#72](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/72))
+- **CLI `okx option algo` 命令**：`place`、`amend`、`cancel`、`orders` — 期权算法单全生命周期管理。([#72](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/72))
+- **7 个新期货核心工具**（Phase 1，对齐 swap 功能）：`futures_amend_order`、`futures_close_position`、`futures_set_leverage`、`futures_get_leverage`、`futures_batch_orders`、`futures_batch_amend`、`futures_batch_cancel`。([#71](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/71))
+- **5 个新期货算法工具**（`registerFuturesAlgoTools`）：`futures_place_algo_order`、`futures_place_move_stop_order`、`futures_amend_algo_order`、`futures_cancel_algo_orders`、`futures_get_algo_orders`。([#71](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/71))
+
+### 修复
+
+- **Bot 工具：补充 `algoId`、`algoOrdType`、`groupId` 缺失的参数描述** — Grid 和 DCA 工具缺少 `algoId` 描述，导致 AI agent 传入无效值（错误 `51000`）或 `algoOrdType` 不匹配（错误 `50016`）。同时补充了 `grid_get_sub_orders` 的 `groupId` 描述和 `spot_amend_algo_order` 的 `newSz` 描述。
+- **CLI：`okx bot dca orders` 新增 `--algoId` 和 `--instId` 过滤** — 现已与 `okx bot grid orders` 行为对齐。
+- **`swap_get_algo_orders` 硬编码 `instType`**：新增可选 `instType` 参数（默认 `"SWAP"`，支持 `"FUTURES"`）。([#71](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/71))
+- **`callBackRatio` / `callBackSpread` 参数名大小写错误**：修复 POST body 中参数名大小写，MCP 输入参数名保持不变。([#69](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/69))
+- **CLI `algo place` 移动止损参数未透传**：`callbackRatio`、`callbackSpread`、`activePx` 在 `cmdSpotAlgoPlace`、`cmdSwapAlgoPlace`、`cmdFuturesAlgoPlace` 中已正确透传。([#74](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/74))
+- **CLI `okx swap algo cancel` 格式错误**：修复 `cmdSwapAlgoCancel` 的参数包装格式为 `{ orders: [{ instId, algoId }] }`。([#76](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/76))
+
+### 废弃
+
+- **`swap_place_move_stop_order`**：已废弃，推荐使用 `swap_place_algo_order` 并传入 `ordType='move_order_stop'`。该工具仍保留以向后兼容。([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+
+### 变更
+
+- **`--modules all` 现已包含 earn 子模块**：`all` 展开为所有模块，包括 `earn.savings`、`earn.onchain` 和 `earn.dcd`。默认模块保持不变。([#66](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/66))
+- **CLI：移除直接 `smol-toml` 依赖** — TOML 功能现在完全通过 `@agent-tradekit/core` 提供。([#39](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/39))
+- **去重 postinstall 脚本**：monorepo 根目录下的 `scripts/postinstall-notice.js` 为单一来源，包内副本在 `build` 时自动生成。([#50](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/50))
+- **`earn` 重构为子模块目录**（内部重构）：`earn.ts` → `tools/earn/savings.ts`，`onchain-earn.ts` → `tools/earn/onchain.ts`。不影响公开 API。([#64](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/64))
+- **消除 `normalize()` 重复实现**：删除 9 处本地实现，统一使用 `helpers.ts` 中的 `normalizeResponse`。([#70](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/70))
+- **提取 `buildAttachAlgoOrds()` 辅助函数**：TP/SL 组装逻辑提取为共享函数，替换 5 处重复代码块。([#70](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/70))
+- **精简工具描述文本**：从所有工具的 description 中移除 "Private endpoint"、"Public endpoint" 和 "Rate limit" 等标签，减少 MCP schema 的 token 开销。`[CAUTION]` 标记保持不变。([#70](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/70))
+
+---
+
+## [1.2.4-beta.7] - 2026-03-14
+
+### 修复
+
+- **CLI `okx swap algo cancel` 报 "orders must be a non-empty array"**：`cmdSwapAlgoCancel` 将 `{ instId, algoId }` 直接传给 `swap_cancel_algo_orders`，而该工具要求 `{ orders: [{ instId, algoId }] }` 格式，导致命令必然失败。已修正为与 `futures`/`option` 保持一致的包装格式。([#76](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/76))
+
+---
+
+## [1.2.4-beta.6] - 2026-03-14
+
+### 修复
+
+- **CLI `algo place` 移动止损参数未透传**：`cmdSpotAlgoPlace`、`cmdSwapAlgoPlace`、`cmdFuturesAlgoPlace` 在用户传入 `callbackRatio`、`callbackSpread`、`activePx` 时会静默丢弃这些参数。通过 `okx {spot,swap,futures} algo place --ordType move_order_stop` 下移动止损单时，API 会返回错误 50015（缺少必要参数）。三个参数现已正确透传到 tool runner。([#74](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/74))
+
+---
+
+## [1.2.4-beta.5] - 2026-03-14
+
+### 新增
+
+- **4 个新期权算法核心工具**（`registerOptionAlgoTools`）：`option_place_algo_order`、`option_amend_algo_order`、`option_cancel_algo_orders`、`option_get_algo_orders`。支持对期权持仓挂条件单（TP/SL），修改或取消已有算法单，以及查询待成交/历史期权算法订单。([#72](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/72))
+- **`option_place_order` 新增附加 TP/SL 支持**（`attachAlgoOrds`）：下单时可同步传入 `--tpTriggerPx`/`--tpOrdPx` 和/或 `--slTriggerPx`/`--slOrdPx`，一步完成期权下单与止盈止损设置。([#72](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/72))
+- **CLI `okx option algo place`**：为期权持仓下条件单（TP/SL）。用法：`okx option algo place --instId BTC-USD-250328-95000-C --side sell --ordType oco --sz 1 --tdMode cross --tpTriggerPx 0.006 --tpOrdPx -1 --slTriggerPx 0.003 --slOrdPx -1`。([#72](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/72))
+- **CLI `okx option algo amend`**：修改已有期权算法单的 TP/SL 价格。用法：`okx option algo amend --instId BTC-USD-250328-95000-C --algoId <id> [--newTpTriggerPx <p>] [--newSlTriggerPx <p>]`。([#72](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/72))
+- **CLI `okx option algo cancel`**：取消期权算法单。用法：`okx option algo cancel --instId BTC-USD-250328-95000-C --algoId <id>`。([#72](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/72))
+- **CLI `okx option algo orders`**：查询待成交或历史期权算法订单。用法：`okx option algo orders [--instId <id>] [--history] [--ordType <conditional|oco>] [--json]`。([#72](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/72))
+
+- **7 个新期货核心工具**（Phase 1，对齐 swap 功能）：`futures_amend_order`、`futures_close_position`、`futures_set_leverage`、`futures_get_leverage`、`futures_batch_orders`、`futures_batch_amend`、`futures_batch_cancel`。这些工具使用 futures 专属名称（`futures_*`），而非复用 swap 工具，为期货提供独立的 API 接口。([#71](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/71))
+- **5 个新期货算法工具**（`registerFuturesAlgoTools`）：`futures_place_algo_order`、`futures_place_move_stop_order`、`futures_amend_algo_order`、`futures_cancel_algo_orders`、`futures_get_algo_orders`。与 swap algo 工具类似，但使用 `instType: "FUTURES"` 并注册在 `futures` 模块下。([#71](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/71))
+
+### 修复
+
+- **`swap_get_algo_orders` 硬编码 `instType`**：该工具之前在 API 请求中硬编码 `instType: "SWAP"`，导致无法查询 FUTURES 类型的算法订单。现在新增可选 `instType` 参数（默认 `"SWAP"`，支持 `"FUTURES"`）。([#71](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/71))
+
+### 变更
+
+- **消除 `normalize()` 重复实现**：删除了 `spot-trade`、`swap-trade`、`futures-trade`、`option-trade`、`algo-trade`、`account`、`market`、`bot/grid`、`bot/dca` 中共 9 处本地 `normalize()` 函数，统一使用 `helpers.ts` 中的 `normalizeResponse`。([#70](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/70))
+- **提取 `buildAttachAlgoOrds()` 辅助函数**：将 TP/SL 组装逻辑（`tpTriggerPx`、`tpOrdPx`、`slTriggerPx`、`slOrdPx` → `attachAlgoOrds`）提取为 `helpers.ts` 中的共享函数，替换了 `spot_place_order`、`spot_batch_orders`（place）、`swap_place_order`、`swap_batch_orders`（place）、`futures_place_order` 中 5 处重复代码块。([#70](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/70))
+- **精简工具描述文本**：从所有工具的 description 字符串中移除 "Private endpoint"、"Public endpoint" 和 "Rate limit: X req/s per UID" 等标签，以减少 MCP schema 的 token 开销。`[CAUTION]` 标记保持不变。([#70](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/70))
+
+### 修复
+
+- **`callBackRatio` / `callBackSpread` 参数名大小写错误**：OKX API 要求使用 `callBackRatio` 和 `callBackSpread`（大写 B），但 POST body 中实际发送的是 `callbackRatio` 和 `callbackSpread`（小写 b），导致返回 sCode 50015 错误。已修复 `swap_place_algo_order` 和 `swap_place_move_stop_order` 两个 handler。MCP 输入参数名（`callbackRatio` / `callbackSpread`）保持不变。([#69](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/69))
+
+---
+
+## [1.2.4-beta.4] - 2026-03-14
+
+### 新增
+
+- **`market_get_stock_tokens` 工具**：新增专用工具，用于查询股票代币合约列表（如 `AAPL-USDT-SWAP`、`TSLA-USDT-SWAP`）。通过 `GET /api/v5/public/instruments` 获取全量合约后，在客户端按 `instCategory=3` 过滤。支持 `instType`（默认 `SWAP`）及可选 `instId` 参数。([#65](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/65))
+- **CLI `okx market stock-tokens`**：新增 CLI 子命令，映射到 `market_get_stock_tokens`。用法：`okx market stock-tokens [--instType <SPOT|SWAP>] [--instId <id>] [--json]`。([#65](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/65))
+- **现货移动止盈止损支持**（`spot_place_algo_order` 传入 `ordType='move_order_stop'`）：除支持 conditional/oco 外，现已支持移动止损。传入 `ordType='move_order_stop'` 并指定 `callbackRatio`（如 `'0.01'` 表示 1%）或 `callbackSpread`（固定价格距离），可选传入 `activePx`。([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+- **`swap_place_algo_order` 新增移动止损支持**（`ordType='move_order_stop'`）：新增 `callbackRatio`、`callbackSpread`、`activePx` 参数，可替代已废弃的 `swap_place_move_stop_order` 工具。([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+- **`spot_get_algo_orders` 现已包含移动止损订单**：未指定 `ordType` 过滤时，查询现并行获取 `conditional`、`oco` 和 `move_order_stop` 三种类型。([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+- **CLI `okx spot algo trail`**：新增现货移动止损下单命令。用法：`okx spot algo trail --instId BTC-USDT --side sell --sz 0.001 --callbackRatio 0.01 [--activePx <price>] [--tdMode cash]`。([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+- **CLI `okx futures algo trail`**：新增期货移动止损下单命令。用法：`okx futures algo trail --instId BTC-USD-250328 --side sell --sz 1 --callbackRatio 0.01 [--activePx <price>] [--posSide <net|long|short>] [--tdMode <cross|isolated>] [--reduceOnly]`。([#68](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/68))
+
+### 修复
+
+- **Bot 工具：补充 `algoId`、`algoOrdType`、`groupId` 缺失的参数描述** — Grid 工具（`grid_get_orders`、`grid_get_order_details`、`grid_get_sub_orders`、`grid_stop_order`）和 DCA 工具（`dca_get_orders`、`dca_get_order_details`）缺少 `algoId` 描述，导致 AI agent 传入无效值（错误 `51000`）或 `algoOrdType` 不匹配（错误 `50016`）。同时补充了 `grid_get_sub_orders` 的 `groupId` 描述和 `spot_amend_algo_order` 的 `newSz` 描述。
+- **CLI：`okx bot dca orders` 新增 `--algoId` 和 `--instId` 过滤** — 此前 CLI 未将这些参数传递给底层 `dca_get_orders` 工具，现已与 `okx bot grid orders` 行为对齐。
+
+### 废弃
+
+- **`swap_place_move_stop_order`**：已废弃，推荐使用 `swap_place_algo_order` 并传入 `ordType='move_order_stop'`。该工具仍保留以向后兼容。([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+
+### 变更
+
+- **`--modules all` 现已包含 earn 子模块**：`all` 现在会展开为所有模块，包括 `earn.savings`、`earn.onchain` 和 `earn.dcd`，与 bot 子模块保持一致。默认模块保持不变。([#66](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/66))
+- **CLI：移除直接 `smol-toml` 依赖** — `packages/cli` 不再声明 `smol-toml` 为直接依赖，TOML 功能现在完全通过 `@agent-tradekit/core` 提供。([#39](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/39))
+- **去重 postinstall 脚本**：monorepo 根目录下的 `scripts/postinstall-notice.js` 现为单一来源，`packages/cli/scripts/postinstall.js` 和 `packages/mcp/scripts/postinstall.js` 在 `build` 时自动生成，已加入 `.gitignore`。([#50](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/50))
+- **`earn` 重构为子模块目录**（内部重构）：`earn.ts` → `tools/earn/savings.ts`，`onchain-earn.ts` → `tools/earn/onchain.ts`，新增 `tools/earn/index.ts` 聚合入口，不影响公开 API。([#64](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/64))
+
+---
+
+## [1.2.4-beta.3] - 2026-03-13
+
+### 新增
+
+- **CLI `okx futures algo trail`**：新增期货移动止损下单命令。用法：`okx futures algo trail --instId BTC-USD-250328 --side sell --sz 1 --callbackRatio 0.01 [--activePx <price>] [--posSide <net|long|short>] [--tdMode <cross|isolated>] [--reduceOnly]`。([#68](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/68))
+
+---
+
+## [1.2.4-beta.2] - 2026-03-13
+
+### 新增
+
+- **现货移动止盈止损支持**（`spot_place_algo_order` 传入 `ordType='move_order_stop'`）：`spot_place_algo_order` 除支持 conditional/oco 外，现已支持移动止损（trailing stop）。传入 `ordType='move_order_stop'` 并指定 `callbackRatio`（如 `'0.01'` 表示 1%）或 `callbackSpread`（固定价格距离），可选传入 `activePx`（激活价格）。([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+- **`swap_place_algo_order` 新增移动止损支持**（`ordType='move_order_stop'`）：swap 算法订单工具新增 `callbackRatio`、`callbackSpread`、`activePx` 参数，可替代已废弃的 `swap_place_move_stop_order` 工具。([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+- **`spot_get_algo_orders` 现已包含移动止损订单**：未指定 `ordType` 过滤时，查询现并行获取 `conditional`、`oco` 和 `move_order_stop` 三种类型（此前仅查询 `conditional` 和 `oco`）。([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+- **CLI `okx spot algo trail`**：新增现货移动止损下单命令。用法：`okx spot algo trail --instId BTC-USDT --side sell --sz 0.001 --callbackRatio 0.01 [--activePx <price>] [--tdMode cash]`。([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+
+### 废弃
+
+- **`swap_place_move_stop_order`**：已废弃，推荐使用 `swap_place_algo_order` 并传入 `ordType='move_order_stop'`。该工具仍保留以向后兼容。([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+
+### 变更
+
+- **`--modules all` 现已包含 earn 子模块**：`all` 现在会展开为所有模块，包括 `earn.savings`、`earn.onchain` 和 `earn.dcd`，与 bot 子模块保持一致。此前 earn 需要通过 `all,earn` 显式启用。默认模块保持不变（`spot`、`swap`、`option`、`account`、`bot.grid`）。([#66](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/66))
+
+---
+
+## [1.2.4-beta.1] - 2026-03-13
+
+### 新增
+
+- **`market_get_stock_tokens` 工具**：新增专用工具，用于查询股票代币合约列表（如 `AAPL-USDT-SWAP`、`TSLA-USDT-SWAP`）。通过 `GET /api/v5/public/instruments` 获取全量合约后，在客户端按 `instCategory=3` 过滤。支持 `instType`（默认 `SWAP`）及可选 `instId` 参数。([#65](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/65))
+- **CLI `okx market stock-tokens`**：新增 CLI 子命令，映射到 `market_get_stock_tokens`。用法：`okx market stock-tokens [--instType <SPOT|SWAP>] [--instId <id>] [--json]`。
+- **DCD 模块**（`earn.dcd`）— 新增 8 个 MCP 工具和 10 个 CLI 命令，支持 OKX 双币赢（Dual Currency Deposit）：`dcd_get_currency_pairs`、`dcd_get_products`、`dcd_request_quote`、`dcd_execute_quote`、`dcd_request_redeem_quote`、`dcd_execute_redeem`、`dcd_get_order_state`、`dcd_get_orders`。CLI 命令：`okx earn dcd pairs`、`products`、`quote`、`buy`、`quote-and-buy`、`redeem-quote`、`redeem`、`redeem-execute`、`order`、`orders`。支持客户端产品筛选（`--minYield`、`--strikeNear`、`--termDays`、`--expDate`）、两步提前赎回流程，以及所有写操作的模拟盘拦截。
+
+### 修复
+
+- **Bot 工具：补充 `algoId`、`algoOrdType`、`groupId` 缺失的参数描述** — Grid 工具（`grid_get_orders`、`grid_get_order_details`、`grid_get_sub_orders`、`grid_stop_order`）和 DCA 工具（`dca_get_orders`、`dca_get_order_details`）缺少 `algoId` 描述，导致 AI agent 传入无效值（错误 `51000`）或 `algoOrdType` 不匹配（错误 `50016`）。同时补充了 `grid_get_sub_orders` 的 `groupId` 描述和 `spot_amend_algo_order` 的 `newSz` 描述。
+- **CLI：`okx bot dca orders` 新增 `--algoId` 和 `--instId` 过滤** — 此前 CLI 未将这些参数传递给底层 `dca_get_orders` 工具，尽管 MCP tool 已支持。现已与 `okx bot grid orders` 行为对齐。
+
+### 变更
+
+- **CLI：移除直接 `smol-toml` 依赖** — `packages/cli` 不再声明 `smol-toml` 为直接依赖。TOML 功能现在完全通过 `@agent-tradekit/core` 提供，core 包内部已内联 `smol-toml`。([#39](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/39))
+- **去重 postinstall 脚本**：monorepo 根目录下的 `scripts/postinstall-notice.js` 现为单一来源。`packages/cli/scripts/postinstall.js` 和 `packages/mcp/scripts/postinstall.js` 在 `build` 时自动生成，已加入 `.gitignore`。([#50](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/50))
+- **`earn` 重构为子模块目录**（内部重构）：`earn.ts` → `tools/earn/savings.ts`，`onchain-earn.ts` → `tools/earn/onchain.ts`，新增 `tools/earn/index.ts` 作为聚合入口。与 `bot/` 子模块目录结构保持一致，不影响公开 API。([#64](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/64))
+
+---
+
+## [1.2.4-beta.0] - 2026-03-13
+
+### 新增
+
+- **`market_get_stock_tokens` 工具**：新增专用工具，用于查询股票代币合约列表（如 `AAPL-USDT-SWAP`、`TSLA-USDT-SWAP`）。通过 `GET /api/v5/public/instruments` 获取全量合约后，在客户端按 `instCategory=3` 过滤。支持 `instType`（默认 `SWAP`）及可选 `instId` 参数。([#65](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/65))
+- **CLI `okx market stock-tokens`**：新增 CLI 子命令，映射到 `market_get_stock_tokens`。用法：`okx market stock-tokens [--instType <SPOT|SWAP>] [--instId <id>] [--json]`。
+
+### 修复
+
+- **Bot 工具：补充 `algoId`、`algoOrdType`、`groupId` 缺失的参数描述** — Grid 工具（`grid_get_orders`、`grid_get_order_details`、`grid_get_sub_orders`、`grid_stop_order`）和 DCA 工具（`dca_get_orders`、`dca_get_order_details`）缺少 `algoId` 描述，导致 AI agent 传入无效值（错误 `51000`）或 `algoOrdType` 不匹配（错误 `50016`）。同时补充了 `grid_get_sub_orders` 的 `groupId` 描述和 `spot_amend_algo_order` 的 `newSz` 描述。
+- **CLI：`okx bot dca orders` 新增 `--algoId` 和 `--instId` 过滤** — 此前 CLI 未将这些参数传递给底层 `dca_get_orders` 工具，尽管 MCP tool 已支持。现已与 `okx bot grid orders` 行为对齐。
+
+### 变更
+
+- **CLI：移除直接 `smol-toml` 依赖** — `packages/cli` 不再声明 `smol-toml` 为直接依赖。TOML 功能现在完全通过 `@agent-tradekit/core` 提供，core 包内部已内联 `smol-toml`。([#39](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/39))
+- **去重 postinstall 脚本**：monorepo 根目录下的 `scripts/postinstall-notice.js` 现为单一来源。`packages/cli/scripts/postinstall.js` 和 `packages/mcp/scripts/postinstall.js` 在 `build` 时自动生成，已加入 `.gitignore`。([#50](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/50))
+- **`earn` 重构为子模块目录**（内部重构）：`earn.ts` → `tools/earn/savings.ts`，`onchain-earn.ts` → `tools/earn/onchain.ts`，新增 `tools/earn/index.ts` 作为聚合入口。与 `bot/` 子模块目录结构保持一致，不影响公开 API。([#64](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/64))
+
+---
+
+## [1.2.3] - 2026-03-12
+
+### 破坏性变更
+
+- **`--modules all` 不再包含 earn 子模块**：此前 `--modules all` 会展开为所有模块，包括 `earn.savings` 和 `earn.onchain`。现在 `all` 仅包含基础模块和 bot 子模块，earn 模块需要显式启用：
+  - `--modules all,earn` — 所有模块 + 全部 earn 子模块
+  - `--modules all,earn.savings` — 所有模块 + 仅简单赚币
+  - `--modules all,earn.onchain` — 所有模块 + 仅链上赚币
+  - `--modules earn` — 仅 earn 子模块
+
+  **迁移方案**：若此前使用 `--modules all` 且依赖 earn 工具，需在配置中追加 `,earn`：`--modules all,earn`。
+
+### 新增
+
+- **DCD 模块**（`earn.dcd`）— 新增 8 个 MCP 工具和 10 个 CLI 命令，支持 OKX 双币赢（Dual Currency Deposit）：`dcd_get_currency_pairs`、`dcd_get_products`、`dcd_request_quote`、`dcd_execute_quote`、`dcd_request_redeem_quote`、`dcd_execute_redeem`、`dcd_get_order_state`、`dcd_get_orders`。CLI 命令：`okx earn dcd pairs`、`products`、`quote`、`buy`、`quote-and-buy`、`redeem-quote`、`redeem`、`redeem-execute`、`order`、`orders`。支持客户端产品筛选（`--minYield`、`--strikeNear`、`--termDays`、`--expDate`）、两步提前赎回流程，以及所有写操作的模拟盘拦截。
+- **HTTP/HTTPS 代理支持**：在 TOML Profile 中配置 `proxy_url`，所有 OKX API 请求将通过代理服务器转发。支持带认证的代理 URL（如 `http://user:pass@proxy:8080`）。仅支持 HTTP/HTTPS 代理，不支持 SOCKS。（[#53](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/53)）
+- **CLI `--verbose` 标志**：为任意命令添加 `--verbose`，可在 stderr 查看详细的网络请求/响应信息 — 包括方法、URL、认证状态（密钥脱敏）、耗时、HTTP 状态码、OKX 错误码和 trace ID。适用于排查连接和认证问题。
+- **CLI `okx diagnose` 诊断命令**：逐步检查连通性 — 环境（Node.js、OS、shell、locale、时区、代理）、配置（凭证、站点、base URL）、网络（DNS → TCP → TLS → 公开 API）和认证。失败时给出具体建议，并在末尾输出可复制分享的诊断报告。
+- **CLI 下单命令 — 附带止盈止损**：`okx spot place`、`okx swap place`、`okx futures place` 现支持可选的止盈止损参数：`--tpTriggerPx`、`--tpOrdPx`、`--tpTriggerPxType`、`--slTriggerPx`、`--slOrdPx`、`--slTriggerPxType`。这些参数会直接作为附带 TP/SL 传递给 OKX 下单 API。
+- **Earn 模块** — 新增 7 个 OKX 简单赚币（活期/灵活借贷）工具：`earn_get_savings_balance`、`earn_savings_purchase`、`earn_savings_redeem`、`earn_set_lending_rate`、`earn_get_lending_history`、`earn_get_lending_rate_summary`、`earn_get_lending_rate_history`。包含 CLI 命令、中英文文档及完整测试覆盖。
 
 ---
 
@@ -20,6 +324,7 @@
 - **合约 DCA — 可选参数**：`--slMode`（止损价格类型：`limit`/`market`）、`--allowReinvest`（利润再投入下一轮循环，默认 `true`）、`--triggerStrategy`（启动方式：`instant`/`price`/`rsi`）、`--triggerPx`（触发价格，`price` 策略时必填）。均为可选参数，仅适用于合约 DCA 创建。
 - **合约 DCA 订单 — `instId` 过滤**：`dca_get_orders` 现支持可选的 `--instId` 参数，用于按合约筛选 DCA 机器人（如 `BTC-USDT-SWAP`）
 - **合约 DCA 子订单 — `cycleId` 过滤**：`dca_get_sub_orders` 现支持可选的 `--cycleId` 参数，用于查询指定周期内的订单
+- **链上赚币模块（6 个工具）**：新增 `onchain-earn` 模块，支持 OKX 链上赚币（质押/DeFi）产品 — `onchain_earn_get_offers`、`onchain_earn_purchase`、`onchain_earn_redeem`、`onchain_earn_cancel`、`onchain_earn_get_active_orders`、`onchain_earn_get_order_history`。CLI 命令：`okx earn onchain offers`、`okx earn onchain purchase`、`okx earn onchain redeem`、`okx earn onchain cancel`、`okx earn onchain orders`、`okx earn onchain history`。
 
 ### 变更
 

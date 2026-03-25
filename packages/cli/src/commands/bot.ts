@@ -1,5 +1,14 @@
 import type { ToolRunner } from "@agent-tradekit/core";
-import { printJson, printTable, printKv } from "../formatter.js";
+import { outputLine, errorLine, printJson, printKv, printTable } from "../formatter.js";
+
+function emitWriteResult(item: Record<string, unknown> | undefined, label: string, idKey: string): void {
+  const isError = item?.["sCode"] !== "0" && item?.["sCode"] !== 0;
+  if (isError) {
+    errorLine(`Error: ${item?.["sMsg"]} (sCode ${item?.["sCode"]})`);
+  } else {
+    outputLine(`${label}: ${item?.[idKey]} (OK)`);
+  }
+}
 
 function getData(result: unknown): unknown {
   return (result as Record<string, unknown>).data;
@@ -23,7 +32,7 @@ export async function cmdGridOrders(
   });
   const orders = (getData(result) as Record<string, unknown>[]) ?? [];
   if (opts.json) return printJson(orders);
-  if (!orders.length) { process.stdout.write("No grid bots\n"); return; }
+  if (!orders.length) { outputLine("No grid bots"); return; }
   printTable(
     orders.map((o) => ({
       algoId:     o["algoId"],
@@ -48,7 +57,7 @@ export async function cmdGridDetails(
     algoId: opts.algoId,
   });
   const detail = ((getData(result) as Record<string, unknown>[]) ?? [])[0];
-  if (!detail) { process.stdout.write("Bot not found\n"); return; }
+  if (!detail) { outputLine("Bot not found"); return; }
   if (opts.json) return printJson(detail);
   printKv({
     algoId:       detail["algoId"],
@@ -83,7 +92,7 @@ export async function cmdGridSubOrders(
   });
   const orders = (getData(result) as Record<string, unknown>[]) ?? [];
   if (opts.json) return printJson(orders);
-  if (!orders.length) { process.stdout.write("No sub-orders\n"); return; }
+  if (!orders.length) { outputLine("No sub-orders"); return; }
   printTable(
     orders.map((o) => ({
       ordId:   o["ordId"],
@@ -133,9 +142,7 @@ export async function cmdGridCreate(
   const data = getData(result) as Record<string, unknown>[];
   if (opts.json) return printJson(data);
   const r = data?.[0];
-  process.stdout.write(
-    `Grid bot created: ${r?.["algoId"]} (${r?.["sCode"] === "0" ? "OK" : r?.["sMsg"]})\n`,
-  );
+  emitWriteResult(data?.[0], "Grid bot created", "algoId");
 }
 
 export async function cmdGridStop(
@@ -157,9 +164,7 @@ export async function cmdGridStop(
   const data = getData(result) as Record<string, unknown>[];
   if (opts.json) return printJson(data);
   const r = data?.[0];
-  process.stdout.write(
-    `Grid bot stopped: ${r?.["algoId"]} (${r?.["sCode"] === "0" ? "OK" : r?.["sMsg"]})\n`,
-  );
+  emitWriteResult(data?.[0], "Grid bot stopped", "algoId");
 }
 
 // ---------------------------------------------------------------------------
@@ -207,9 +212,7 @@ export async function cmdDcaCreate(
   const data = getData(result) as Record<string, unknown>[];
   if (opts.json) return printJson(data);
   const r = data?.[0];
-  process.stdout.write(
-    `DCA bot created: ${r?.["algoId"]} (${r?.["sCode"] === "0" ? "OK" : r?.["sMsg"]})\n`,
-  );
+  emitWriteResult(data?.[0], "DCA bot created", "algoId");
 }
 
 export async function cmdDcaStop(
@@ -222,21 +225,21 @@ export async function cmdDcaStop(
   const data = getData(result) as Record<string, unknown>[];
   if (opts.json) return printJson(data);
   const r = data?.[0];
-  process.stdout.write(
-    `DCA bot stopped: ${r?.["algoId"]} (${r?.["sCode"] === "0" ? "OK" : r?.["sMsg"]})\n`,
-  );
+  emitWriteResult(data?.[0], "DCA bot stopped", "algoId");
 }
 
 export async function cmdDcaOrders(
   run: ToolRunner,
-  opts: { history: boolean; json: boolean },
+  opts: { algoId?: string; instId?: string; history: boolean; json: boolean },
 ): Promise<void> {
   const result = await run("dca_get_orders", {
     status: opts.history ? "history" : "active",
+    algoId: opts.algoId,
+    instId: opts.instId,
   });
   const orders = (getData(result) as Record<string, unknown>[]) ?? [];
   if (opts.json) return printJson(orders);
-  if (!orders.length) { process.stdout.write("No DCA bots\n"); return; }
+  if (!orders.length) { outputLine("No DCA bots"); return; }
   printTable(
     orders.map((o) => ({
       algoId:    o["algoId"],
@@ -257,7 +260,7 @@ export async function cmdDcaDetails(
     algoId: opts.algoId,
   });
   const detail = ((getData(result) as Record<string, unknown>[]) ?? [])[0];
-  if (!detail) { process.stdout.write("DCA bot not found\n"); return; }
+  if (!detail) { outputLine("DCA bot not found"); return; }
   if (opts.json) return printJson(detail);
   printKv({
     algoId:        detail["algoId"],
@@ -286,7 +289,7 @@ export async function cmdDcaSubOrders(
   });
   const orders = (getData(result) as Record<string, unknown>[]) ?? [];
   if (opts.json) return printJson(orders);
-  if (!orders.length) { process.stdout.write("No sub-orders\n"); return; }
+  if (!orders.length) { outputLine("No sub-orders"); return; }
   printTable(
     orders.map((o) => ({
       cycleId:     o["cycleId"],

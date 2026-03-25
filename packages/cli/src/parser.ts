@@ -19,6 +19,7 @@ export interface CliValues {
   px?: string;
   posSide?: string;
   tdMode?: string;
+  tgtCcy?: string;
   lever?: string;
   mgnMode?: string;
   tpTriggerPx?: string;
@@ -80,11 +81,46 @@ export interface CliValues {
   // batch
   action?: string;
   orders?: string;
+  // earn
+  rate?: string;
   // audit
   since?: string;
   tool?: string;
   // config profile
   force?: boolean;
+  // onchain-earn
+  productId?: string;
+  protocolType?: string;
+  term?: string;
+  tag?: string;
+  allowEarlyRedeem?: boolean;
+  state?: string;
+  // dcd
+  quoteId?: string;
+  notionalCcy?: string;
+  optType?: string;
+  baseCcy?: string;
+  beginId?: string;
+  endId?: string;
+  begin?: string;
+  end?: string;
+  minYield?: string;
+  strikeNear?: string;
+  termDays?: string;
+  minTermDays?: string;
+  maxTermDays?: string;
+  expDate?: string;
+  minAnnualizedYield?: string;
+  // indicator
+  params?: string;
+  list?: boolean;
+  "backtest-time"?: string;
+  // diagnostics (diagnose-specific flags)
+  verbose?: boolean;
+  mcp?: boolean;   // diagnose --mcp: run MCP server checks only
+  cli?: boolean;   // diagnose --cli: run CLI/general checks only (explicit alias for default)
+  all?: boolean;   // diagnose --all: run CLI checks then MCP checks
+  output?: string; // diagnose --output: save diagnostic report to file
 }
 
 export const CLI_OPTIONS = {
@@ -110,6 +146,7 @@ export const CLI_OPTIONS = {
   px: { type: "string" },
   posSide: { type: "string" },
   tdMode: { type: "string" },
+  tgtCcy: { type: "string" },
   // leverage
   lever: { type: "string" },
   mgnMode: { type: "string" },
@@ -180,11 +217,46 @@ export const CLI_OPTIONS = {
   // batch
   action: { type: "string" },
   orders: { type: "string" },
+  // earn
+  rate: { type: "string" },
   // audit
   since: { type: "string" },
   tool: { type: "string" },
   // config profile
   force: { type: "boolean", default: false },
+  // onchain-earn
+  productId: { type: "string" },
+  protocolType: { type: "string" },
+  term: { type: "string" },
+  tag: { type: "string" },
+  allowEarlyRedeem: { type: "boolean", default: false },
+  state: { type: "string" },
+  // dcd
+  quoteId: { type: "string" },
+  notionalCcy: { type: "string" },
+  optType: { type: "string" },
+  baseCcy: { type: "string" },
+  beginId: { type: "string" },
+  endId: { type: "string" },
+  begin: { type: "string" },
+  end: { type: "string" },
+  minYield: { type: "string" },
+  strikeNear: { type: "string" },
+  termDays: { type: "string" },
+  minTermDays: { type: "string" },
+  maxTermDays: { type: "string" },
+  expDate: { type: "string" },
+  minAnnualizedYield: { type: "string" },
+  // indicator
+  params: { type: "string" },
+  list: { type: "boolean", default: false },
+  "backtest-time": { type: "string" },
+  // diagnostics — cli/mcp/all/output are diagnose-specific; verbose is shared
+  verbose: { type: "boolean", default: false },
+  mcp: { type: "boolean", default: false }, // diagnose --mcp only: MCP server checks
+  cli: { type: "boolean", default: false }, // diagnose --cli only: CLI/general checks (explicit alias for default)
+  all: { type: "boolean", default: false }, // diagnose --all: run both CLI and MCP checks
+  output: { type: "string" },               // diagnose --output only: save report to file
 } as const;
 
 export function parseCli(argv: string[]): { values: CliValues; positionals: string[] } {

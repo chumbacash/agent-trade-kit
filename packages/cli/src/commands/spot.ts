@@ -1,8 +1,29 @@
 import type { ToolRunner } from "@agent-tradekit/core";
-import { printJson, printKv, printTable } from "../formatter.js";
+import { errorLine, outputLine, printJson, printKv, printTable } from "../formatter.js";
 
 function getData(result: unknown): unknown {
   return (result as Record<string, unknown>).data;
+}
+
+function emitWriteResult(item: Record<string, unknown> | undefined, label: string, idKey: string): void {
+  const isError = item?.["sCode"] !== "0" && item?.["sCode"] !== 0;
+  if (isError) {
+    errorLine(`Error: ${item?.["sMsg"]} (sCode ${item?.["sCode"]})`);
+  } else {
+    outputLine(`${label}: ${item?.[idKey]} (OK)`);
+  }
+}
+
+function emitBatchResults(items: Record<string, unknown>[]): void {
+  for (const r of items) {
+    const isError = r["sCode"] !== "0" && r["sCode"] !== 0;
+    const id = r["ordId"] ?? r["clOrdId"] ?? "?";
+    if (isError) {
+      errorLine(`${id}: ${r["sMsg"]} (sCode ${r["sCode"]})`);
+    } else {
+      outputLine(`${id}: OK`);
+    }
+  }
 }
 
 export async function cmdSpotOrders(
@@ -34,7 +55,12 @@ export async function cmdSpotPlace(
     side: string;
     ordType: string;
     sz: string;
+    tgtCcy?: string;
     px?: string;
+    tpTriggerPx?: string;
+    tpOrdPx?: string;
+    slTriggerPx?: string;
+    slOrdPx?: string;
     json: boolean;
   },
 ): Promise<void> {
@@ -44,25 +70,28 @@ export async function cmdSpotPlace(
     side: opts.side,
     ordType: opts.ordType,
     sz: opts.sz,
+    tgtCcy: opts.tgtCcy,
     px: opts.px,
+    tpTriggerPx: opts.tpTriggerPx,
+    tpOrdPx: opts.tpOrdPx,
+    slTriggerPx: opts.slTriggerPx,
+    slOrdPx: opts.slOrdPx,
   });
   const data = getData(result) as Record<string, unknown>[];
   if (opts.json) return printJson(data);
-  const order = data?.[0];
-  process.stdout.write(`Order placed: ${order?.["ordId"]} (${order?.["sCode"] === "0" ? "OK" : order?.["sMsg"]})\n`);
+  emitWriteResult(data?.[0], "Order placed", "ordId");
 }
 
 export async function cmdSpotCancel(
   run: ToolRunner,
-  instId: string,
-  ordId: string,
-  json: boolean,
+  opts: { instId: string; ordId?: string; clOrdId?: string; json: boolean },
 ): Promise<void> {
-  const result = await run("spot_cancel_order", { instId, ordId });
+  const { instId, ordId, clOrdId, json } = opts;
+  if (!ordId && !clOrdId) throw new Error("Either --ordId or --clOrdId is required");
+  const result = await run("spot_cancel_order", { instId, ...(ordId ? { ordId } : { clOrdId }) });
   const data = getData(result) as Record<string, unknown>[];
   if (json) return printJson(data);
-  const r = data?.[0];
-  process.stdout.write(`Cancelled: ${r?.["ordId"]} (${r?.["sCode"] === "0" ? "OK" : r?.["sMsg"]})\n`);
+  emitWriteResult(data?.[0], "Cancelled", "ordId");
 }
 
 export async function cmdSpotAlgoPlace(
@@ -77,6 +106,9 @@ export async function cmdSpotAlgoPlace(
     tpOrdPx?: string;
     slTriggerPx?: string;
     slOrdPx?: string;
+    callbackRatio?: string;
+    callbackSpread?: string;
+    activePx?: string;
     json: boolean;
   },
 ): Promise<void> {
@@ -90,13 +122,13 @@ export async function cmdSpotAlgoPlace(
     tpOrdPx: opts.tpOrdPx,
     slTriggerPx: opts.slTriggerPx,
     slOrdPx: opts.slOrdPx,
+    callbackRatio: opts.callbackRatio,
+    callbackSpread: opts.callbackSpread,
+    activePx: opts.activePx,
   });
   const data = getData(result) as Record<string, unknown>[];
   if (opts.json) return printJson(data);
-  const order = data?.[0];
-  process.stdout.write(
-    `Algo order placed: ${order?.["algoId"]} (${order?.["sCode"] === "0" ? "OK" : order?.["sMsg"]})\n`,
-  );
+  emitWriteResult(data?.[0], "Algo order placed", "algoId");
 }
 
 export async function cmdSpotAlgoAmend(
@@ -123,10 +155,7 @@ export async function cmdSpotAlgoAmend(
   });
   const data = getData(result) as Record<string, unknown>[];
   if (opts.json) return printJson(data);
-  const r = data?.[0];
-  process.stdout.write(
-    `Algo order amended: ${r?.["algoId"]} (${r?.["sCode"] === "0" ? "OK" : r?.["sMsg"]})\n`,
-  );
+  emitWriteResult(data?.[0], "Algo order amended", "algoId");
 }
 
 export async function cmdSpotAlgoCancel(
@@ -138,10 +167,7 @@ export async function cmdSpotAlgoCancel(
   const result = await run("spot_cancel_algo_order", { instId, algoId });
   const data = getData(result) as Record<string, unknown>[];
   if (json) return printJson(data);
-  const r = data?.[0];
-  process.stdout.write(
-    `Algo order cancelled: ${r?.["algoId"]} (${r?.["sCode"] === "0" ? "OK" : r?.["sMsg"]})\n`,
-  );
+  emitWriteResult(data?.[0], "Algo order cancelled", "algoId");
 }
 
 export async function cmdSpotGet(
@@ -152,7 +178,7 @@ export async function cmdSpotGet(
   const data = getData(result) as Record<string, unknown>[];
   if (opts.json) return printJson(data);
   const o = data?.[0];
-  if (!o) { process.stdout.write("No data\n"); return; }
+  if (!o) { outputLine("No data"); return; }
   printKv({
     ordId: o["ordId"],
     instId: o["instId"],
@@ -187,8 +213,7 @@ export async function cmdSpotAmend(
   });
   const data = getData(result) as Record<string, unknown>[];
   if (opts.json) return printJson(data);
-  const r = data?.[0];
-  process.stdout.write(`Order amended: ${r?.["ordId"]} (${r?.["sCode"] === "0" ? "OK" : r?.["sMsg"]})\n`);
+  emitWriteResult(data?.[0], "Order amended", "ordId");
 }
 
 export async function cmdSpotAlgoOrders(
@@ -202,7 +227,7 @@ export async function cmdSpotAlgoOrders(
   });
   const orders = getData(result) as Record<string, unknown>[];
   if (opts.json) return printJson(orders);
-  if (!(orders ?? []).length) { process.stdout.write("No algo orders\n"); return; }
+  if (!(orders ?? []).length) { outputLine("No algo orders"); return; }
   printTable(
     orders.map((o) => ({
       algoId: o["algoId"],
@@ -236,6 +261,34 @@ export async function cmdSpotFills(
   );
 }
 
+export async function cmdSpotAlgoTrailPlace(
+  run: ToolRunner,
+  opts: {
+    instId: string;
+    side: string;
+    sz: string;
+    callbackRatio?: string;
+    callbackSpread?: string;
+    activePx?: string;
+    tdMode?: string;
+    json: boolean;
+  },
+): Promise<void> {
+  const result = await run("spot_place_algo_order", {
+    instId: opts.instId,
+    tdMode: opts.tdMode ?? "cash",
+    side: opts.side,
+    ordType: "move_order_stop",
+    sz: opts.sz,
+    callbackRatio: opts.callbackRatio,
+    callbackSpread: opts.callbackSpread,
+    activePx: opts.activePx,
+  });
+  const data = getData(result) as Record<string, unknown>[];
+  if (opts.json) return printJson(data);
+  emitWriteResult(data?.[0], "Trailing stop placed", "algoId");
+}
+
 export async function cmdSpotBatch(
   run: ToolRunner,
   opts: { action: string; orders: string; json: boolean },
@@ -244,12 +297,12 @@ export async function cmdSpotBatch(
   try {
     parsed = JSON.parse(opts.orders);
   } catch {
-    process.stderr.write("Error: --orders must be a valid JSON array\n");
+    errorLine("Error: --orders must be a valid JSON array");
     process.exitCode = 1;
     return;
   }
   if (!Array.isArray(parsed) || parsed.length === 0) {
-    process.stderr.write("Error: --orders must be a non-empty JSON array\n");
+    errorLine("Error: --orders must be a non-empty JSON array");
     process.exitCode = 1;
     return;
   }
@@ -261,7 +314,7 @@ export async function cmdSpotBatch(
   };
   const tool = toolMap[opts.action];
   if (!tool) {
-    process.stderr.write(`Error: --action must be one of: place, amend, cancel\n`);
+    errorLine("Error: --action must be one of: place, amend, cancel");
     process.exitCode = 1;
     return;
   }
@@ -269,7 +322,5 @@ export async function cmdSpotBatch(
   const result = await run(tool, tool === "spot_batch_orders" ? { action: opts.action, orders: parsed } : { orders: parsed });
   const data = getData(result) as Record<string, unknown>[];
   if (opts.json) return printJson(data);
-  for (const r of data ?? []) {
-    process.stdout.write(`${r["ordId"] ?? r["clOrdId"] ?? "?"}: ${r["sCode"] === "0" ? "OK" : r["sMsg"]}\n`);
-  }
+  emitBatchResults(data ?? []);
 }

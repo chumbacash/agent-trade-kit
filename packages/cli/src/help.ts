@@ -1,5 +1,7 @@
+import { EOL } from "node:os";
 import { SUPPORTED_CLIENTS } from "./commands/client-setup.js";
 import { configFilePath } from "@agent-tradekit/core";
+import { output, outputLine, errorLine } from "./formatter.js";
 
 // ---------------------------------------------------------------------------
 // Help tree data structures
@@ -81,6 +83,10 @@ const HELP_TREE: HelpTree = {
         usage: "okx market open-interest --instType <SWAP|FUTURES|OPTION> [--instId <id>]",
         description: "Get open interest for instruments",
       },
+      "stock-tokens": {
+        usage: "okx market stock-tokens [--instType <SPOT|SWAP>] [--instId <id>]",
+        description: "List all stock token instruments (instCategory=3, e.g. AAPL-USDT-SWAP)",
+      },
     },
   },
 
@@ -158,8 +164,8 @@ const HELP_TREE: HelpTree = {
         description: "Get trade fill history for spot orders",
       },
       place: {
-        usage: "okx spot place --instId <id> --side <buy|sell> --ordType <type> --sz <n> [--px <price>] [--tdMode <cash|cross|isolated>]",
-        description: "Place a new spot order",
+        usage: "okx spot place --instId <id> --side <buy|sell> --ordType <type> --sz <n> [--px <price>] [--tdMode <cash|cross|isolated>] [--tpTriggerPx <price>] [--tpOrdPx <price|-1>] [--slTriggerPx <price>] [--slOrdPx <price|-1>]",
+        description: "Place a new spot order (supports attached TP/SL)",
       },
       amend: {
         usage: "okx spot amend --instId <id> --ordId <id> [--newSz <n>] [--newPx <price>]",
@@ -219,8 +225,8 @@ const HELP_TREE: HelpTree = {
         description: "Get trade fill history for swap orders",
       },
       place: {
-        usage: "okx swap place --instId <id> --side <buy|sell> --ordType <type> --sz <n> [--posSide <side>] [--px <price>] [--tdMode <cross|isolated>]",
-        description: "Place a new perpetual swap order",
+        usage: "okx swap place --instId <id> --side <buy|sell> --ordType <type> --sz <n> [--posSide <side>] [--px <price>] [--tdMode <cross|isolated>] [--tpTriggerPx <price>] [--tpOrdPx <price|-1>] [--slTriggerPx <price>] [--slOrdPx <price|-1>]",
+        description: "Place a new perpetual swap order (supports attached TP/SL)",
       },
       cancel: {
         usage: "okx swap cancel <instId> --ordId <id>",
@@ -277,7 +283,7 @@ const HELP_TREE: HelpTree = {
   },
 
   futures: {
-    description: "Futures trading (orders, positions)",
+    description: "Futures trading (orders, positions, algo orders, leverage)",
     commands: {
       orders: {
         usage: "okx futures orders [--instId <id>] [--history] [--archive]",
@@ -292,16 +298,63 @@ const HELP_TREE: HelpTree = {
         description: "Get trade fill history for futures orders",
       },
       place: {
-        usage: "okx futures place --instId <id> --side <buy|sell> --ordType <type> --sz <n>\n                 [--tdMode <cross|isolated>] [--posSide <net|long|short>] [--px <price>] [--reduceOnly]",
-        description: "Place a new futures order",
+        usage: "okx futures place --instId <id> --side <buy|sell> --ordType <type> --sz <n>\n                 [--tdMode <cross|isolated>] [--posSide <net|long|short>] [--px <price>] [--reduceOnly]\n                 [--tpTriggerPx <price>] [--tpOrdPx <price|-1>] [--slTriggerPx <price>] [--slOrdPx <price|-1>]",
+        description: "Place a new futures order (supports attached TP/SL)",
       },
       cancel: {
         usage: "okx futures cancel <instId> --ordId <id>",
         description: "Cancel a pending futures order",
       },
+      amend: {
+        usage: "okx futures amend --instId <id> [--ordId <id>] [--clOrdId <id>] [--newSz <n>] [--newPx <price>]",
+        description: "Amend a pending futures order",
+      },
       get: {
         usage: "okx futures get --instId <id> --ordId <id>",
         description: "Get details of a specific futures order",
+      },
+      close: {
+        usage: "okx futures close --instId <id> --mgnMode <cross|isolated> [--posSide <net|long|short>] [--autoCxl]",
+        description: "Close a futures position",
+      },
+      "get-leverage": {
+        usage: "okx futures get-leverage --instId <id> --mgnMode <cross|isolated>",
+        description: "Get current leverage for a futures instrument",
+      },
+      leverage: {
+        usage: "okx futures leverage --instId <id> --lever <n> --mgnMode <cross|isolated> [--posSide <net|long|short>]",
+        description: "Set leverage for a futures instrument",
+      },
+      batch: {
+        usage: "okx futures batch --action <place|amend|cancel> --orders '<json>'",
+        description: "Batch place, amend, or cancel futures orders",
+      },
+    },
+    subgroups: {
+      algo: {
+        description: "Futures algo orders (trailing stop, conditional, OCO)",
+        commands: {
+          orders: {
+            usage: "okx futures algo orders [--instId <id>] [--history] [--ordType <conditional|oco>]",
+            description: "List futures algo orders",
+          },
+          trail: {
+            usage: "okx futures algo trail --instId <id> --side <buy|sell> --sz <n> --callbackRatio <ratio>\n                   [--activePx <price>] [--posSide <net|long|short>] [--tdMode <cross|isolated>] [--reduceOnly]",
+            description: "Place a trailing stop algo order for futures",
+          },
+          place: {
+            usage: "okx futures algo place --instId <id> --side <buy|sell> --sz <n> [--ordType <conditional|oco>]\n                   [--tpTriggerPx <price>] [--tpOrdPx <price|-1>]\n                   [--slTriggerPx <price>] [--slOrdPx <price|-1>]\n                   [--posSide <net|long|short>] [--tdMode <cross|isolated>] [--reduceOnly]",
+            description: "Place a futures algo order (take-profit/stop-loss)",
+          },
+          amend: {
+            usage: "okx futures algo amend --instId <id> --algoId <id> [--newSz <n>]\n                   [--newTpTriggerPx <price>] [--newTpOrdPx <price|-1>]\n                   [--newSlTriggerPx <price>] [--newSlOrdPx <price|-1>]",
+            description: "Amend a pending futures algo order",
+          },
+          cancel: {
+            usage: "okx futures algo cancel --instId <id> --algoId <id>",
+            description: "Cancel a pending futures algo order",
+          },
+        },
       },
     },
   },
@@ -352,6 +405,103 @@ const HELP_TREE: HelpTree = {
     },
   },
 
+  earn: {
+    description: "Earn products — Simple Earn, On-chain Earn, and DCD (Dual Currency Deposit)",
+    subgroups: {
+      savings: {
+        description: "Simple Earn — flexible savings and lending",
+        commands: {
+          balance: {
+            usage: "okx earn savings balance [<ccy>]",
+            description: "Get savings balance (optionally filter by currency)",
+          },
+          purchase: {
+            usage: "okx earn savings purchase --ccy <ccy> --amt <n> [--rate <rate>]",
+            description: "Purchase Simple Earn (flexible savings). Rate defaults to 0.01 (1%)",
+          },
+          redeem: {
+            usage: "okx earn savings redeem --ccy <ccy> --amt <n>",
+            description: "Redeem Simple Earn (flexible savings)",
+          },
+          "set-rate": {
+            usage: "okx earn savings set-rate --ccy <ccy> --rate <rate>",
+            description: "Set lending rate for a currency",
+          },
+          "lending-history": {
+            usage: "okx earn savings lending-history [--ccy <ccy>] [--limit <n>]",
+            description: "Get market lending rate history",
+          },
+          "rate-summary": {
+            usage: "okx earn savings rate-summary [<ccy>]",
+            description: "Get coin lending market rate summary (not Simple Earn, public)",
+          },
+          "rate-history": {
+            usage: "okx earn savings rate-history [--ccy <ccy>] [--limit <n>]",
+            description: "Query Simple Earn lending rates (public, no auth needed)",
+          },
+        },
+      },
+      onchain: {
+        description: "On-chain Earn — staking and DeFi products",
+        commands: {
+          offers: {
+            usage: "okx earn onchain offers [--productId <id>] [--protocolType <type>] [--ccy <ccy>]",
+            description: "Browse available on-chain earn products (staking, DeFi)",
+          },
+          purchase: {
+            usage: "okx earn onchain purchase --productId <id> --ccy <ccy> --amt <n> [--term <term>] [--tag <tag>]",
+            description: "Purchase an on-chain earn product (stake/deposit)",
+          },
+          redeem: {
+            usage: "okx earn onchain redeem --ordId <id> --protocolType <type> [--allowEarlyRedeem]",
+            description: "Redeem an on-chain earn position",
+          },
+          cancel: {
+            usage: "okx earn onchain cancel --ordId <id> --protocolType <type>",
+            description: "Cancel a pending on-chain earn order",
+          },
+          orders: {
+            usage: "okx earn onchain orders [--productId <id>] [--protocolType <type>] [--ccy <ccy>] [--state <state>]",
+            description: "List active on-chain earn orders",
+          },
+          history: {
+            usage: "okx earn onchain history [--productId <id>] [--protocolType <type>] [--ccy <ccy>]",
+            description: "Get on-chain earn order history",
+          },
+        },
+      },
+      dcd: {
+        description: "DCD (Dual Currency Deposit) — structured products with fixed yield",
+        commands: {
+          pairs: {
+            usage: "okx earn dcd pairs",
+            description: "List available DCD currency pairs",
+          },
+          products: {
+            usage: "okx earn dcd products --baseCcy <ccy> --quoteCcy <ccy> --optType <C|P>\n                         [--minYield <n>] [--strikeNear <price>]\n                         [--termDays <n>] [--minTermDays <n>] [--maxTermDays <n>]\n                         [--expDate <YYYY-MM-DD|YYYY-MM-DDTHH:mm>]",
+            description: "List active DCD products (baseCcy, quoteCcy, optType required). Client-side filters: minYield (e.g. 0.05=5%), strikeNear (±10%), term range, expDate",
+          },
+          "quote-and-buy": {
+            usage: "okx earn dcd quote-and-buy --productId <id> --sz <n> --notionalCcy <ccy> [--clOrdId <id>] [--minAnnualizedYield <pct>]",
+            description: "[CAUTION] Subscribe to a DCD product atomically (quote + execute in one step)",
+          },
+          "redeem-execute": {
+            usage: "okx earn dcd redeem-execute --ordId <id>",
+            description: "[CAUTION] Re-quote and execute early redemption in one step (recommended for AI agent use)",
+          },
+          order: {
+            usage: "okx earn dcd order --ordId <id>",
+            description: "Query current state of a DCD order",
+          },
+          orders: {
+            usage: "okx earn dcd orders [--ordId <id>] [--productId <id>] [--uly <uly>] [--state <state>] [--limit <n>]",
+            description: "Get DCD order history. State: initial|live|pending_settle|settled|pending_redeem|redeemed|rejected",
+          },
+        },
+      },
+    },
+  },
+
   bot: {
     description: "Trading bot strategies (grid, dca)",
     subgroups: {
@@ -384,7 +534,7 @@ const HELP_TREE: HelpTree = {
         description: "Contract DCA (Martingale) bot — leveraged recurring buys on futures/swaps",
         commands: {
           orders: {
-            usage: "okx bot dca orders [--history]",
+            usage: "okx bot dca orders [--algoId <id>] [--instId <id>] [--history]",
             description: "List active or historical Contract DCA bot orders",
           },
           details: {
@@ -434,6 +584,11 @@ const HELP_TREE: HelpTree = {
     description: "Set up client integrations (Cursor, Windsurf, Claude, etc.)",
     usage: `okx setup --client <${SUPPORTED_CLIENTS.join("|")}> [--profile <name>] [--modules <list>]`,
   },
+
+  diagnose: {
+    description: "Run network / MCP server diagnostics",
+    usage: "okx diagnose [--cli | --mcp | --all] [--profile <name>] [--demo] [--output <file>]",
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -450,6 +605,7 @@ function printGlobalHelp(): void {
     `  --profile <name>   Use a named profile from ${configFilePath()}`,
     "  --demo             Use simulated trading (demo) mode",
     "  --json             Output raw JSON",
+    "  --verbose          Show detailed network request/response info (stderr)",
     "  --version, -v      Show version",
     "  --help             Show this help",
     "",
@@ -462,14 +618,14 @@ function printGlobalHelp(): void {
   }
 
   lines.push("", 'Run "okx <module> --help" for module details.', "");
-  process.stdout.write(lines.join("\n"));
+  output(lines.join(EOL));
 }
 
 /** Render module-level help (one path argument, e.g. "spot"). */
 function printModuleHelp(moduleName: string): void {
   const group = HELP_TREE[moduleName];
   if (!group) {
-    process.stderr.write(`Unknown module: ${moduleName}\n`);
+    errorLine(`Unknown module: ${moduleName}`);
     process.exitCode = 1;
     return;
   }
@@ -521,20 +677,20 @@ function printModuleHelp(moduleName: string): void {
   }
 
   lines.push("");
-  process.stdout.write(lines.join("\n"));
+  output(lines.join(EOL));
 }
 
 /** Render subgroup-level help (two path arguments, e.g. "bot", "grid"). */
 function printSubgroupHelp(moduleName: string, subgroupName: string): void {
   const group = HELP_TREE[moduleName];
   if (!group) {
-    process.stderr.write(`Unknown module: ${moduleName}\n`);
+    errorLine(`Unknown module: ${moduleName}`);
     process.exitCode = 1;
     return;
   }
   const subgroup = group.subgroups?.[subgroupName];
   if (!subgroup) {
-    process.stderr.write(`Unknown subgroup: ${moduleName} ${subgroupName}\n`);
+    errorLine(`Unknown subgroup: ${moduleName} ${subgroupName}`);
     process.exitCode = 1;
     return;
   }
@@ -553,7 +709,7 @@ function printSubgroupHelp(moduleName: string, subgroupName: string): void {
   }
 
   lines.push("");
-  process.stdout.write(lines.join("\n"));
+  output(lines.join(EOL));
 }
 
 /** Append a formatted command list to the lines array. */

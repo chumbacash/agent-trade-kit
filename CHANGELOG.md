@@ -9,7 +9,311 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
+## [1.2.6] - 2026-03-23
+
+### Added
+
+- **`market_get_indicator` tool** (`market`): Query technical indicator values for any instrument via the OKX AIGC indicator API. Supports 70+ indicators across 10 categories — moving averages (MA, EMA, WMA, HMA…), trend (MACD, SuperTrend, SAR, ADX…), Ichimoku, momentum oscillators (RSI, KDJ, StochRSI…), volatility (BB, ATR, Keltner…), volume (OBV, VWAP, MFI…), statistics (LR, Slope, Sigma…), price auxiliary (TP, MP), candlestick patterns (15 types), and BTC crypto-cycle indicators (BTCRAINBOW, AHR999). No API credentials required. Accepts optional `params`, `returnList`, `limit`, and `backtestTime`. CLI: `okx market indicator <name> <instId> [--bar <tf>] [--params <p1,p2>] [--list] [--limit N] [--backtest-time <ms>]`.
+- **`publicPost()` on `OkxRestClient`**: New unauthenticated POST method, symmetric with `publicGet`. Used internally by `market_get_indicator`.
+- **`tgtCcy` parameter for place orders**: `spot_place_order`, `swap_place_order`, and `futures_place_order` now accept `tgtCcy`. Set `tgtCcy=quote_ccy` to specify order size in USDT instead of contracts/base currency.
+
+### Fixed
+
+- **CLI exits with code 1 on OKX business failure**: Write endpoints return HTTP 200 even when an order is rejected (e.g. `sCode="51008"`). The CLI now sets `process.exitCode = 1` when any item in the response has a non-zero `sCode`, making failures detectable by scripts and LLMs via exit code alone.
+- **Friendly error for `config.toml` passphrase with special characters**: When a passphrase contains `#`, `\`, `"`, or `'`, the error now includes TOML quoting guidance instead of a cryptic parse error.
+- **Insufficient balance errors now hint to check funding account**: Error codes `51008` (insufficient balance), `51119` (insufficient margin), and `51127` (insufficient available margin) now include a suggestion to check the funding account via `account_get_asset_balance` and transfer with `account_transfer (from=18, to=6)`.
+
+### Changed
+
+- **CLI output layer abstracted** (internal): Raw `process.stdout`/`stderr` writes unified behind an output abstraction. No user-facing behavior change.
+
+---
+
+## [1.2.5] - 2026-03-18
+
+### Added
+
+- **`dcd_subscribe` tool** (`earn.dcd`): atomic DCD subscription that requests a quote and executes it in a single step, eliminating quote-expiry race conditions for MCP users. Accepts optional `minAnnualizedYield` (in percent) — if the actual quote yield falls below this threshold, the order is rejected before execution. Returns the trade result with a quote snapshot (`annualizedYield`, `absYield`). Not supported in demo mode.
+- **`dcd_redeem` tool** (`earn.dcd`): two-step early redemption designed for user confirmation before executing. First call (no `quoteId`): requests a redemption quote showing the early-exit cost. Second call (with `quoteId`): executes the redemption. If the quote has expired between the two calls, a fresh quote is automatically requested and executed atomically; response includes `autoRefreshedQuote: true`. Not supported in demo mode for the execute step.
+- **CLI `okx diagnose --mcp`**: New MCP server troubleshooting mode. Checks package versions, Node.js compatibility, MCP entry-point existence and executability, Claude Desktop `mcpServers` configuration, recent MCP log tail, module-load smoke test (`--version`), and a live stdio JSON-RPC handshake (5 s timeout). Zero external dependencies — uses Node.js built-ins only.
+- **`--output <file>` for `okx diagnose`**: Both the default and `--mcp` modes now accept `--output <path>` to save the diagnostic report to a file for sharing.
+- **`allToolSpecs()` exported from `@agent-tradekit/core`**: The function is now part of the public API, exposed for future external consumers that need to enumerate all registered tool specs.
+
+### Removed
+
+- **Low-level DCD split tools removed**: `dcd_request_quote`, `dcd_execute_quote`, `dcd_request_redeem_quote`, and `dcd_execute_redeem` have been removed. Use `dcd_subscribe` for subscribe flows and `dcd_redeem` for early redemption flows.
+
+### Fixed
+
+- **CLI `cancel` commands now support `--clOrdId`**: `okx spot/swap/futures cancel` previously required `--ordId` as a positional argument. Now accepts either `--ordId` or `--clOrdId` (client order ID); throws a clear error if neither is provided. Affects `spot_cancel_order`, `swap_cancel_order`, `futures_cancel_order`.
+- **CLI `spot/swap/futures cancel` was ignoring `--instId` flag**: `cmdSpotCancel`, `cmdSwapCancel`, and `cmdFuturesCancel` used the positional argument (`rest[0]`) as `instId` instead of the `--instId` flag value, causing the cancel to silently use the wrong instrument ID. Fixed to correctly pass `v.instId`.
+
+### Changed
+
+- **Tool descriptions optimized across all modules**: Removed "Private endpoint", "Public endpoint", and "Rate limit" labels from all tool description strings to reduce MCP schema token overhead. Shortened descriptions for earn, grid, DCA, swap/futures/option modules. `[CAUTION]` markers preserved.
+- **TWAP bot moved to CLI-only**: `bot.twap` MCP tools removed; TWAP functionality remains available via `okx bot twap` CLI commands.
+- **`sanitize()` utility**: Masks UUIDs, long hex strings (≥32 chars), and Bearer tokens in diagnostic output before sharing.
+- **`diagnose-utils.ts`** (internal): Shared `Report`, `ok`, `fail`, `section`, and `sanitize` helpers extracted from `diagnose.ts` to enable reuse by `diagnose-mcp.ts`.
+- **File-level comments added** to all tools modules (internal documentation).
+
+---
+
+## [1.2.5-beta.5] - 2026-03-17
+
+### Fixed
+
+- **CLI `cancel` commands now support `--clOrdId`**: `okx spot/swap/futures cancel` previously required `--ordId` as a positional argument. Now accepts either `--ordId` or `--clOrdId` (client order ID); throws a clear error if neither is provided. Affects `spot_cancel_order`, `swap_cancel_order`, `futures_cancel_order`.
+
+---
+
+## [1.2.5-beta.4] - 2026-03-17
+
+### Removed
+
+- **`feat/add-more-bots-phase-1` reverted**: Removed all changes introduced by this branch, including bug fixes that are a side effect of the revert:
+  - `dca_create_order` RSI trigger sub-parameters (`triggerCond`, `thold`, `timePeriod`, `timeframe`) and copy-trading params (`trackingMode`, `profitSharingRatio`)
+  - 5 DCA CLI commands: `margin-add`, `margin-reduce`, `set-tp`, `set-reinvest`, `manual-buy`
+  - Spot Recurring Buy CLI commands: `okx bot recurring create|amend|stop|orders|details|sub-orders`
+  - `grid_create_order` 6 new optional parameters (`tpTriggerPx`, `slTriggerPx`, `algoClOrdId`, `tradeQuoteCcy`, `tpRatio`, `slRatio`)
+  - 14 new grid CLI commands (`amend-basic-param`, `amend-order`, `close-position`, `cancel-close-order`, `instant-trigger`, `positions`, `withdraw-income`, `compute-margin-balance`, `margin-balance`, `adjust-investment`, `ai-param`, `min-investment`, `rsi-back-testing`, `max-quantity`)
+  - TWAP CLI commands: `okx bot twap place|cancel|orders|details`
+  - *(side effect)* **`swap_cancel_algo_orders` input format restored**: the branch had broken the input schema from `{ orders: [{ algoId, instId }] }` to flat `{ instId, algoId }`; revert restores correct format.
+  - *(side effect)* **`dca_create_order` `pxStepsMult`/`volMult` threshold corrected**: the branch had misdocumented the required threshold as `maxSafetyOrds > 1`; revert restores correct `> 0`.
+
+---
+
+## [1.2.5-beta.3] - 2026-03-17
+
+### Removed
+
+- **`copytrading` module reverted**: Removed the 5 CLI copy-trading commands (`traders`, `trader-detail`, `status`, `follow`, `unfollow`), the `copytrading` MCP tool, related documentation (`docs/cli-reference.md` copytrading section), and README copy-trading entries introduced in v1.2.5-beta.2.
+
+---
+
+## [1.2.5-beta.2] - 2026-03-17
+
+### Added
+
+- **`dcd_subscribe` tool** (`earn.dcd`): atomic DCD subscription that requests a quote and executes it in a single step, eliminating quote-expiry race conditions for MCP users. Accepts optional `minAnnualizedYield` (in percent) — if the actual quote yield falls below this threshold, the order is rejected before execution. Returns the trade result with a quote snapshot (`annualizedYield`, `absYield`). Not supported in demo mode.
+- **`dcd_redeem` tool** (`earn.dcd`): two-step early redemption designed for user confirmation before executing. First call (no `quoteId`): requests a redemption quote showing the early-exit cost. Second call (with `quoteId`): executes the redemption. If the quote has expired between the two calls, a fresh quote is automatically requested and executed atomically; response includes `autoRefreshedQuote: true`. Not supported in demo mode for the execute step.
+- **Removed low-level split DCD tools**: `dcd_request_quote`, `dcd_execute_quote`, `dcd_request_redeem_quote`, and `dcd_execute_redeem` have been removed. Use `dcd_subscribe` for subscribe flows and `dcd_redeem` for early redemption flows.
+
+### Changed
+
+- **CLI `okx diagnose --mcp`**: New MCP server troubleshooting mode. Checks package versions, Node.js compatibility, MCP entry-point existence and executability, Claude Desktop `mcpServers` configuration, recent MCP log tail, module-load smoke test (`--version`), and a live stdio JSON-RPC handshake (5 s timeout). Zero external dependencies — uses Node.js built-ins only.
+- **`--output <file>` for `okx diagnose`**: Both the default and `--mcp` modes now accept `--output <path>` to save the diagnostic report to a file for sharing.
+- **`diagnose-utils.ts`** (internal): Shared `Report`, `ok`, `fail`, `section`, and `sanitize` helpers extracted from `diagnose.ts` to enable reuse by `diagnose-mcp.ts`.
+- **`sanitize()` utility**: Masks UUIDs, long hex strings (≥32 chars), and Bearer tokens in diagnostic output before sharing.
+- **`allToolSpecs()` exported from `@agent-tradekit/core`**: The function is now part of the public API, exposed for future external consumers that need to enumerate all registered tool specs (e.g. third-party MCP clients, testing utilities). It was already used internally by `buildTools()` and `createToolRunner()`; this change makes the export public-facing for anticipated downstream use, not for use within `diagnose-mcp.ts`.
+
+---
+
+## [1.2.4] - 2026-03-15
+
+### Added
+
+- **`market_get_stock_tokens` tool**: new dedicated tool to list stock token instruments (e.g. `AAPL-USDT-SWAP`, `TSLA-USDT-SWAP`). Fetches all instruments via `GET /api/v5/public/instruments` and filters client-side by `instCategory=3`. Supports `instType` (default `SWAP`) and optional `instId`. ([#65](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/65))
+- **CLI `okx market stock-tokens`**: new CLI sub-command mapping to `market_get_stock_tokens`. Usage: `okx market stock-tokens [--instType <SPOT|SWAP>] [--instId <id>] [--json]`. ([#65](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/65))
+- **Spot trailing stop support** (`spot_place_algo_order` with `ordType='move_order_stop'`): `spot_place_algo_order` now supports trailing stop orders in addition to conditional/oco. Pass `ordType='move_order_stop'` with `callbackRatio` (e.g. `'0.01'` for 1%) or `callbackSpread` (fixed price distance), and optionally `activePx`. ([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+- **`swap_place_algo_order` now supports trailing stop** (`ordType='move_order_stop'`): extended with `callbackRatio`, `callbackSpread`, and `activePx` parameters, replacing the need for the deprecated `swap_place_move_stop_order` tool. ([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+- **`spot_get_algo_orders` now includes trailing stop orders**: When no `ordType` filter is specified, the query now fetches `conditional`, `oco`, and `move_order_stop` orders in parallel. ([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+- **CLI `okx spot algo trail`**: New CLI sub-command for placing a spot trailing stop order. Usage: `okx spot algo trail --instId BTC-USDT --side sell --sz 0.001 --callbackRatio 0.01 [--activePx <price>] [--tdMode cash]`. ([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+- **CLI `okx futures algo trail`**: New CLI sub-command for placing a futures trailing stop order. Usage: `okx futures algo trail --instId BTC-USD-250328 --side sell --sz 1 --callbackRatio 0.01 [--activePx <price>] [--posSide <net|long|short>] [--tdMode <cross|isolated>] [--reduceOnly]`. ([#68](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/68))
+- **4 new option algo core tools** (`registerOptionAlgoTools`): `option_place_algo_order`, `option_amend_algo_order`, `option_cancel_algo_orders`, `option_get_algo_orders`. These let AI agents and users place conditional TP/SL algo orders on option positions, amend or cancel them, and query pending/historical option algo orders. ([#72](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/72))
+- **`option_place_order` now supports attached TP/SL** (`attachAlgoOrds`): Pass `--tpTriggerPx`/`--tpOrdPx` and/or `--slTriggerPx`/`--slOrdPx` to attach a take-profit or stop-loss algo order to the option order in one step. ([#72](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/72))
+- **CLI `okx option algo` commands**: `place`, `amend`, `cancel`, `orders` — full lifecycle management for option TP/SL algo orders. ([#72](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/72))
+- **7 new futures core tools** for delivery contract (Phase 1 feature parity with swap): `futures_amend_order`, `futures_close_position`, `futures_set_leverage`, `futures_get_leverage`, `futures_batch_orders`, `futures_batch_amend`, `futures_batch_cancel`. ([#71](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/71))
+- **5 new futures algo tools** (`registerFuturesAlgoTools`): `futures_place_algo_order`, `futures_place_move_stop_order`, `futures_amend_algo_order`, `futures_cancel_algo_orders`, `futures_get_algo_orders`. ([#71](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/71))
+
+### Fixed
+
+- **Bot tools: added missing parameter descriptions for `algoId`, `algoOrdType`, and `groupId`** — Grid and DCA tools were missing `algoId` descriptions, causing AI agents to pass invalid values (error `51000`) or mismatched `algoOrdType` (error `50016`). Also added `groupId` for `grid_get_sub_orders` and `newSz` for `spot_amend_algo_order`.
+- **CLI: `okx bot dca orders` now supports `--algoId` and `--instId` filters** — aligned with `okx bot grid orders` behavior.
+- **`swap_get_algo_orders` hardcoded `instType`**: Now accepts an optional `instType` parameter (default `"SWAP"`, accepts `"FUTURES"`). ([#71](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/71))
+- **`callBackRatio` / `callBackSpread` parameter name mismatch**: Fixed capital-B parameter names in POST body for `swap_place_algo_order` and `swap_place_move_stop_order`. MCP input schema names remain unchanged. ([#69](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/69))
+- **CLI `algo place` missing trailing stop params**: `callbackRatio`, `callbackSpread`, and `activePx` were silently dropped in `cmdSpotAlgoPlace`, `cmdSwapAlgoPlace`, and `cmdFuturesAlgoPlace`. Now passed through correctly. ([#74](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/74))
+- **CLI `okx swap algo cancel` format**: Fixed `cmdSwapAlgoCancel` to wrap args as `{ orders: [{ instId, algoId }] }` matching the tool's required format. ([#76](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/76))
+
+### Deprecated
+
+- **`swap_place_move_stop_order`**: Deprecated in favor of `swap_place_algo_order` with `ordType='move_order_stop'`. The tool remains functional for backward compatibility. ([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+
+### Changed
+
+- **`--modules all` now includes earn sub-modules**: `all` now expands to every module including `earn.savings`, `earn.onchain`, and `earn.dcd`. Default modules remain unchanged. ([#66](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/66))
+- **CLI: removed direct `smol-toml` dependency** — TOML functionality now provided exclusively through `@agent-tradekit/core`. ([#39](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/39))
+- **Deduplicate postinstall script**: `scripts/postinstall-notice.js` at monorepo root is the single source of truth; package copies are generated during `build`. ([#50](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/50))
+- **`earn` restructured as sub-module directory** (internal): `earn.ts` → `tools/earn/savings.ts`, `onchain-earn.ts` → `tools/earn/onchain.ts`. No public API changes. ([#64](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/64))
+- **Deduplicate `normalize()` across tool modules**: Removed 9 local copies; all now use shared `normalizeResponse` from `helpers.ts`. ([#70](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/70))
+- **Extract `buildAttachAlgoOrds()` helper**: Shared TP/SL assembly helper in `helpers.ts`, replacing 5 duplicate inline blocks. ([#70](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/70))
+- **Trim tool descriptions**: Removed "Private endpoint", "Public endpoint", and "Rate limit" labels from all tool descriptions to reduce MCP schema token overhead. `[CAUTION]` markers preserved. ([#70](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/70))
+
+---
+
+## [1.2.4-beta.7] - 2026-03-14
+
+### Fixed
+
+- **CLI `okx swap algo cancel` reports "orders must be a non-empty array"**: `cmdSwapAlgoCancel` was passing `{ instId, algoId }` directly to `swap_cancel_algo_orders`, but the tool requires `{ orders: [{ instId, algoId }] }` format, causing the command to always fail. Fixed to match the wrapping pattern used by `futures`/`option`. ([#76](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/76))
+
+---
+
+## [1.2.4-beta.6] - 2026-03-14
+
+### Fixed
+
+- **CLI `algo place` missing trailing stop params**: `cmdSpotAlgoPlace`, `cmdSwapAlgoPlace`, and `cmdFuturesAlgoPlace` were silently dropping `callbackRatio`, `callbackSpread`, and `activePx` when passed by the user. Placing a trailing stop via `okx {spot,swap,futures} algo place --ordType move_order_stop` would return API error 50015 (missing required param). The three params are now passed through to the tool runner correctly. ([#74](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/74))
+
+---
+
+## [1.2.4-beta.5] - 2026-03-14
+
+### Added
+
+- **4 new option algo core tools** (`registerOptionAlgoTools`): `option_place_algo_order`, `option_amend_algo_order`, `option_cancel_algo_orders`, `option_get_algo_orders`. These let AI agents and users place conditional TP/SL algo orders on option positions, amend or cancel them, and query pending/historical option algo orders. ([#72](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/72))
+- **`option_place_order` now supports attached TP/SL** (`attachAlgoOrds`): Pass `--tpTriggerPx`/`--tpOrdPx` and/or `--slTriggerPx`/`--slOrdPx` to attach a take-profit or stop-loss algo order to the option order in one step. ([#72](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/72))
+- **CLI `okx option algo place`**: Place an option TP/SL algo order. Usage: `okx option algo place --instId BTC-USD-250328-95000-C --side sell --ordType oco --sz 1 --tdMode cross --tpTriggerPx 0.006 --tpOrdPx -1 --slTriggerPx 0.003 --slOrdPx -1`. ([#72](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/72))
+- **CLI `okx option algo amend`**: Amend an existing option algo order's TP/SL levels. Usage: `okx option algo amend --instId BTC-USD-250328-95000-C --algoId <id> [--newTpTriggerPx <p>] [--newSlTriggerPx <p>]`. ([#72](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/72))
+- **CLI `okx option algo cancel`**: Cancel an option algo order. Usage: `okx option algo cancel --instId BTC-USD-250328-95000-C --algoId <id>`. ([#72](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/72))
+- **CLI `okx option algo orders`**: List pending or historical option algo orders. Usage: `okx option algo orders [--instId <id>] [--history] [--ordType <conditional|oco>] [--json]`. ([#72](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/72))
+
+- **7 new futures core tools** for delivery contract (Phase 1 feature parity with swap): `futures_amend_order`, `futures_close_position`, `futures_set_leverage`, `futures_get_leverage`, `futures_batch_orders`, `futures_batch_amend`, `futures_batch_cancel`. These use futures-specific tool names (`futures_*`) instead of reusing swap tools, giving futures its own dedicated API surface. ([#71](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/71))
+- **5 new futures algo tools** (`registerFuturesAlgoTools`): `futures_place_algo_order`, `futures_place_move_stop_order`, `futures_amend_algo_order`, `futures_cancel_algo_orders`, `futures_get_algo_orders`. These are analogues of the swap algo tools but use `instType: "FUTURES"` and are registered under the `futures` module. ([#71](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/71))
+
+### Fixed
+
+- **`swap_get_algo_orders` hardcoded `instType`**: The tool previously hardcoded `instType: "SWAP"` in the API request body, making it impossible to query FUTURES algo orders. Now accepts an optional `instType` parameter (default `"SWAP"`, accepts `"FUTURES"`). ([#71](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/71))
+
+### Changed
+
+- **Deduplicate `normalize()` across tool modules**: Removed 9 local `normalize()` copies from `spot-trade`, `swap-trade`, `futures-trade`, `option-trade`, `algo-trade`, `account`, `market`, `bot/grid`, `bot/dca`; all now use the shared `normalizeResponse` from `helpers.ts`. ([#70](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/70))
+- **Extract `buildAttachAlgoOrds()` helper**: Moved the inline TP/SL assembly pattern (`tpTriggerPx`, `tpOrdPx`, `slTriggerPx`, `slOrdPx` → `attachAlgoOrds`) into a shared helper in `helpers.ts`, replacing 5 duplicate blocks in `spot_place_order`, `spot_batch_orders` (place), `swap_place_order`, `swap_batch_orders` (place), and `futures_place_order`. ([#70](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/70))
+- **Trim tool descriptions**: Removed "Private endpoint", "Public endpoint", and "Rate limit: X req/s per UID" labels from all tool description strings to reduce MCP schema token overhead. `[CAUTION]` markers are preserved. ([#70](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/70))
+
+### Fixed
+
+- **`callBackRatio` / `callBackSpread` parameter name mismatch**: OKX API expects `callBackRatio` and `callBackSpread` (capital B) but the POST body was sending `callbackRatio` and `callbackSpread` (lowercase b), causing sCode 50015 errors. Fixed in `swap_place_algo_order` and `swap_place_move_stop_order` handlers. The MCP input schema parameter names (`callbackRatio` / `callbackSpread`) remain unchanged. ([#69](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/69))
+
+---
+
+## [1.2.4-beta.4] - 2026-03-14
+
+### Added
+
+- **`market_get_stock_tokens` tool**: new dedicated tool to list stock token instruments (e.g. `AAPL-USDT-SWAP`, `TSLA-USDT-SWAP`). Fetches all instruments via `GET /api/v5/public/instruments` and filters client-side by `instCategory=3`. Supports `instType` (default `SWAP`) and optional `instId`. ([#65](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/65))
+- **CLI `okx market stock-tokens`**: new CLI sub-command mapping to `market_get_stock_tokens`. Usage: `okx market stock-tokens [--instType <SPOT|SWAP>] [--instId <id>] [--json]`. ([#65](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/65))
+- **Spot trailing stop support** (`spot_place_algo_order` with `ordType='move_order_stop'`): `spot_place_algo_order` now supports trailing stop orders in addition to conditional/oco. Pass `ordType='move_order_stop'` with `callbackRatio` (e.g. `'0.01'` for 1%) or `callbackSpread` (fixed price distance), and optionally `activePx`. ([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+- **`swap_place_algo_order` now supports trailing stop** (`ordType='move_order_stop'`): extended with the same `callbackRatio`, `callbackSpread`, and `activePx` parameters, replacing the need for the deprecated `swap_place_move_stop_order` tool. ([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+- **`spot_get_algo_orders` now includes trailing stop orders**: When no `ordType` filter is specified, the query now fetches `conditional`, `oco`, and `move_order_stop` orders in parallel. ([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+- **CLI `okx spot algo trail`**: New CLI sub-command for placing a spot trailing stop order. Usage: `okx spot algo trail --instId BTC-USDT --side sell --sz 0.001 --callbackRatio 0.01 [--activePx <price>] [--tdMode cash]`. ([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+- **CLI `okx futures algo trail`**: New CLI sub-command for placing a futures trailing stop order. Usage: `okx futures algo trail --instId BTC-USD-250328 --side sell --sz 1 --callbackRatio 0.01 [--activePx <price>] [--posSide <net|long|short>] [--tdMode <cross|isolated>] [--reduceOnly]`. ([#68](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/68))
+
+### Fixed
+
+- **Bot tools: added missing parameter descriptions for `algoId`, `algoOrdType`, and `groupId`** — Grid tools (`grid_get_orders`, `grid_get_order_details`, `grid_get_sub_orders`, `grid_stop_order`) and DCA tools (`dca_get_orders`, `dca_get_order_details`) were missing `algoId` descriptions, causing AI agents to pass invalid values (error `51000`) or mismatched `algoOrdType` (error `50016`). Also added `groupId` description for `grid_get_sub_orders` and `newSz` description for `spot_amend_algo_order`.
+- **CLI: `okx bot dca orders` now supports `--algoId` and `--instId` filters** — Previously the CLI did not pass these parameters to the underlying `dca_get_orders` tool, even though the MCP tool already supported them. Now aligned with `okx bot grid orders` behavior.
+
+### Deprecated
+
+- **`swap_place_move_stop_order`**: Deprecated in favor of `swap_place_algo_order` with `ordType='move_order_stop'`. The tool remains functional for backward compatibility. ([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+
+### Changed
+
+- **`--modules all` now includes earn sub-modules**: `all` now expands to every module including `earn.savings`, `earn.onchain`, and `earn.dcd`, on par with bot sub-modules. Previously, earn required explicit opt-in via `all,earn`. The default modules remain unchanged. ([#66](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/66))
+- **CLI: removed direct `smol-toml` dependency** — `packages/cli` no longer declares `smol-toml` as a direct dependency. The TOML functionality is now provided exclusively through `@agent-tradekit/core`. ([#39](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/39))
+- **Deduplicate postinstall script**: `scripts/postinstall-notice.js` at monorepo root is now the single source of truth. The copies in `packages/cli/scripts/postinstall.js` and `packages/mcp/scripts/postinstall.js` are generated during `build` and ignored by git. ([#50](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/50))
+- **`earn` restructured as sub-module directory** (internal): `earn.ts` → `tools/earn/savings.ts`, `onchain-earn.ts` → `tools/earn/onchain.ts`, with a new `tools/earn/index.ts` aggregator. No public API changes. ([#64](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/64))
+
+---
+
+## [1.2.4-beta.3] - 2026-03-13
+
+### Added
+
+- **CLI `okx futures algo trail`**: New CLI sub-command for placing a futures trailing stop order. Usage: `okx futures algo trail --instId BTC-USD-250328 --side sell --sz 1 --callbackRatio 0.01 [--activePx <price>] [--posSide <net|long|short>] [--tdMode <cross|isolated>] [--reduceOnly]`. ([#68](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/68))
+
+---
+
+## [1.2.4-beta.2] - 2026-03-13
+
+### Added
+
+- **Spot trailing stop support** (`spot_place_algo_order` with `ordType='move_order_stop'`): `spot_place_algo_order` now supports trailing stop orders in addition to conditional/oco. Pass `ordType='move_order_stop'` with `callbackRatio` (e.g. `'0.01'` for 1%) or `callbackSpread` (fixed price distance), and optionally `activePx`. ([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+- **`swap_place_algo_order` now supports trailing stop** (`ordType='move_order_stop'`): The swap algo order tool is extended with the same `callbackRatio`, `callbackSpread`, and `activePx` parameters, replacing the need for the deprecated `swap_place_move_stop_order` tool. ([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+- **`spot_get_algo_orders` now includes trailing stop orders**: When no `ordType` filter is specified, the query now fetches `conditional`, `oco`, and `move_order_stop` orders in parallel (previously only `conditional` and `oco`). ([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+- **CLI `okx spot algo trail`**: New CLI sub-command for placing a spot trailing stop order. Usage: `okx spot algo trail --instId BTC-USDT --side sell --sz 0.001 --callbackRatio 0.01 [--activePx <price>] [--tdMode cash]`. ([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+
+### Deprecated
+
+- **`swap_place_move_stop_order`**: Deprecated in favor of `swap_place_algo_order` with `ordType='move_order_stop'`. The tool remains functional for backward compatibility. ([#67](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/67))
+
+### Changed
+
+- **`--modules all` now includes earn sub-modules**: `all` now expands to every module including `earn.savings`, `earn.onchain`, and `earn.dcd`, on par with bot sub-modules. Previously, earn required explicit opt-in via `all,earn`. The default modules remain unchanged (`spot`, `swap`, `option`, `account`, `bot.grid`). ([#66](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/66))
+
+---
+
+## [1.2.4-beta.1] - 2026-03-13
+
+### Added
+
+- **`market_get_stock_tokens` tool**: new dedicated tool to list stock token instruments (e.g. `AAPL-USDT-SWAP`, `TSLA-USDT-SWAP`). Fetches all instruments via `GET /api/v5/public/instruments` and filters client-side by `instCategory=3`. Supports `instType` (default `SWAP`) and optional `instId`. ([#65](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/65))
+- **CLI `okx market stock-tokens`**: new CLI sub-command mapping to `market_get_stock_tokens`. Usage: `okx market stock-tokens [--instType <SPOT|SWAP>] [--instId <id>] [--json]`.
+- **DCD module** (`earn.dcd`) — 8 new MCP tools and 10 CLI commands for OKX Dual Currency Deposit (双币赢): `dcd_get_currency_pairs`, `dcd_get_products`, `dcd_request_quote`, `dcd_execute_quote`, `dcd_request_redeem_quote`, `dcd_execute_redeem`, `dcd_get_order_state`, `dcd_get_orders`. CLI: `okx earn dcd pairs`, `products`, `quote`, `buy`, `quote-and-buy`, `redeem-quote`, `redeem`, `redeem-execute`, `order`, `orders`. Supports client-side product filtering (`--minYield`, `--strikeNear`, `--termDays`, `--expDate`), two-step early redemption flow, and demo-mode guard on all write operations.
+
+### Fixed
+
+- **Bot tools: added missing parameter descriptions for `algoId`, `algoOrdType`, and `groupId`** — Grid tools (`grid_get_orders`, `grid_get_order_details`, `grid_get_sub_orders`, `grid_stop_order`) and DCA tools (`dca_get_orders`, `dca_get_order_details`) were missing `algoId` descriptions, causing AI agents to pass invalid values (error `51000`) or mismatched `algoOrdType` (error `50016`). Also added `groupId` description for `grid_get_sub_orders` and `newSz` description for `spot_amend_algo_order`.
+- **CLI: `okx bot dca orders` now supports `--algoId` and `--instId` filters** — Previously the CLI did not pass these parameters to the underlying `dca_get_orders` tool, even though the MCP tool already supported them. Now aligned with `okx bot grid orders` behavior.
+
+### Changed
+
+- **CLI: removed direct `smol-toml` dependency** — `packages/cli` no longer declares `smol-toml` as a direct dependency. The TOML functionality is now provided exclusively through `@agent-tradekit/core`, which bundles `smol-toml` internally. ([#39](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/39))
+- **Deduplicate postinstall script**: `scripts/postinstall-notice.js` at monorepo root is now the single source of truth. The copies in `packages/cli/scripts/postinstall.js` and `packages/mcp/scripts/postinstall.js` are generated during `build` and ignored by git. ([#50](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/50))
+- **`earn` restructured as sub-module directory** (internal): `earn.ts` → `tools/earn/savings.ts`, `onchain-earn.ts` → `tools/earn/onchain.ts`, with a new `tools/earn/index.ts` aggregator. Consistent with the `bot/` sub-module directory pattern. No public API changes. ([#64](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/64))
+
+---
+
+## [1.2.4-beta.0] - 2026-03-13
+
+### Added
+
+- **`market_get_stock_tokens` tool**: new dedicated tool to list stock token instruments (e.g. `AAPL-USDT-SWAP`, `TSLA-USDT-SWAP`). Fetches all instruments via `GET /api/v5/public/instruments` and filters client-side by `instCategory=3`. Supports `instType` (default `SWAP`) and optional `instId`. ([#65](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/65))
+- **CLI `okx market stock-tokens`**: new CLI sub-command mapping to `market_get_stock_tokens`. Usage: `okx market stock-tokens [--instType <SPOT|SWAP>] [--instId <id>] [--json]`.
+
+### Fixed
+
+- **Bot tools: added missing parameter descriptions for `algoId`, `algoOrdType`, and `groupId`** — Grid tools (`grid_get_orders`, `grid_get_order_details`, `grid_get_sub_orders`, `grid_stop_order`) and DCA tools (`dca_get_orders`, `dca_get_order_details`) were missing `algoId` descriptions, causing AI agents to pass invalid values (error `51000`) or mismatched `algoOrdType` (error `50016`). Also added `groupId` description for `grid_get_sub_orders` and `newSz` description for `spot_amend_algo_order`.
+- **CLI: `okx bot dca orders` now supports `--algoId` and `--instId` filters** — Previously the CLI did not pass these parameters to the underlying `dca_get_orders` tool, even though the MCP tool already supported them. Now aligned with `okx bot grid orders` behavior.
+
+### Changed
+
+- **CLI: removed direct `smol-toml` dependency** — `packages/cli` no longer declares `smol-toml` as a direct dependency. The TOML functionality is now provided exclusively through `@agent-tradekit/core`, which bundles `smol-toml` internally. ([#39](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/39))
+- **Deduplicate postinstall script**: `scripts/postinstall-notice.js` at monorepo root is now the single source of truth. The copies in `packages/cli/scripts/postinstall.js` and `packages/mcp/scripts/postinstall.js` are generated during `build` and ignored by git. ([#50](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/50))
+- **`earn` restructured as sub-module directory** (internal): `earn.ts` → `tools/earn/savings.ts`, `onchain-earn.ts` → `tools/earn/onchain.ts`, with a new `tools/earn/index.ts` aggregator. Consistent with the `bot/` sub-module directory pattern. No public API changes. ([#64](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/64))
+
+---
+
+## [1.2.3] - 2026-03-12
+
+### Breaking Changes
+
+- **`--modules all` no longer includes earn sub-modules**: Previously, `--modules all` expanded to every module including `earn.savings` and `earn.onchain`. Now `all` only includes base modules and bot sub-modules. To enable earn modules, you must opt in explicitly:
+  - `--modules all,earn` — all modules + all earn sub-modules
+  - `--modules all,earn.savings` — all modules + Simple Earn only
+  - `--modules all,earn.onchain` — all modules + On-chain Earn only
+  - `--modules earn` — earn sub-modules only
+
+  **Migration**: if you previously used `--modules all` and relied on earn tools being active, add `,earn` to your configuration: `--modules all,earn`.
+
+### Added
+
+- **DCD module** (`earn.dcd`) — 8 new MCP tools and 10 CLI commands for OKX Dual Currency Deposit (双币赢): `dcd_get_currency_pairs`, `dcd_get_products`, `dcd_request_quote`, `dcd_execute_quote`, `dcd_request_redeem_quote`, `dcd_execute_redeem`, `dcd_get_order_state`, `dcd_get_orders`. CLI: `okx earn dcd pairs`, `products`, `quote`, `buy`, `quote-and-buy`, `redeem-quote`, `redeem`, `redeem-execute`, `order`, `orders`. Supports client-side product filtering (`--minYield`, `--strikeNear`, `--termDays`, `--expDate`), two-step early redemption flow, and demo-mode guard on all write operations.
+- **HTTP/HTTPS proxy support**: Configure `proxy_url` in your TOML profile to route all OKX API requests through a proxy server. Supports authenticated proxies via URL credentials (e.g. `http://user:pass@proxy:8080`). Only HTTP/HTTPS proxies are supported; SOCKS is not. ([#53](https://gitlab.okg.com/retail-ai/okx-trade-mcp/-/issues/53))
+- **CLI `--verbose` flag**: Add `--verbose` to any command to see detailed network request/response info on stderr — method, URL, auth status (key masked), timing, HTTP status, OKX code, and trace ID. Useful for debugging connectivity and auth issues.
+- **CLI `okx diagnose` command**: Step-by-step connectivity check that verifies environment (Node.js, OS, shell, locale, timezone, proxy), configuration (credentials, site, base URL), network (DNS → TCP → TLS → public API), and authentication. On failure, shows actionable hints. Prints a copy-paste diagnostic report block for sharing with support.
+- **CLI place commands — attached TP/SL**: `okx spot place`, `okx swap place`, and `okx futures place` now accept optional take-profit and stop-loss parameters: `--tpTriggerPx`, `--tpOrdPx`, `--tpTriggerPxType`, `--slTriggerPx`, `--slOrdPx`, `--slTriggerPxType`. These are forwarded directly to the OKX order API as attached TP/SL on the placed order.
+- **Earn module** — 7 new tools for OKX Simple Earn (savings/flexible lending): `earn_get_savings_balance`, `earn_savings_purchase`, `earn_savings_redeem`, `earn_set_lending_rate`, `earn_get_lending_history`, `earn_get_lending_rate_summary`, `earn_get_lending_rate_history`. Includes CLI commands, dual-language documentation, and full test coverage.
 
 ---
 
@@ -20,6 +324,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Contract DCA — optional parameters**: `--slMode` (stop-loss price type: `limit`/`market`), `--allowReinvest` (reinvest profit into next cycle, default `true`), `--triggerStrategy` (bot start mode: `instant`/`price`/`rsi`), `--triggerPx` (trigger price for `price` strategy). All are optional and only apply to contract DCA create.
 - **Contract DCA orders — `instId` filter**: `dca_get_orders` now accepts an optional `--instId` parameter to filter contract DCA bots by instrument (e.g. `BTC-USDT-SWAP`)
 - **Contract DCA sub-orders — `cycleId` filter**: `dca_get_sub_orders` now accepts an optional `--cycleId` parameter, allowing querying orders within a specific cycle
+- **On-chain Earn module (6 tools)**: new `onchain-earn` module for OKX On-chain Earn (staking/DeFi) products — `onchain_earn_get_offers`, `onchain_earn_purchase`, `onchain_earn_redeem`, `onchain_earn_cancel`, `onchain_earn_get_active_orders`, `onchain_earn_get_order_history`. CLI: `okx earn onchain offers`, `okx earn onchain purchase`, `okx earn onchain redeem`, `okx earn onchain cancel`, `okx earn onchain orders`, `okx earn onchain history`.
 
 ### Changed
 
